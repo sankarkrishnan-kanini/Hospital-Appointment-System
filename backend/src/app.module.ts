@@ -7,9 +7,15 @@ import { ClientAccountModule } from './client-account/client-account.module';
 import { DoctorModule } from './doctor/doctor.module';
 import { DoctorDocumentModule } from './doctor-document/doctor-document.module';
 import { AppointmentStatusModule } from './appointment-status/appointment-status.module';
+import { DoctorSpecializationModule } from './doctor-specialization/doctor-specialization.module';
+import { DoctorUnavailabilityModule } from './doctor-unavailability/doctor-unavailability.module';
+import { HospitalAffiliationModule } from './hospital-affiliation/hospital-affiliation.module';
+import { InNetworkInsuranceModule } from './in-network-insurance/in-network-insurance.module';
+import { NotificationModule } from './notification/notification.module';
+import { OfficeModule } from './office/office.module';
 
 @Module({
-  imports: [AppointmentModule, AppointmentHistoryModule, ClientAccountModule, DoctorModule, DoctorDocumentModule, AppointmentStatusModule],
+  imports: [AppointmentModule, AppointmentHistoryModule, ClientAccountModule, DoctorModule, DoctorDocumentModule, AppointmentStatusModule, DoctorSpecializationModule, DoctorUnavailabilityModule, HospitalAffiliationModule, InNetworkInsuranceModule, NotificationModule, OfficeModule],
   controllers: [AppController],
   providers: [AppService],
 })
