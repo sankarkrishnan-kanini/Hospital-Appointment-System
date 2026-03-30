@@ -6,8 +6,8 @@ export declare class OfficedoctoravailabilityService {
     private readonly prisma;
     constructor(prisma: PrismaService);
     create(dto: createofficedoctoravailabilityDTO): Promise<BadRequestException | {
-        officeId: number;
         id: number;
+        officeId: number;
         reason: string | null;
         dayOfWeek: string;
         startTime: Date;
@@ -15,8 +15,8 @@ export declare class OfficedoctoravailabilityService {
         isAvailable: boolean;
     }>;
     findAll(officeId: number): Promise<{
-        officeId: number;
         id: number;
+        officeId: number;
         reason: string | null;
         dayOfWeek: string;
         startTime: Date;
@@ -24,8 +24,8 @@ export declare class OfficedoctoravailabilityService {
         isAvailable: boolean;
     }[]>;
     findOne(id: number): Promise<{
-        officeId: number;
         id: number;
+        officeId: number;
         reason: string | null;
         dayOfWeek: string;
         startTime: Date;
@@ -33,8 +33,8 @@ export declare class OfficedoctoravailabilityService {
         isAvailable: boolean;
     }>;
     update(id: number, dto: UpdateOfficeDoctorAvailabilityDTO): Promise<{
-        officeId: number;
         id: number;
+        officeId: number;
         reason: string | null;
         dayOfWeek: string;
         startTime: Date;
@@ -42,8 +42,8 @@ export declare class OfficedoctoravailabilityService {
         isAvailable: boolean;
     }>;
     remove(id: number): Promise<{
-        officeId: number;
         id: number;
+        officeId: number;
         reason: string | null;
         dayOfWeek: string;
         startTime: Date;

@@ -4,29 +4,29 @@ import { UpdateInNetworkInsuranceDto } from './DTOS/updateInNetworkInsuranceDTO'
 export declare class InNetworkInsuranceService {
     private readonly prisma;
     constructor(prisma: PrismaService);
-    findAll(): import(".prisma/client").Prisma.PrismaPromise<{
-        officeId: number;
+    findAll(): Promise<{
         id: number;
+        officeId: number;
         insuranceName: string;
     }[]>;
-    findOne(id: number): import(".prisma/client").Prisma.Prisma__InNetworkInsuranceClient<{
-        officeId: number;
+    findOne(id: number): Promise<{
         id: number;
-        insuranceName: string;
-    } | null, null, import("@prisma/client/runtime/client").DefaultArgs, import(".prisma/client").Prisma.PrismaClientOptions>;
-    create(data: CreateInNetworkInsuranceDto): import(".prisma/client").Prisma.Prisma__InNetworkInsuranceClient<{
         officeId: number;
-        id: number;
         insuranceName: string;
-    }, never, import("@prisma/client/runtime/client").DefaultArgs, import(".prisma/client").Prisma.PrismaClientOptions>;
-    update(id: number, data: UpdateInNetworkInsuranceDto): import(".prisma/client").Prisma.Prisma__InNetworkInsuranceClient<{
+    } | null>;
+    create(data: CreateInNetworkInsuranceDto): Promise<{
+        id: number;
         officeId: number;
-        id: number;
         insuranceName: string;
-    }, never, import("@prisma/client/runtime/client").DefaultArgs, import(".prisma/client").Prisma.PrismaClientOptions>;
-    remove(id: number): import(".prisma/client").Prisma.Prisma__InNetworkInsuranceClient<{
+    }>;
+    update(id: number, data: UpdateInNetworkInsuranceDto): Promise<{
+        id: number;
         officeId: number;
-        id: number;
         insuranceName: string;
-    }, never, import("@prisma/client/runtime/client").DefaultArgs, import(".prisma/client").Prisma.PrismaClientOptions>;
+    }>;
+    remove(id: number): Promise<{
+        id: number;
+        officeId: number;
+        insuranceName: string;
+    }>;
 }

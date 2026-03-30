@@ -4,74 +4,74 @@ import { UpdateAppointmentDto } from './DTOS/updateAppointmentDTO';
 export declare class AppointmentService {
     private readonly prisma;
     constructor(prisma: PrismaService);
-    findAll(): import(".prisma/client").Prisma.PrismaPromise<{
+    findAll(): Promise<{
+        id: number;
         userAccountId: number;
         officeId: number;
         timeSlotId: number;
         probableStartTime: Date;
+        actualEndTime: Date | null;
         durationInMinutes: number;
         appointmentStatusId: number;
         appointmentTakenDate: Date;
-        id: number;
-        actualEndTime: Date | null;
         cancellationReason: string | null;
         createdAt: Date;
         updatedAt: Date;
     }[]>;
-    findOne(id: number): import(".prisma/client").Prisma.Prisma__AppointmentClient<{
+    findOne(id: number): Promise<{
+        id: number;
         userAccountId: number;
         officeId: number;
         timeSlotId: number;
         probableStartTime: Date;
+        actualEndTime: Date | null;
         durationInMinutes: number;
         appointmentStatusId: number;
         appointmentTakenDate: Date;
-        id: number;
-        actualEndTime: Date | null;
         cancellationReason: string | null;
         createdAt: Date;
         updatedAt: Date;
-    } | null, null, import("@prisma/client/runtime/client").DefaultArgs, import(".prisma/client").Prisma.PrismaClientOptions>;
-    create(data: CreateAppointmentDto): import(".prisma/client").Prisma.Prisma__AppointmentClient<{
+    } | null>;
+    create(data: CreateAppointmentDto): Promise<{
+        id: number;
         userAccountId: number;
         officeId: number;
         timeSlotId: number;
         probableStartTime: Date;
+        actualEndTime: Date | null;
         durationInMinutes: number;
         appointmentStatusId: number;
         appointmentTakenDate: Date;
-        id: number;
-        actualEndTime: Date | null;
         cancellationReason: string | null;
         createdAt: Date;
         updatedAt: Date;
-    }, never, import("@prisma/client/runtime/client").DefaultArgs, import(".prisma/client").Prisma.PrismaClientOptions>;
-    update(id: number, data: UpdateAppointmentDto): import(".prisma/client").Prisma.Prisma__AppointmentClient<{
+    }>;
+    update(id: number, data: UpdateAppointmentDto): Promise<{
+        id: number;
         userAccountId: number;
         officeId: number;
         timeSlotId: number;
         probableStartTime: Date;
+        actualEndTime: Date | null;
         durationInMinutes: number;
         appointmentStatusId: number;
         appointmentTakenDate: Date;
-        id: number;
-        actualEndTime: Date | null;
         cancellationReason: string | null;
         createdAt: Date;
         updatedAt: Date;
-    }, never, import("@prisma/client/runtime/client").DefaultArgs, import(".prisma/client").Prisma.PrismaClientOptions>;
-    remove(id: number): import(".prisma/client").Prisma.Prisma__AppointmentClient<{
+    }>;
+    remove(id: number): Promise<{
+        id: number;
         userAccountId: number;
         officeId: number;
         timeSlotId: number;
         probableStartTime: Date;
+        actualEndTime: Date | null;
         durationInMinutes: number;
         appointmentStatusId: number;
         appointmentTakenDate: Date;
-        id: number;
-        actualEndTime: Date | null;
         cancellationReason: string | null;
         createdAt: Date;
         updatedAt: Date;
-    }, never, import("@prisma/client/runtime/client").DefaultArgs, import(".prisma/client").Prisma.PrismaClientOptions>;
+    }>;
 }

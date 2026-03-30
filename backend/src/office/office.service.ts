@@ -8,23 +8,23 @@ export class OfficeService {
 
   constructor(private readonly prisma: PrismaService) {}
 
-  findAll() {
-    return this.prisma.office.findMany();
+  async findAll() {
+    return await this.prisma.office.findMany();
   }
 
-  findOne(id: number) {
-    return this.prisma.office.findUnique({ where: { id } });
+  async findOne(id: number) {
+    return await this.prisma.office.findUnique({ where: { id } });
   }
 
-  create(data: CreateOfficeDto) {
-    return this.prisma.office.create({ data });
+  async create(data: CreateOfficeDto) {
+    return await this.prisma.office.create({ data });
   }
 
-  update(id: number, data: UpdateOfficeDto) {
-    return this.prisma.office.update({ where: { id }, data });
+  async update(id: number, data: UpdateOfficeDto) {
+    return await this.prisma.office.update({ where: { id }, data });
   }
 
-  remove(id: number) {
-    return this.prisma.office.delete({ where: { id } });
+  async remove(id: number) {
+    return await this.prisma.office.delete({ where: { id } });
   }
 }

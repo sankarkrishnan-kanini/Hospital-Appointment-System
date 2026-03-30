@@ -8,23 +8,23 @@ export class DoctorUnavailabilityService {
 
   constructor(private readonly prisma: PrismaService) {}
 
-  findAll() {
-    return this.prisma.doctorUnavailability.findMany();
+  async findAll() {
+    return await this.prisma.doctorUnavailability.findMany();
   }
 
-  findOne(id: number) {
-    return this.prisma.doctorUnavailability.findUnique({ where: { id } });
+  async findOne(id: number) {
+    return await this.prisma.doctorUnavailability.findUnique({ where: { id } });
   }
 
-  create(data: CreateDoctorUnavailabilityDto) {
-    return this.prisma.doctorUnavailability.create({ data });
+  async create(data: CreateDoctorUnavailabilityDto) {
+    return await this.prisma.doctorUnavailability.create({ data });
   }
 
-  update(id: number, data: UpdateDoctorUnavailabilityDto) {
-    return this.prisma.doctorUnavailability.update({ where: { id }, data });
+  async update(id: number, data: UpdateDoctorUnavailabilityDto) {
+    return await this.prisma.doctorUnavailability.update({ where: { id }, data });
   }
 
-  remove(id: number) {
-    return this.prisma.doctorUnavailability.delete({ where: { id } });
+  async remove(id: number) {
+    return await this.prisma.doctorUnavailability.delete({ where: { id } });
   }
 }

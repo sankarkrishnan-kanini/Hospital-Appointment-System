@@ -8,33 +8,28 @@ export class AppointmentController {
 
   constructor(private readonly appointmentService: AppointmentService) {}
 
-  // GET /appointment
   @Get()
-  findAll() {
-    return this.appointmentService.findAll();
+  async findAll() {
+    return await this.appointmentService.findAll();
   }
 
-  // GET /appointment/1
   @Get(':id')
-  findOne(@Param('id', new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE })) id: number) {
-    return this.appointmentService.findOne(id);
+  async findOne(@Param('id', new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE })) id: number) {
+    return await this.appointmentService.findOne(id);
   }
 
-  // POST /appointment
   @Post()
-  create(@Body() createAppointmentDto: CreateAppointmentDto) {
-    return this.appointmentService.create(createAppointmentDto);
+  async create(@Body() createAppointmentDto: CreateAppointmentDto) {
+    return await this.appointmentService.create(createAppointmentDto);
   }
 
-  // PATCH /appointment/1
   @Patch(':id')
-  update(@Param('id', new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE })) id: number, @Body() data: UpdateAppointmentDto) {
-    return this.appointmentService.update(id, data);
+  async update(@Param('id', new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE })) id: number, @Body() data: UpdateAppointmentDto) {
+    return await this.appointmentService.update(id, data);
   }
 
-  // DELETE /appointment/1
   @Delete(':id')
-  remove(@Param('id', new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE })) id: number) {
-    return this.appointmentService.remove(id);
+  async remove(@Param('id', new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE })) id: number) {
+    return await this.appointmentService.remove(id);
   }
 }

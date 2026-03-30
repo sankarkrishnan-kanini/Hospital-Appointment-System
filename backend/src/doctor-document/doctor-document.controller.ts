@@ -9,27 +9,27 @@ export class DoctorDocumentController {
   constructor(private readonly doctorDocumentService: DoctorDocumentService) {}
 
   @Get()
-  findAll() {
-    return this.doctorDocumentService.findAll();
+  async findAll() {
+    return await this.doctorDocumentService.findAll();
   }
 
   @Get(':id')
-  findOne(@Param('id', new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE })) id: number) {
-    return this.doctorDocumentService.findOne(id);
+  async findOne(@Param('id', new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE })) id: number) {
+    return await this.doctorDocumentService.findOne(id);
   }
 
   @Post()
-  create(@Body() dto: CreateDoctorDocumentDto) {
-    return this.doctorDocumentService.create(dto);
+  async create(@Body() dto: CreateDoctorDocumentDto) {
+    return await this.doctorDocumentService.create(dto);
   }
 
   @Patch(':id')
-  update(@Param('id', new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE })) id: number, @Body() dto: UpdateDoctorDocumentDto) {
-    return this.doctorDocumentService.update(id, dto);
+  async update(@Param('id', new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE })) id: number, @Body() dto: UpdateDoctorDocumentDto) {
+    return await this.doctorDocumentService.update(id, dto);
   }
 
   @Delete(':id')
-  remove(@Param('id', new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE })) id: number) {
-    return this.doctorDocumentService.remove(id);
+  async remove(@Param('id', new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE })) id: number) {
+    return await this.doctorDocumentService.remove(id);
   }
 }

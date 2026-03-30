@@ -4,29 +4,29 @@ import { UpdateInNetworkInsuranceDto } from './DTOS/updateInNetworkInsuranceDTO'
 export declare class InNetworkInsuranceController {
     private readonly inNetworkInsuranceService;
     constructor(inNetworkInsuranceService: InNetworkInsuranceService);
-    findAll(): import(".prisma/client").Prisma.PrismaPromise<{
-        officeId: number;
+    findAll(): Promise<{
         id: number;
+        officeId: number;
         insuranceName: string;
     }[]>;
-    findOne(id: number): import(".prisma/client").Prisma.Prisma__InNetworkInsuranceClient<{
-        officeId: number;
+    findOne(id: number): Promise<{
         id: number;
-        insuranceName: string;
-    } | null, null, import("@prisma/client/runtime/client").DefaultArgs, import(".prisma/client").Prisma.PrismaClientOptions>;
-    create(dto: CreateInNetworkInsuranceDto): import(".prisma/client").Prisma.Prisma__InNetworkInsuranceClient<{
         officeId: number;
-        id: number;
         insuranceName: string;
-    }, never, import("@prisma/client/runtime/client").DefaultArgs, import(".prisma/client").Prisma.PrismaClientOptions>;
-    update(id: number, dto: UpdateInNetworkInsuranceDto): import(".prisma/client").Prisma.Prisma__InNetworkInsuranceClient<{
+    } | null>;
+    create(dto: CreateInNetworkInsuranceDto): Promise<{
+        id: number;
         officeId: number;
-        id: number;
         insuranceName: string;
-    }, never, import("@prisma/client/runtime/client").DefaultArgs, import(".prisma/client").Prisma.PrismaClientOptions>;
-    remove(id: number): import(".prisma/client").Prisma.Prisma__InNetworkInsuranceClient<{
+    }>;
+    update(id: number, dto: UpdateInNetworkInsuranceDto): Promise<{
+        id: number;
         officeId: number;
-        id: number;
         insuranceName: string;
-    }, never, import("@prisma/client/runtime/client").DefaultArgs, import(".prisma/client").Prisma.PrismaClientOptions>;
+    }>;
+    remove(id: number): Promise<{
+        id: number;
+        officeId: number;
+        insuranceName: string;
+    }>;
 }
