@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { prisma } from '../adaptor';
 import { CreateInNetworkInsuranceDto } from './DTOS/createInNetworkInsuranceDTO';
+import { UpdateInNetworkInsuranceDto } from './DTOS/updateInNetworkInsuranceDTO';
 
 @Injectable()
 export class InNetworkInsuranceService {
@@ -17,7 +18,7 @@ export class InNetworkInsuranceService {
     return prisma.inNetworkInsurance.create({ data });
   }
 
-  update(id: number, data: Partial<CreateInNetworkInsuranceDto>) {
+  update(id: number, data: UpdateInNetworkInsuranceDto) {
     return prisma.inNetworkInsurance.update({ where: { id }, data });
   }
 

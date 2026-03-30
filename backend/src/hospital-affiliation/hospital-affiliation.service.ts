@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { prisma } from '../adaptor';
 import { CreateHospitalAffiliationDto } from './DTOS/createHospitalAffiliationDTO';
+import { UpdateHospitalAffiliationDto } from './DTOS/updateHospitalAffiliationDTO';
 
 @Injectable()
 export class HospitalAffiliationService {
@@ -17,7 +18,7 @@ export class HospitalAffiliationService {
     return prisma.hospitalAffiliation.create({ data });
   }
 
-  update(id: number, data: Partial<CreateHospitalAffiliationDto>) {
+  update(id: number, data: UpdateHospitalAffiliationDto) {
     return prisma.hospitalAffiliation.update({ where: { id }, data });
   }
 

@@ -1,6 +1,7 @@
-import { Controller, Get, Post, Patch, Delete, Body, Param, ParseIntPipe } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Body, Param, ParseIntPipe, HttpStatus } from '@nestjs/common';
 import { DoctorDocumentService } from './doctor-document.service';
 import { CreateDoctorDocumentDto } from './DTOS/createDoctorDocumentDTO';
+import { UpdateDoctorDocumentDto } from './DTOS/updateDoctorDocumentDTO';
 
 @Controller('doctor-document')
 export class DoctorDocumentController {
@@ -13,7 +14,7 @@ export class DoctorDocumentController {
   }
 
   @Get(':id')
-  findOne(@Param('id', ParseIntPipe) id: number) {
+  findOne(@Param('id', new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE })) id: number) {
     return this.doctorDocumentService.findOne(id);
   }
 
@@ -23,12 +24,12 @@ export class DoctorDocumentController {
   }
 
   @Patch(':id')
-  update(@Param('id', ParseIntPipe) id: number, @Body() dto: Partial<CreateDoctorDocumentDto>) {
+  update(@Param('id', new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE })) id: number, @Body() dto: UpdateDoctorDocumentDto) {
     return this.doctorDocumentService.update(id, dto);
   }
 
   @Delete(':id')
-  remove(@Param('id', ParseIntPipe) id: number) {
+  remove(@Param('id', new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE })) id: number) {
     return this.doctorDocumentService.remove(id);
   }
 }

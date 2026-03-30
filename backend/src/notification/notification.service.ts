@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { prisma } from '../adaptor';
 import { CreateNotificationDto } from './DTOS/createNotificationDTO';
+import { UpdateNotificationDto } from './DTOS/updateNotificationDTO';
 
 @Injectable()
 export class NotificationService {
@@ -17,7 +18,7 @@ export class NotificationService {
     return prisma.notification.create({ data });
   }
 
-  update(id: number, data: Partial<CreateNotificationDto>) {
+  update(id: number, data: UpdateNotificationDto) {
     return prisma.notification.update({ where: { id }, data });
   }
 

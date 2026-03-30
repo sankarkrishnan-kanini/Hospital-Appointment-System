@@ -1,6 +1,7 @@
-import { Controller, Get, Post, Patch, Delete, Body, Param, ParseIntPipe } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Body, Param, ParseIntPipe, HttpStatus } from '@nestjs/common';
 import { AppointmentStatusService } from './appointment-status.service';
 import { CreateAppointmentStatusDto } from './DTOS/createAppointmentStatusDTO';
+import { UpdateAppointmentStatusDto } from './DTOS/updateAppointmentStatusDTO';
 
 @Controller('appointment-status')
 export class AppointmentStatusController {
@@ -13,7 +14,7 @@ export class AppointmentStatusController {
   }
 
   @Get(':id')
-  findOne(@Param('id', ParseIntPipe) id: number) {
+  findOne(@Param('id', new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE })) id: number) {
     return this.appointmentStatusService.findOne(id);
   }
 
@@ -23,12 +24,12 @@ export class AppointmentStatusController {
   }
 
   @Patch(':id')
-  update(@Param('id', ParseIntPipe) id: number, @Body() dto: Partial<CreateAppointmentStatusDto>) {
+  update(@Param('id', new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE })) id: number, @Body() dto: UpdateAppointmentStatusDto) {
     return this.appointmentStatusService.update(id, dto);
   }
 
   @Delete(':id')
-  remove(@Param('id', ParseIntPipe) id: number) {
+  remove(@Param('id', new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE })) id: number) {
     return this.appointmentStatusService.remove(id);
   }
 }

@@ -1,6 +1,7 @@
-import { Controller, Get, Post, Patch, Delete, Body, Param, ParseIntPipe } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Body, Param, ParseIntPipe, HttpStatus } from '@nestjs/common';
 import { ClientAccountService } from './client-account.service';
 import { CreateClientAccountDto } from './DTOS/createClientAccountDTO';
+import { UpdateClientAccountDto } from './DTOS/updateClientAccountDTO';
 
 @Controller('client-account')
 export class ClientAccountController {
@@ -13,7 +14,7 @@ export class ClientAccountController {
   }
 
   @Get(':id')
-  findOne(@Param('id', ParseIntPipe) id: number) {
+  findOne(@Param('id', new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE })) id: number) {
     return this.clientAccountService.findOne(id);
   }
 
@@ -23,12 +24,12 @@ export class ClientAccountController {
   }
 
   @Patch(':id')
-  update(@Param('id', ParseIntPipe) id: number, @Body() dto: Partial<CreateClientAccountDto>) {
+  update(@Param('id', new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE })) id: number, @Body() dto: UpdateClientAccountDto) {
     return this.clientAccountService.update(id, dto);
   }
 
   @Delete(':id')
-  remove(@Param('id', ParseIntPipe) id: number) {
+  remove(@Param('id', new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE })) id: number) {
     return this.clientAccountService.remove(id);
   }
 }
