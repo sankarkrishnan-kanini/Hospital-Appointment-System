@@ -1,6 +1,7 @@
-import { Controller, Get, Post, Patch, Delete, Body, Param, ParseIntPipe } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Body, Param, ParseIntPipe, HttpStatus } from '@nestjs/common';
 import { DoctorUnavailabilityService } from './doctor-unavailability.service';
 import { CreateDoctorUnavailabilityDto } from './DTOS/createDoctorUnavailabilityDTO';
+import { UpdateDoctorUnavailabilityDto } from './DTOS/updateDoctorUnavailabilityDTO';
 
 @Controller('doctor-unavailability')
 export class DoctorUnavailabilityController {
@@ -13,7 +14,7 @@ export class DoctorUnavailabilityController {
   }
 
   @Get(':id')
-  findOne(@Param('id', ParseIntPipe) id: number) {
+  findOne(@Param('id', new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE })) id: number) {
     return this.doctorUnavailabilityService.findOne(id);
   }
 
@@ -23,12 +24,12 @@ export class DoctorUnavailabilityController {
   }
 
   @Patch(':id')
-  update(@Param('id', ParseIntPipe) id: number, @Body() dto: Partial<CreateDoctorUnavailabilityDto>) {
+  update(@Param('id', new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE })) id: number, @Body() dto: UpdateDoctorUnavailabilityDto) {
     return this.doctorUnavailabilityService.update(id, dto);
   }
 
   @Delete(':id')
-  remove(@Param('id', ParseIntPipe) id: number) {
+  remove(@Param('id', new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE })) id: number) {
     return this.doctorUnavailabilityService.remove(id);
   }
 }

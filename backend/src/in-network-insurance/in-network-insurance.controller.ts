@@ -1,6 +1,7 @@
-import { Controller, Get, Post, Patch, Delete, Body, Param, ParseIntPipe } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Body, Param, ParseIntPipe, HttpStatus } from '@nestjs/common';
 import { InNetworkInsuranceService } from './in-network-insurance.service';
 import { CreateInNetworkInsuranceDto } from './DTOS/createInNetworkInsuranceDTO';
+import { UpdateInNetworkInsuranceDto } from './DTOS/updateInNetworkInsuranceDTO';
 
 @Controller('in-network-insurance')
 export class InNetworkInsuranceController {
@@ -13,7 +14,7 @@ export class InNetworkInsuranceController {
   }
 
   @Get(':id')
-  findOne(@Param('id', ParseIntPipe) id: number) {
+  findOne(@Param('id', new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE })) id: number) {
     return this.inNetworkInsuranceService.findOne(id);
   }
 
@@ -23,12 +24,12 @@ export class InNetworkInsuranceController {
   }
 
   @Patch(':id')
-  update(@Param('id', ParseIntPipe) id: number, @Body() dto: Partial<CreateInNetworkInsuranceDto>) {
+  update(@Param('id', new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE })) id: number, @Body() dto: UpdateInNetworkInsuranceDto) {
     return this.inNetworkInsuranceService.update(id, dto);
   }
 
   @Delete(':id')
-  remove(@Param('id', ParseIntPipe) id: number) {
+  remove(@Param('id', new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE })) id: number) {
     return this.inNetworkInsuranceService.remove(id);
   }
 }

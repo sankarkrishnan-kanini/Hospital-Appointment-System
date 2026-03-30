@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateOfficeDto } from './DTOS/createOfficeDTO';
+import { UpdateOfficeDto } from './DTOS/updateOfficeDTO';
 
 @Injectable()
 export class OfficeService {
@@ -18,7 +19,8 @@ export class OfficeService {
     return this.prisma.office.create({ data });
   }
 
-  update(id: number, data: Partial<CreateOfficeDto>) {
+
+  update(id: number, data: UpdateOfficeDto) {
     return this.prisma.office.update({ where: { id }, data });
   }
 

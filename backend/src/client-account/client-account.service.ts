@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { prisma } from '../adaptor';
 import { CreateClientAccountDto } from './DTOS/createClientAccountDTO';
+import { UpdateClientAccountDto } from './DTOS/updateClientAccountDTO';
 
 @Injectable()
 export class ClientAccountService {
@@ -19,7 +20,7 @@ export class ClientAccountService {
     return prisma.clientAccount.create({ data });
   }
 
-  update(id: number, data: Partial<CreateClientAccountDto>) {
+  update(id: number, data: UpdateClientAccountDto) {
     return prisma.clientAccount.update({
       where: { id },
       data

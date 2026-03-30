@@ -1,7 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateDoctorDto } from './DTOS/createDoctorDTO';
-import { Prisma } from 'generated/prisma/browser';
+
+import { UpdateDoctorDto } from './DTOS/updateDoctorDTO';
 
 @Injectable()
 export class DoctorService {
@@ -20,7 +21,8 @@ export class DoctorService {
     return this.prisma.doctor.create({ data });
   }
 
-  update(id: number, data: Partial<CreateDoctorDto>) {
+
+  update(id: number, data: UpdateDoctorDto) {
     return this.prisma.doctor.update({
       where: { id },
       data

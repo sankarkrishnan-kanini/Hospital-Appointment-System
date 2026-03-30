@@ -1,6 +1,7 @@
-import { Controller, Get, Post, Patch, Delete, Body, Param, ParseIntPipe } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Body, Param, ParseIntPipe, HttpStatus } from '@nestjs/common';
 import { OfficeService } from './office.service';
 import { CreateOfficeDto } from './DTOS/createOfficeDTO';
+import { UpdateOfficeDto } from './DTOS/updateOfficeDTO';
 
 @Controller('office')
 export class OfficeController {
@@ -13,7 +14,7 @@ export class OfficeController {
   }
 
   @Get(':id')
-  findOne(@Param('id', ParseIntPipe) id: number) {
+  findOne(@Param('id', new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE })) id: number) {
     return this.officeService.findOne(id);
   }
 
@@ -23,12 +24,12 @@ export class OfficeController {
   }
 
   @Patch(':id')
-  update(@Param('id', ParseIntPipe) id: number, @Body() dto: Partial<CreateOfficeDto>) {
+  update(@Param('id', new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE })) id: number, @Body() dto: UpdateOfficeDto) {
     return this.officeService.update(id, dto);
   }
 
   @Delete(':id')
-  remove(@Param('id', ParseIntPipe) id: number) {
+  remove(@Param('id', new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE })) id: number) {
     return this.officeService.remove(id);
   }
 }

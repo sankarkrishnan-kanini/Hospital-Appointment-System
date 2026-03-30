@@ -1,6 +1,7 @@
-import { Controller, Get, Post, Patch, Delete, Body, Param, ParseIntPipe } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Body, Param, ParseIntPipe, HttpStatus } from '@nestjs/common';
 import { NotificationService } from './notification.service';
 import { CreateNotificationDto } from './DTOS/createNotificationDTO';
+import { UpdateNotificationDto } from './DTOS/updateNotificationDTO';
 
 @Controller('notification')
 export class NotificationController {
@@ -13,7 +14,7 @@ export class NotificationController {
   }
 
   @Get(':id')
-  findOne(@Param('id', ParseIntPipe) id: number) {
+  findOne(@Param('id', new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE })) id: number) {
     return this.notificationService.findOne(id);
   }
 
@@ -23,12 +24,12 @@ export class NotificationController {
   }
 
   @Patch(':id')
-  update(@Param('id', ParseIntPipe) id: number, @Body() dto: Partial<CreateNotificationDto>) {
+  update(@Param('id', new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE })) id: number, @Body() dto: UpdateNotificationDto) {
     return this.notificationService.update(id, dto);
   }
 
   @Delete(':id')
-  remove(@Param('id', ParseIntPipe) id: number) {
+  remove(@Param('id', new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE })) id: number) {
     return this.notificationService.remove(id);
   }
 }
