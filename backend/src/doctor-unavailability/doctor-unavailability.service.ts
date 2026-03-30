@@ -1,27 +1,28 @@
 import { Injectable } from '@nestjs/common';
-import { prisma } from '../adaptor';
+import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateDoctorUnavailabilityDto } from './DTOS/createDoctorUnavailabilityDTO';
 
 @Injectable()
 export class DoctorUnavailabilityService {
+  constructor(private readonly prisma: PrismaService) {}
 
   findAll() {
-    return prisma.doctorUnavailability.findMany();
+    return this.prisma.doctorUnavailability.findMany();
   }
 
   findOne(id: number) {
-    return prisma.doctorUnavailability.findUnique({ where: { id } });
+    return this.prisma.doctorUnavailability.findUnique({ where: { id } });
   }
 
   create(data: CreateDoctorUnavailabilityDto) {
-    return prisma.doctorUnavailability.create({ data });
+    return this.prisma.doctorUnavailability.create({ data });
   }
 
   update(id: number, data: Partial<CreateDoctorUnavailabilityDto>) {
-    return prisma.doctorUnavailability.update({ where: { id }, data });
+    return this.prisma.doctorUnavailability.update({ where: { id }, data });
   }
 
   remove(id: number) {
-    return prisma.doctorUnavailability.delete({ where: { id } });
+    return this.prisma.doctorUnavailability.delete({ where: { id } });
   }
 }

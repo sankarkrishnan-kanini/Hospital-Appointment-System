@@ -1,27 +1,27 @@
 import { Injectable } from '@nestjs/common';
-import { prisma } from '../adaptor';
+import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateDoctorSpecializationDto } from './DTOS/createDoctorSpecializationDTO';
 
 @Injectable()
 export class DoctorSpecializationService {
-
+   constructor(private readonly prisma:PrismaService){}
   findAll() {
-    return prisma.doctorSpecialization.findMany();
+    return this.prisma.doctorSpecialization.findMany();
   }
 
   findOne(id: number) {
-    return prisma.doctorSpecialization.findUnique({ where: { id } });
+    return this.prisma.doctorSpecialization.findUnique({ where: { id } });
   }
 
   create(data: CreateDoctorSpecializationDto) {
-    return prisma.doctorSpecialization.create({ data });
+    return this.prisma.doctorSpecialization.create({ data });
   }
 
   update(id: number, data: Partial<CreateDoctorSpecializationDto>) {
-    return prisma.doctorSpecialization.update({ where: { id }, data });
+    return this.prisma.doctorSpecialization.update({ where: { id }, data });
   }
 
   remove(id: number) {
-    return prisma.doctorSpecialization.delete({ where: { id } });
+    return this.prisma.doctorSpecialization.delete({ where: { id } });
   }
 }

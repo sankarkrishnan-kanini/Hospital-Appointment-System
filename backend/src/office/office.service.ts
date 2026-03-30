@@ -1,27 +1,28 @@
 import { Injectable } from '@nestjs/common';
-import { prisma } from '../adaptor';
+import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateOfficeDto } from './DTOS/createOfficeDTO';
 
 @Injectable()
 export class OfficeService {
+  constructor(private readonly prisma: PrismaService) {}
 
   findAll() {
-    return prisma.office.findMany();
+    return this.prisma.office.findMany();
   }
 
   findOne(id: number) {
-    return prisma.office.findUnique({ where: { id } });
+    return this.prisma.office.findUnique({ where: { id } });
   }
 
   create(data: CreateOfficeDto) {
-    return prisma.office.create({ data });
+    return this.prisma.office.create({ data });
   }
 
   update(id: number, data: Partial<CreateOfficeDto>) {
-    return prisma.office.update({ where: { id }, data });
+    return this.prisma.office.update({ where: { id }, data });
   }
 
   remove(id: number) {
-    return prisma.office.delete({ where: { id } });
+    return this.prisma.office.delete({ where: { id } });
   }
 }

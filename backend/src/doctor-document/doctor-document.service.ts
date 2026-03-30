@@ -1,22 +1,23 @@
 import { Injectable } from '@nestjs/common';
-import { prisma } from '../adaptor';
+import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateDoctorDocumentDto } from './DTOS/createDoctorDocumentDTO';
 
 @Injectable()
 export class DoctorDocumentService {
 
+  constructor(private readonly prisma:PrismaService){}
   findAll() {
-    return prisma.doctorDocument.findMany();
+    return this.prisma.doctorDocument.findMany();
   }
 
   findOne(id: number) {
-    return prisma.doctorDocument.findUnique({
+    return this.prisma.doctorDocument.findUnique({
       where: { id }
     });
   }
 
   create(data: CreateDoctorDocumentDto) {
-    return prisma.doctorDocument.create({
+    return this.prisma.doctorDocument.create({
       data: {
         doctorId: data.doctorId,
         documentType: data.documentType,
@@ -26,7 +27,7 @@ export class DoctorDocumentService {
   }
 
   update(id: number, data: Partial<CreateDoctorDocumentDto>) {
-    return prisma.doctorDocument.update({
+    return this.prisma.doctorDocument.update({
       where: { id },
       data: {
         ...(data.doctorId && { doctorId: data.doctorId }),
@@ -37,7 +38,7 @@ export class DoctorDocumentService {
   }
 
   remove(id: number) {
-    return prisma.doctorDocument.delete({
+    return this.prisma.doctorDocument.delete({
       where: { id }
     });
   }

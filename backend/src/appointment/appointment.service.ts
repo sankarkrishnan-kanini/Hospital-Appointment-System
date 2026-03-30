@@ -1,32 +1,33 @@
 import { Injectable } from '@nestjs/common';
-import {prisma} from '../adaptor'
+import { PrismaService  } from 'src/prisma/prisma.service';
 import { CreateAppointmentDto } from './DTOS/createAppointmentDTO';
 @Injectable()
 export class AppointmentService {
 
+  constructor(private readonly prisma:PrismaService){}
 
     // GET all appointments
   findAll() {
-    return prisma.appointment.findMany();
+    return this.prisma.appointment.findMany();
   }
 
   // GET one appointment by id
   findOne(id: number) {
-    return prisma.appointment.findUnique({
+    return this.prisma.appointment.findUnique({
       where: { id }
     });
   }
 
   // POST create appointment
   create(data: CreateAppointmentDto) {
-    return prisma.appointment.create({
+    return this.prisma.appointment.create({
       data
     });
   }
 
   // PATCH update appointment
   update(id: number, data: Partial<CreateAppointmentDto>) {
-    return prisma.appointment.update({
+    return this.prisma.appointment.update({
       where: { id },
       data
     });
@@ -34,7 +35,7 @@ export class AppointmentService {
 
   // DELETE appointment
   remove(id: number) {
-    return prisma.appointment.delete({
+    return this.prisma.appointment.delete({
       where: { id }
     });
   }
