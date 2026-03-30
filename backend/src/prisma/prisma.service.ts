@@ -7,10 +7,10 @@ export class PrismaService extends PrismaClient {
 	
 	constructor(){
 	   const adapter = new PrismaMariaDb({
-			host: "localhost",
+			host: "127.0.0.1",
 			user: "root",
 			password: "Admin@123456789$1",
-			database: "hospitalmanagementdb"
+			database: "hospitalbookingdb"
 	   });
 	   
 	   super({ adapter });
