@@ -1,12 +1,13 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from 'src/prisma/prisma.service';
+import { PrismaService } from '../prisma/prisma.service';
 import { CreateNotificationDto } from './DTOS/createNotificationDTO';
 import { UpdateNotificationDto } from './DTOS/updateNotificationDTO';
 
 @Injectable()
 export class NotificationService {
 
-    constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) {}
+
   findAll() {
     return this.prisma.notification.findMany();
   }
@@ -19,10 +20,8 @@ export class NotificationService {
     return this.prisma.notification.create({ data });
   }
 
-
   update(id: number, data: UpdateNotificationDto) {
     return this.prisma.notification.update({ where: { id }, data });
-
   }
 
   remove(id: number) {

@@ -1,10 +1,11 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from 'src/prisma/prisma.service';
+import { PrismaService } from '../prisma/prisma.service';
 import { CreateOfficeDto } from './DTOS/createOfficeDTO';
 import { UpdateOfficeDto } from './DTOS/updateOfficeDTO';
 
 @Injectable()
 export class OfficeService {
+
   constructor(private readonly prisma: PrismaService) {}
 
   findAll() {
@@ -18,7 +19,6 @@ export class OfficeService {
   create(data: CreateOfficeDto) {
     return this.prisma.office.create({ data });
   }
-
 
   update(id: number, data: UpdateOfficeDto) {
     return this.prisma.office.update({ where: { id }, data });

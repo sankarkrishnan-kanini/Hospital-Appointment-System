@@ -1,10 +1,11 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from 'src/prisma/prisma.service';
+import { PrismaService } from '../prisma/prisma.service';
 import { CreateDoctorUnavailabilityDto } from './DTOS/createDoctorUnavailabilityDTO';
 import { UpdateDoctorUnavailabilityDto } from './DTOS/updateDoctorUnavailabilityDTO';
 
 @Injectable()
 export class DoctorUnavailabilityService {
+
   constructor(private readonly prisma: PrismaService) {}
 
   findAll() {
