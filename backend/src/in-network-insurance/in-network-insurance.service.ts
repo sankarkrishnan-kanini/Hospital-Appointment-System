@@ -1,28 +1,30 @@
 import { Injectable } from '@nestjs/common';
-import { prisma } from '../adaptor';
+import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateInNetworkInsuranceDto } from './DTOS/createInNetworkInsuranceDTO';
 import { UpdateInNetworkInsuranceDto } from './DTOS/updateInNetworkInsuranceDTO';
 
 @Injectable()
 export class InNetworkInsuranceService {
 
+    constructor(private readonly prisma: PrismaService) {}
   findAll() {
-    return prisma.inNetworkInsurance.findMany();
+    return this.prisma.inNetworkInsurance.findMany();
   }
 
   findOne(id: number) {
-    return prisma.inNetworkInsurance.findUnique({ where: { id } });
+    return this.prisma.inNetworkInsurance.findUnique({ where: { id } });
   }
 
   create(data: CreateInNetworkInsuranceDto) {
-    return prisma.inNetworkInsurance.create({ data });
+    return this.prisma.inNetworkInsurance.create({ data });
   }
 
+
   update(id: number, data: UpdateInNetworkInsuranceDto) {
-    return prisma.inNetworkInsurance.update({ where: { id }, data });
+    return this.prisma.inNetworkInsurance.update({ where: { id }, data });
   }
 
   remove(id: number) {
-    return prisma.inNetworkInsurance.delete({ where: { id } });
+    return this.prisma.inNetworkInsurance.delete({ where: { id } });
   }
 }

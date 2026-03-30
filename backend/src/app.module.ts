@@ -13,10 +13,12 @@ import { HospitalAffiliationModule } from './hospital-affiliation/hospital-affil
 import { InNetworkInsuranceModule } from './in-network-insurance/in-network-insurance.module';
 import { NotificationModule } from './notification/notification.module';
 import { OfficeModule } from './office/office.module';
+import { OfficedoctoravailabilityModule } from './officedoctoravailability/officedoctoravailability.module';
+import { PrismaService } from './prisma/prisma.service';
 
 @Module({
-  imports: [AppointmentModule, AppointmentHistoryModule, ClientAccountModule, DoctorModule, DoctorDocumentModule, AppointmentStatusModule, DoctorSpecializationModule, DoctorUnavailabilityModule, HospitalAffiliationModule, InNetworkInsuranceModule, NotificationModule, OfficeModule],
+  imports: [AppointmentModule, AppointmentHistoryModule, ClientAccountModule, DoctorModule, DoctorDocumentModule, AppointmentStatusModule, DoctorSpecializationModule, DoctorUnavailabilityModule, HospitalAffiliationModule, InNetworkInsuranceModule, NotificationModule, OfficeModule, OfficedoctoravailabilityModule],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, PrismaService],
 })
 export class AppModule {}
