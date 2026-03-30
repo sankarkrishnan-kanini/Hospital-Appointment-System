@@ -1,34 +1,35 @@
 import { Injectable } from '@nestjs/common';
-import { prisma } from '../adaptor';
+import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateAppointmentHistoryDto } from './DTOS/createAppointmentHistoryDTO';
 import { UpdateAppointmentHistoryDto } from './DTOS/updateAppointmentHistoryDTO';
 
 @Injectable()
 export class AppointmentHistoryService {
 
+  constructor(private readonly prisma: PrismaService) {}
   findAll() {
-    return prisma.appointmentHistory.findMany();
+    return this.prisma.appointmentHistory.findMany();
   }
 
   findOne(id: number) {
-    return prisma.appointmentHistory.findUnique({
+    return this.  prisma.appointmentHistory.findUnique({
       where: { id }
     });
   }
 
   create(data: CreateAppointmentHistoryDto) {
-    return prisma.appointmentHistory.create({ data });
+    return this.prisma.appointmentHistory.create({ data });
   }
 
   update(id: number, data: UpdateAppointmentHistoryDto) {
-    return prisma.appointmentHistory.update({
+    return this.prisma.appointmentHistory.update({
       where: { id },
       data
     });
   }
 
   remove(id: number) {
-    return prisma.appointmentHistory.delete({
+    return this.prisma.appointmentHistory.delete({
       where: { id }
     });
   }
