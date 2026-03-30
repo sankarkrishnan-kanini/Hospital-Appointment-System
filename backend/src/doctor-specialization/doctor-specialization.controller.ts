@@ -9,27 +9,27 @@ export class DoctorSpecializationController {
   constructor(private readonly doctorSpecializationService: DoctorSpecializationService) {}
 
   @Get()
-  findAll() {
-    return this.doctorSpecializationService.findAll();
+  async findAll() {
+    return await this.doctorSpecializationService.findAll();
   }
 
   @Get(':id')
-  findOne(@Param('id', new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE })) id: number) {
-    return this.doctorSpecializationService.findOne(id);
+  async findOne(@Param('id', new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE })) id: number) {
+    return await this.doctorSpecializationService.findOne(id);
   }
 
   @Post()
-  create(@Body() dto: CreateDoctorSpecializationDto) {
-    return this.doctorSpecializationService.create(dto);
+  async create(@Body() dto: CreateDoctorSpecializationDto) {
+    return await this.doctorSpecializationService.create(dto);
   }
 
   @Patch(':id')
-  update(@Param('id', new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE })) id: number, @Body() dto: UpdateDoctorSpecializationDto) {
-    return this.doctorSpecializationService.update(id, dto);
+  async update(@Param('id', new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE })) id: number, @Body() dto: UpdateDoctorSpecializationDto) {
+    return await this.doctorSpecializationService.update(id, dto);
   }
 
   @Delete(':id')
-  remove(@Param('id', new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE })) id: number) {
-    return this.doctorSpecializationService.remove(id);
+  async remove(@Param('id', new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE })) id: number) {
+    return await this.doctorSpecializationService.remove(id);
   }
 }

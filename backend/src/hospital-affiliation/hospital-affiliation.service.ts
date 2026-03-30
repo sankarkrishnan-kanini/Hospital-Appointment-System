@@ -8,23 +8,23 @@ export class HospitalAffiliationService {
 
   constructor(private readonly prisma: PrismaService) {}
 
-  findAll() {
-    return this.prisma.hospitalAffiliation.findMany();
+  async findAll() {
+    return await this.prisma.hospitalAffiliation.findMany();
   }
 
-  findOne(id: number) {
-    return this.prisma.hospitalAffiliation.findUnique({ where: { id } });
+  async findOne(id: number) {
+    return await this.prisma.hospitalAffiliation.findUnique({ where: { id } });
   }
 
-  create(data: CreateHospitalAffiliationDto) {
-    return this.prisma.hospitalAffiliation.create({ data });
+  async create(data: CreateHospitalAffiliationDto) {
+    return await this.prisma.hospitalAffiliation.create({ data });
   }
 
-  update(id: number, data: UpdateHospitalAffiliationDto) {
-    return this.prisma.hospitalAffiliation.update({ where: { id }, data });
+  async update(id: number, data: UpdateHospitalAffiliationDto) {
+    return await this.prisma.hospitalAffiliation.update({ where: { id }, data });
   }
 
-  remove(id: number) {
-    return this.prisma.hospitalAffiliation.delete({ where: { id } });
+  async remove(id: number) {
+    return await this.prisma.hospitalAffiliation.delete({ where: { id } });
   }
 }

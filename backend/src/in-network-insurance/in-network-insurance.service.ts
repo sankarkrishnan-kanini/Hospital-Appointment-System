@@ -8,23 +8,23 @@ export class InNetworkInsuranceService {
 
   constructor(private readonly prisma: PrismaService) {}
 
-  findAll() {
-    return this.prisma.inNetworkInsurance.findMany();
+  async findAll() {
+    return await this.prisma.inNetworkInsurance.findMany();
   }
 
-  findOne(id: number) {
-    return this.prisma.inNetworkInsurance.findUnique({ where: { id } });
+  async findOne(id: number) {
+    return await this.prisma.inNetworkInsurance.findUnique({ where: { id } });
   }
 
-  create(data: CreateInNetworkInsuranceDto) {
-    return this.prisma.inNetworkInsurance.create({ data });
+  async create(data: CreateInNetworkInsuranceDto) {
+    return await this.prisma.inNetworkInsurance.create({ data });
   }
 
-  update(id: number, data: UpdateInNetworkInsuranceDto) {
-    return this.prisma.inNetworkInsurance.update({ where: { id }, data });
+  async update(id: number, data: UpdateInNetworkInsuranceDto) {
+    return await this.prisma.inNetworkInsurance.update({ where: { id }, data });
   }
 
-  remove(id: number) {
-    return this.prisma.inNetworkInsurance.delete({ where: { id } });
+  async remove(id: number) {
+    return await this.prisma.inNetworkInsurance.delete({ where: { id } });
   }
 }

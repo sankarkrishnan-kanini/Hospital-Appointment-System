@@ -8,23 +8,23 @@ export class NotificationService {
 
   constructor(private readonly prisma: PrismaService) {}
 
-  findAll() {
-    return this.prisma.notification.findMany();
+  async findAll() {
+    return await this.prisma.notification.findMany();
   }
 
-  findOne(id: number) {
-    return this.prisma.notification.findUnique({ where: { id } });
+  async findOne(id: number) {
+    return await this.prisma.notification.findUnique({ where: { id } });
   }
 
-  create(data: CreateNotificationDto) {
-    return this.prisma.notification.create({ data });
+  async create(data: CreateNotificationDto) {
+    return await this.prisma.notification.create({ data });
   }
 
-  update(id: number, data: UpdateNotificationDto) {
-    return this.prisma.notification.update({ where: { id }, data });
+  async update(id: number, data: UpdateNotificationDto) {
+    return await this.prisma.notification.update({ where: { id }, data });
   }
 
-  remove(id: number) {
-    return this.prisma.notification.delete({ where: { id } });
+  async remove(id: number) {
+    return await this.prisma.notification.delete({ where: { id } });
   }
 }

@@ -9,27 +9,27 @@ export class ClientAccountController {
   constructor(private readonly clientAccountService: ClientAccountService) {}
 
   @Get()
-  findAll() {
-    return this.clientAccountService.findAll();
+  async findAll() {
+    return await this.clientAccountService.findAll();
   }
 
   @Get(':id')
-  findOne(@Param('id', new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE })) id: number) {
-    return this.clientAccountService.findOne(id);
+  async findOne(@Param('id', new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE })) id: number) {
+    return await this.clientAccountService.findOne(id);
   }
 
   @Post()
-  create(@Body() dto: CreateClientAccountDto) {
-    return this.clientAccountService.create(dto);
+  async create(@Body() dto: CreateClientAccountDto) {
+    return await this.clientAccountService.create(dto);
   }
 
   @Patch(':id')
-  update(@Param('id', new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE })) id: number, @Body() dto: UpdateClientAccountDto) {
-    return this.clientAccountService.update(id, dto);
+  async update(@Param('id', new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE })) id: number, @Body() dto: UpdateClientAccountDto) {
+    return await this.clientAccountService.update(id, dto);
   }
 
   @Delete(':id')
-  remove(@Param('id', new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE })) id: number) {
-    return this.clientAccountService.remove(id);
+  async remove(@Param('id', new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE })) id: number) {
+    return await this.clientAccountService.remove(id);
   }
 }

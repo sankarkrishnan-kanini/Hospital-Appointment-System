@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
-
 import { CreateClientAccountDto } from './DTOS/createClientAccountDTO';
 import { UpdateClientAccountDto } from './DTOS/updateClientAccountDTO';
 
@@ -9,32 +8,23 @@ export class ClientAccountService {
 
   constructor(private readonly prisma: PrismaService) {}
 
-  findAll() {
-    return this.prisma.clientAccount.findMany();
+  async findAll() {
+    return await this.prisma.clientAccount.findMany();
   }
 
-  findOne(id: number) {
-    return this.prisma.clientAccount.findUnique({
-      where: { id }
-    });
-
+  async findOne(id: number) {
+    return await this.prisma.clientAccount.findUnique({ where: { id } });
   }
 
-  create(data: CreateClientAccountDto) {
-    return this.prisma.clientAccount.create({ data });
+  async create(data: CreateClientAccountDto) {
+    return await this.prisma.clientAccount.create({ data });
   }
 
-  update(id: number, data: UpdateClientAccountDto) {
-    return this.prisma.clientAccount.update({
-      where: { id },
-      data
-    });
+  async update(id: number, data: UpdateClientAccountDto) {
+    return await this.prisma.clientAccount.update({ where: { id }, data });
   }
 
-  remove(id: number) {
-    return this.prisma.clientAccount.delete({
-      where: { id }
-    });
-
+  async remove(id: number) {
+    return await this.prisma.clientAccount.delete({ where: { id } });
   }
 }
