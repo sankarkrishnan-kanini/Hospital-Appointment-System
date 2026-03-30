@@ -7,14 +7,16 @@ import { UpdateAppointmentHistoryDto } from './DTOS/updateAppointmentHistoryDTO'
 export class AppointmentHistoryService {
 
   constructor(private readonly prisma: PrismaService) {}
+
   findAll() {
     return this.prisma.appointmentHistory.findMany();
   }
 
   findOne(id: number) {
-    return this.  prisma.appointmentHistory.findUnique({
+    return this.prisma.appointmentHistory.findUnique({
       where: { id }
     });
+
   }
 
   create(data: CreateAppointmentHistoryDto) {
@@ -32,5 +34,6 @@ export class AppointmentHistoryService {
     return this.prisma.appointmentHistory.delete({
       where: { id }
     });
+
   }
 }

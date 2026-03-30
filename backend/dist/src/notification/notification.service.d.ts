@@ -1,4 +1,4 @@
-import { PrismaService } from 'src/prisma/prisma.service';
+import { PrismaService } from '../prisma/prisma.service';
 import { CreateNotificationDto } from './DTOS/createNotificationDTO';
 import { UpdateNotificationDto } from './DTOS/updateNotificationDTO';
 export declare class NotificationService {

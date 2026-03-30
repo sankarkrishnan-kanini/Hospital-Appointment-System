@@ -10,7 +10,7 @@ export class PrismaService extends PrismaClient {
 			host: "localhost",
 			user: "root",
 			password: "Admin@123456789$1",
-			database: "hospitalbookingdb"
+			database: "hospitalmanagementdb"
 	   });
 	   
 	   super({ adapter });

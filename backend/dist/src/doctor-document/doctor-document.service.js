@@ -21,9 +21,7 @@ let DoctorDocumentService = class DoctorDocumentService {
         return this.prisma.doctorDocument.findMany();
     }
     findOne(id) {
-        return this.prisma.doctorDocument.findUnique({
-            where: { id }
-        });
+        return this.prisma.doctorDocument.findUnique({ where: { id } });
     }
     create(data) {
         return this.prisma.doctorDocument.create({
@@ -45,9 +43,7 @@ let DoctorDocumentService = class DoctorDocumentService {
         });
     }
     remove(id) {
-        return this.prisma.doctorDocument.delete({
-            where: { id }
-        });
+        return this.prisma.doctorDocument.delete({ where: { id } });
     }
 };
 exports.DoctorDocumentService = DoctorDocumentService;

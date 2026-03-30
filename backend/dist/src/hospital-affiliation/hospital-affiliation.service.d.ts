@@ -1,4 +1,4 @@
-import { PrismaService } from 'src/prisma/prisma.service';
+import { PrismaService } from '../prisma/prisma.service';
 import { CreateHospitalAffiliationDto } from './DTOS/createHospitalAffiliationDTO';
 import { UpdateHospitalAffiliationDto } from './DTOS/updateHospitalAffiliationDTO';
 export declare class HospitalAffiliationService {

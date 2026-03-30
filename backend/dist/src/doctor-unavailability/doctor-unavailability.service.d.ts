@@ -1,4 +1,4 @@
-import { PrismaService } from 'src/prisma/prisma.service';
+import { PrismaService } from '../prisma/prisma.service';
 import { CreateDoctorUnavailabilityDto } from './DTOS/createDoctorUnavailabilityDTO';
 import { UpdateDoctorUnavailabilityDto } from './DTOS/updateDoctorUnavailabilityDTO';
 export declare class DoctorUnavailabilityService {

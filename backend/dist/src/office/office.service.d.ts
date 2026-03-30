@@ -1,4 +1,4 @@
-import { PrismaService } from 'src/prisma/prisma.service';
+import { PrismaService } from '../prisma/prisma.service';
 import { CreateOfficeDto } from './DTOS/createOfficeDTO';
 import { UpdateOfficeDto } from './DTOS/updateOfficeDTO';
 export declare class OfficeService {

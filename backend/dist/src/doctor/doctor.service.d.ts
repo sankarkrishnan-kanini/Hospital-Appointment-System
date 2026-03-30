@@ -1,4 +1,4 @@
-import { PrismaService } from 'src/prisma/prisma.service';
+import { PrismaService } from '../prisma/prisma.service';
 import { CreateDoctorDto } from './DTOS/createDoctorDTO';
 import { UpdateDoctorDto } from './DTOS/updateDoctorDTO';
 export declare class DoctorService {

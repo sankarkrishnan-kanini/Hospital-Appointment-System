@@ -21,25 +21,16 @@ let AppointmentService = class AppointmentService {
         return this.prisma.appointment.findMany();
     }
     findOne(id) {
-        return this.prisma.appointment.findUnique({
-            where: { id }
-        });
+        return this.prisma.appointment.findUnique({ where: { id } });
     }
     create(data) {
-        return this.prisma.appointment.create({
-            data
-        });
+        return this.prisma.appointment.create({ data });
     }
     update(id, data) {
-        return this.prisma.appointment.update({
-            where: { id },
-            data
-        });
+        return this.prisma.appointment.update({ where: { id }, data });
     }
     remove(id) {
-        return this.prisma.appointment.delete({
-            where: { id }
-        });
+        return this.prisma.appointment.delete({ where: { id } });
     }
 };
 exports.AppointmentService = AppointmentService;

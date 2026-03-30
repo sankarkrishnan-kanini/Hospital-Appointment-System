@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
+
 import { CreateAppointmentStatusDto } from './DTOS/createAppointmentStatusDTO';
 import { UpdateAppointmentStatusDto } from './DTOS/updateAppointmentStatusDTO';
 
@@ -7,14 +8,17 @@ import { UpdateAppointmentStatusDto } from './DTOS/updateAppointmentStatusDTO';
 export class AppointmentStatusService {
 
     constructor(private readonly prisma: PrismaService) {}
+
   findAll() {
     return this.prisma.appointmentStatus.findMany();
   }
 
   findOne(id: number) {
+
     return this.prisma.appointmentStatus.findUnique({
       where: { id }
     });
+
   }
 
   create(data: CreateAppointmentStatusDto) {
@@ -32,5 +36,6 @@ export class AppointmentStatusService {
     return this.prisma.appointmentStatus.delete({
       where: { id }
     });
+
   }
 }

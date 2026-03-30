@@ -3,6 +3,7 @@ import { DoctorUnavailabilityController } from './doctor-unavailability.controll
 import { DoctorUnavailabilityService } from './doctor-unavailability.service';
 import { PrismaModule } from '../prisma/prisma.module';
 
+
 @Module({
   imports: [PrismaModule],
   controllers: [DoctorUnavailabilityController],

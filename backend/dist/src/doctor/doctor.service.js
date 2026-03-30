@@ -21,23 +21,16 @@ let DoctorService = class DoctorService {
         return this.prisma.doctor.findMany();
     }
     findOne(id) {
-        return this.prisma.doctor.findUnique({
-            where: { id }
-        });
+        return this.prisma.doctor.findUnique({ where: { id } });
     }
     create(data) {
         return this.prisma.doctor.create({ data });
     }
     update(id, data) {
-        return this.prisma.doctor.update({
-            where: { id },
-            data
-        });
+        return this.prisma.doctor.update({ where: { id }, data });
     }
     remove(id) {
-        return this.prisma.doctor.delete({
-            where: { id }
-        });
+        return this.prisma.doctor.delete({ where: { id } });
     }
 };
 exports.DoctorService = DoctorService;
