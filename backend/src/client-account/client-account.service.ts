@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
+import { PrismaService } from 'src/prisma/prisma.service';
+
 import { CreateClientAccountDto } from './DTOS/createClientAccountDTO';
 import { UpdateClientAccountDto } from './DTOS/updateClientAccountDTO';
 
@@ -13,7 +14,10 @@ export class ClientAccountService {
   }
 
   findOne(id: number) {
-    return this.prisma.clientAccount.findUnique({ where: { id } });
+    return this.prisma.clientAccount.findUnique({
+      where: { id }
+    });
+
   }
 
   create(data: CreateClientAccountDto) {
@@ -21,10 +25,16 @@ export class ClientAccountService {
   }
 
   update(id: number, data: UpdateClientAccountDto) {
-    return this.prisma.clientAccount.update({ where: { id }, data });
+    return this.prisma.clientAccount.update({
+      where: { id },
+      data
+    });
   }
 
   remove(id: number) {
-    return this.prisma.clientAccount.delete({ where: { id } });
+    return this.prisma.clientAccount.delete({
+      where: { id }
+    });
+
   }
 }

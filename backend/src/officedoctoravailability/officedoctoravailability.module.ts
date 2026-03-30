@@ -1,10 +1,11 @@
 import { Module } from '@nestjs/common';
 import { OfficedoctoravailabilityService } from './officedoctoravailability.service';
 import { OfficedoctoravailabilityController } from './officedoctoravailability.controller';
-import { PrismaService } from '../prisma/prisma.service';
+import { PrismaModule } from '../prisma/prisma.module';
 
 @Module({
-  controllers: [OfficedoctoravailabilityController],
-  providers: [OfficedoctoravailabilityService, PrismaService]
+  imports: [PrismaModule],
+  providers: [OfficedoctoravailabilityService],
+  controllers: [OfficedoctoravailabilityController]
 })
 export class OfficedoctoravailabilityModule {}
