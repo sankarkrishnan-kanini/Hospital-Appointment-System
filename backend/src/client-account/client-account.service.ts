@@ -1,35 +1,30 @@
 import { Injectable } from '@nestjs/common';
-import { prisma } from '../adaptor';
+import { PrismaService } from '../prisma/prisma.service';
 import { CreateClientAccountDto } from './DTOS/createClientAccountDTO';
 import { UpdateClientAccountDto } from './DTOS/updateClientAccountDTO';
 
 @Injectable()
 export class ClientAccountService {
 
+  constructor(private readonly prisma: PrismaService) {}
+
   findAll() {
-    return prisma.clientAccount.findMany();
+    return this.prisma.clientAccount.findMany();
   }
 
   findOne(id: number) {
-    return prisma.clientAccount.findUnique({
-      where: { id }
-    });
+    return this.prisma.clientAccount.findUnique({ where: { id } });
   }
 
   create(data: CreateClientAccountDto) {
-    return prisma.clientAccount.create({ data });
+    return this.prisma.clientAccount.create({ data });
   }
 
   update(id: number, data: UpdateClientAccountDto) {
-    return prisma.clientAccount.update({
-      where: { id },
-      data
-    });
+    return this.prisma.clientAccount.update({ where: { id }, data });
   }
 
   remove(id: number) {
-    return prisma.clientAccount.delete({
-      where: { id }
-    });
+    return this.prisma.clientAccount.delete({ where: { id } });
   }
 }
