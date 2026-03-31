@@ -17,9 +17,10 @@ async function bootstrap() {
         type: 'http',
         scheme: 'bearer',
         bearerFormat: 'JWT',
+        name: 'JWT',
         description: 'Enter JWT token',
         in: 'header',
-    }, 'access-token')
+    }, 'JWT-auth')
         .addTag('hospital-appointment-management')
         .build();
     const documentFactory = () => swagger_1.SwaggerModule.createDocument(app, config);

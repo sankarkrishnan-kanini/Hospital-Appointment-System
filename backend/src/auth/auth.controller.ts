@@ -9,8 +9,10 @@ import {LoginDTO} from './DTOS/LoginDTO';
 import {AuthService} from './auth.service';
 import {AuthGuard} from './auth.guard';
 import { Public } from './auth.decorator';
+import { ApiBearerAuth } from '@nestjs/swagger';
 
 @Controller('auth')
+@ApiBearerAuth('JWT-auth')
 export class AuthController {
 	
 	constructor(private readonly service:AuthService,private readonly usersService:UsersService)
@@ -39,7 +41,6 @@ export class AuthController {
 	{
 		return this.service.Login(dto);
 	}
-	
 	@UseGuards(AuthGuard)
 	@Get('profile')
 	getProfile(@Request() req)
