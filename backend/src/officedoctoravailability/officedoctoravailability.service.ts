@@ -76,7 +76,7 @@ export class OfficedoctoravailabilityService {
       }
     }
 
-    return this.prisma.officeDoctorAvailability.update({
+    return await this.prisma.officeDoctorAvailability.update({
       where: { id },
       data: {
         office:{

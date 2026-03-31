@@ -68,7 +68,7 @@ let OfficedoctoravailabilityService = class OfficedoctoravailabilityService {
                 throw new common_1.BadRequestException('Invalid time range');
             }
         }
-        return this.prisma.officeDoctorAvailability.update({
+        return await this.prisma.officeDoctorAvailability.update({
             where: { id },
             data: {
                 office: {
