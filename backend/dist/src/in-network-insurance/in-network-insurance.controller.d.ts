@@ -5,28 +5,28 @@ export declare class InNetworkInsuranceController {
     private readonly inNetworkInsuranceService;
     constructor(inNetworkInsuranceService: InNetworkInsuranceService);
     findAll(): Promise<{
-        id: number;
         officeId: number;
+        id: number;
         insuranceName: string;
     }[]>;
     findOne(id: number): Promise<{
-        id: number;
         officeId: number;
+        id: number;
         insuranceName: string;
     } | null>;
     create(dto: CreateInNetworkInsuranceDto): Promise<{
-        id: number;
         officeId: number;
+        id: number;
         insuranceName: string;
     }>;
     update(id: number, dto: UpdateInNetworkInsuranceDto): Promise<{
-        id: number;
         officeId: number;
+        id: number;
         insuranceName: string;
     }>;
     remove(id: number): Promise<{
-        id: number;
         officeId: number;
+        id: number;
         insuranceName: string;
     }>;
 }

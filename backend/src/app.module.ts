@@ -15,9 +15,13 @@ import { NotificationModule } from './notification/notification.module';
 import { OfficeModule } from './office/office.module';
 import { OfficedoctoravailabilityModule } from './officedoctoravailability/officedoctoravailability.module';
 import { PrismaService } from './prisma/prisma.service';
+import { UsersModule } from './users/users.module';
+import { QualificationModule } from './qualification/qualification.module';
+import { TimeslotModule } from './timeslot/timeslot.module';
+import { SpecializationModule } from './specialization/specialization.module';
 
 @Module({
-  imports: [AppointmentModule, AppointmentHistoryModule, ClientAccountModule, DoctorModule, DoctorDocumentModule, AppointmentStatusModule, DoctorSpecializationModule, DoctorUnavailabilityModule, HospitalAffiliationModule, InNetworkInsuranceModule, NotificationModule, OfficeModule, OfficedoctoravailabilityModule],
+  imports: [AppointmentModule, AppointmentHistoryModule, ClientAccountModule, DoctorModule, DoctorDocumentModule, AppointmentStatusModule, DoctorSpecializationModule, DoctorUnavailabilityModule, HospitalAffiliationModule, InNetworkInsuranceModule, NotificationModule, OfficeModule, OfficedoctoravailabilityModule, UsersModule, QualificationModule, TimeslotModule, SpecializationModule],
   controllers: [AppController],
   providers: [AppService, PrismaService],
 })
