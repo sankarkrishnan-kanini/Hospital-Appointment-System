@@ -8,6 +8,7 @@ import { HttpStatus } from '@nestjs/common';
 import {LoginDTO} from './DTOS/LoginDTO';
 import {AuthService} from './auth.service';
 import {AuthGuard} from './auth.guard';
+import { ApiBearerAuth } from '@nestjs/swagger';
 
 @Controller('auth')
 export class AuthController {
@@ -38,6 +39,7 @@ export class AuthController {
 		return this.service.Login(dto);
 	}
 	
+	@ApiBearerAuth()
 	@UseGuards(AuthGuard)
 	@Get('profile')
 	getProfile(@Request() req)

@@ -13,7 +13,8 @@ async function bootstrap() {
         .setTitle('Hospital Appointment Management API')
         .setDescription('The hospital appointment management API')
         .setVersion('1.0')
-        .addTag('cats')
+        .addTag('hospital-appointment-management')
+        .addBearerAuth()
         .build();
     const documentFactory = () => swagger_1.SwaggerModule.createDocument(app, config);
     swagger_1.SwaggerModule.setup('api', app, documentFactory);
