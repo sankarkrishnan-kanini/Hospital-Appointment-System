@@ -6,10 +6,10 @@ const common_1 = require("@nestjs/common");
 const swagger_1 = require("@nestjs/swagger");
 async function bootstrap() {
     const app = await core_1.NestFactory.create(app_module_1.AppModule);
-    app.useGlobalPipes(new common_1.ValidationPipe());
+    app.useGlobalPipes(new common_1.ValidationPipe({ transform: true }));
     const config = new swagger_1.DocumentBuilder()
-        .setTitle('Cats example')
-        .setDescription('The cats API description')
+        .setTitle('Hospital Appointment Management API')
+        .setDescription('The hospital appointment management API')
         .setVersion('1.0')
         .addTag('cats')
         .build();

@@ -14,10 +14,11 @@ import { InNetworkInsuranceModule } from './in-network-insurance/in-network-insu
 import { NotificationModule } from './notification/notification.module';
 import { OfficeModule } from './office/office.module';
 import { OfficedoctoravailabilityModule } from './officedoctoravailability/officedoctoravailability.module';
+import { TimeSlotModule } from './time-slot/time-slot.module';
 import { PrismaService } from './prisma/prisma.service';
 
 @Module({
-  imports: [AppointmentModule, AppointmentHistoryModule, ClientAccountModule, DoctorModule, DoctorDocumentModule, AppointmentStatusModule, DoctorSpecializationModule, DoctorUnavailabilityModule, HospitalAffiliationModule, InNetworkInsuranceModule, NotificationModule, OfficeModule, OfficedoctoravailabilityModule],
+  imports: [AppointmentModule, AppointmentHistoryModule, ClientAccountModule, DoctorModule, DoctorDocumentModule, AppointmentStatusModule, DoctorSpecializationModule, DoctorUnavailabilityModule, HospitalAffiliationModule, InNetworkInsuranceModule, NotificationModule, OfficeModule, OfficedoctoravailabilityModule, TimeSlotModule],
   controllers: [AppController],
   providers: [AppService, PrismaService],
 })

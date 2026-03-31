@@ -17,6 +17,9 @@ const common_1 = require("@nestjs/common");
 const appointment_service_1 = require("./appointment.service");
 const createAppointmentDTO_1 = require("./DTOS/createAppointmentDTO");
 const updateAppointmentDTO_1 = require("./DTOS/updateAppointmentDTO");
+const bookAppointmentDTO_1 = require("./DTOS/bookAppointmentDTO");
+const cancelAppointmentDTO_1 = require("./DTOS/cancelAppointmentDTO");
+const rescheduleAppointmentDTO_1 = require("./DTOS/rescheduleAppointmentDTO");
 let AppointmentController = class AppointmentController {
     appointmentService;
     constructor(appointmentService) {
@@ -25,11 +28,32 @@ let AppointmentController = class AppointmentController {
     findAll() {
         return this.appointmentService.findAll();
     }
+    getClientAppointments(clientId) {
+        return this.appointmentService.getClientAppointments(clientId);
+    }
+    getDoctorAppointments(doctorId) {
+        return this.appointmentService.getDoctorAppointments(doctorId);
+    }
+    getAppointmentDetails(id) {
+        return this.appointmentService.getAppointmentDetails(id);
+    }
+    getAppointmentHistory(id) {
+        return this.appointmentService.getAppointmentHistory(id);
+    }
     findOne(id) {
         return this.appointmentService.findOne(id);
     }
+    bookAppointment(dto) {
+        return this.appointmentService.bookAppointment(dto);
+    }
     create(createAppointmentDto) {
         return this.appointmentService.create(createAppointmentDto);
+    }
+    rescheduleAppointment(id, dto) {
+        return this.appointmentService.rescheduleAppointment(id, dto);
+    }
+    cancelAppointment(id, dto) {
+        return this.appointmentService.cancelAppointment(id, dto);
     }
     update(id, data) {
         return this.appointmentService.update(id, data);
@@ -46,6 +70,34 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], AppointmentController.prototype, "findAll", null);
 __decorate([
+    (0, common_1.Get)('client/:clientId'),
+    __param(0, (0, common_1.Param)('clientId', new common_1.ParseIntPipe({ errorHttpStatusCode: common_1.HttpStatus.NOT_ACCEPTABLE }))),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Number]),
+    __metadata("design:returntype", void 0)
+], AppointmentController.prototype, "getClientAppointments", null);
+__decorate([
+    (0, common_1.Get)('doctor/:doctorId'),
+    __param(0, (0, common_1.Param)('doctorId', new common_1.ParseIntPipe({ errorHttpStatusCode: common_1.HttpStatus.NOT_ACCEPTABLE }))),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Number]),
+    __metadata("design:returntype", void 0)
+], AppointmentController.prototype, "getDoctorAppointments", null);
+__decorate([
+    (0, common_1.Get)(':id/details'),
+    __param(0, (0, common_1.Param)('id', new common_1.ParseIntPipe({ errorHttpStatusCode: common_1.HttpStatus.NOT_ACCEPTABLE }))),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Number]),
+    __metadata("design:returntype", void 0)
+], AppointmentController.prototype, "getAppointmentDetails", null);
+__decorate([
+    (0, common_1.Get)(':id/history'),
+    __param(0, (0, common_1.Param)('id', new common_1.ParseIntPipe({ errorHttpStatusCode: common_1.HttpStatus.NOT_ACCEPTABLE }))),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Number]),
+    __metadata("design:returntype", void 0)
+], AppointmentController.prototype, "getAppointmentHistory", null);
+__decorate([
     (0, common_1.Get)(':id'),
     __param(0, (0, common_1.Param)('id', new common_1.ParseIntPipe({ errorHttpStatusCode: common_1.HttpStatus.NOT_ACCEPTABLE }))),
     __metadata("design:type", Function),
@@ -53,12 +105,35 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], AppointmentController.prototype, "findOne", null);
 __decorate([
+    (0, common_1.Post)('book'),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [bookAppointmentDTO_1.BookAppointmentDto]),
+    __metadata("design:returntype", void 0)
+], AppointmentController.prototype, "bookAppointment", null);
+__decorate([
     (0, common_1.Post)(),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [createAppointmentDTO_1.CreateAppointmentDto]),
     __metadata("design:returntype", void 0)
 ], AppointmentController.prototype, "create", null);
+__decorate([
+    (0, common_1.Patch)(':id/reschedule'),
+    __param(0, (0, common_1.Param)('id', new common_1.ParseIntPipe({ errorHttpStatusCode: common_1.HttpStatus.NOT_ACCEPTABLE }))),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Number, rescheduleAppointmentDTO_1.RescheduleAppointmentDto]),
+    __metadata("design:returntype", void 0)
+], AppointmentController.prototype, "rescheduleAppointment", null);
+__decorate([
+    (0, common_1.Patch)(':id/cancel'),
+    __param(0, (0, common_1.Param)('id', new common_1.ParseIntPipe({ errorHttpStatusCode: common_1.HttpStatus.NOT_ACCEPTABLE }))),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Number, cancelAppointmentDTO_1.CancelAppointmentDto]),
+    __metadata("design:returntype", void 0)
+], AppointmentController.prototype, "cancelAppointment", null);
 __decorate([
     (0, common_1.Patch)(':id'),
     __param(0, (0, common_1.Param)('id', new common_1.ParseIntPipe({ errorHttpStatusCode: common_1.HttpStatus.NOT_ACCEPTABLE }))),

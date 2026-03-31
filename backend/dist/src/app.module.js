@@ -23,13 +23,14 @@ const in_network_insurance_module_1 = require("./in-network-insurance/in-network
 const notification_module_1 = require("./notification/notification.module");
 const office_module_1 = require("./office/office.module");
 const officedoctoravailability_module_1 = require("./officedoctoravailability/officedoctoravailability.module");
+const time_slot_module_1 = require("./time-slot/time-slot.module");
 const prisma_service_1 = require("./prisma/prisma.service");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
 exports.AppModule = AppModule = __decorate([
     (0, common_1.Module)({
-        imports: [appointment_module_1.AppointmentModule, appointment_history_module_1.AppointmentHistoryModule, client_account_module_1.ClientAccountModule, doctor_module_1.DoctorModule, doctor_document_module_1.DoctorDocumentModule, appointment_status_module_1.AppointmentStatusModule, doctor_specialization_module_1.DoctorSpecializationModule, doctor_unavailability_module_1.DoctorUnavailabilityModule, hospital_affiliation_module_1.HospitalAffiliationModule, in_network_insurance_module_1.InNetworkInsuranceModule, notification_module_1.NotificationModule, office_module_1.OfficeModule, officedoctoravailability_module_1.OfficedoctoravailabilityModule],
+        imports: [appointment_module_1.AppointmentModule, appointment_history_module_1.AppointmentHistoryModule, client_account_module_1.ClientAccountModule, doctor_module_1.DoctorModule, doctor_document_module_1.DoctorDocumentModule, appointment_status_module_1.AppointmentStatusModule, doctor_specialization_module_1.DoctorSpecializationModule, doctor_unavailability_module_1.DoctorUnavailabilityModule, hospital_affiliation_module_1.HospitalAffiliationModule, in_network_insurance_module_1.InNetworkInsuranceModule, notification_module_1.NotificationModule, office_module_1.OfficeModule, officedoctoravailability_module_1.OfficedoctoravailabilityModule, time_slot_module_1.TimeSlotModule],
         controllers: [app_controller_1.AppController],
         providers: [app_service_1.AppService, prisma_service_1.PrismaService],
     })
