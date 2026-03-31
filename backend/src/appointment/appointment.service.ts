@@ -11,24 +11,24 @@ export class AppointmentService {
 
   constructor(private readonly prisma: PrismaService) {}
 
-  findAll() {
-    return this.prisma.appointment.findMany();
+  async findAll() {
+    return await this.prisma.appointment.findMany();
   }
 
-  findOne(id: number) {
-    return this.prisma.appointment.findUnique({ where: { id } });
+  async findOne(id: number) {
+    return await this.prisma.appointment.findUnique({ where: { id } });
   }
 
-  create(data: CreateAppointmentDto) {
-    return this.prisma.appointment.create({ data });
+  async create(data: CreateAppointmentDto) {
+    return await this.prisma.appointment.create({ data });
   }
 
-  update(id: number, data: UpdateAppointmentDto) {
-    return this.prisma.appointment.update({ where: { id }, data });
+  async update(id: number, data: UpdateAppointmentDto) {
+    return await this.prisma.appointment.update({ where: { id }, data });
   }
 
-  remove(id: number) {
-    return this.prisma.appointment.delete({ where: { id } });
+  async remove(id: number) {
+    return await this.prisma.appointment.delete({ where: { id } });
   }
 
   async bookAppointment(dto: BookAppointmentDto) {

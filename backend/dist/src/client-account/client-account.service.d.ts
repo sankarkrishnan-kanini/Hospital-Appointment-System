@@ -4,7 +4,7 @@ import { UpdateClientAccountDto } from './DTOS/updateClientAccountDTO';
 export declare class ClientAccountService {
     private readonly prisma;
     constructor(prisma: PrismaService);
-    findAll(): import(".prisma/client").Prisma.PrismaPromise<{
+    findAll(): Promise<{
         id: number;
         email: string;
         userId: number;
@@ -12,36 +12,36 @@ export declare class ClientAccountService {
         lastName: string;
         contactNumber: string;
     }[]>;
-    findOne(id: number): import(".prisma/client").Prisma.Prisma__ClientAccountClient<{
+    findOne(id: number): Promise<{
         id: number;
         email: string;
         userId: number;
         firstName: string;
         lastName: string;
         contactNumber: string;
-    } | null, null, import("@prisma/client/runtime/client").DefaultArgs, import(".prisma/client").Prisma.PrismaClientOptions>;
-    create(data: CreateClientAccountDto): import(".prisma/client").Prisma.Prisma__ClientAccountClient<{
+    } | null>;
+    create(data: CreateClientAccountDto): Promise<{
         id: number;
         email: string;
         userId: number;
         firstName: string;
         lastName: string;
         contactNumber: string;
-    }, never, import("@prisma/client/runtime/client").DefaultArgs, import(".prisma/client").Prisma.PrismaClientOptions>;
-    update(id: number, data: UpdateClientAccountDto): import(".prisma/client").Prisma.Prisma__ClientAccountClient<{
+    }>;
+    update(id: number, data: UpdateClientAccountDto): Promise<{
         id: number;
         email: string;
         userId: number;
         firstName: string;
         lastName: string;
         contactNumber: string;
-    }, never, import("@prisma/client/runtime/client").DefaultArgs, import(".prisma/client").Prisma.PrismaClientOptions>;
-    remove(id: number): import(".prisma/client").Prisma.Prisma__ClientAccountClient<{
+    }>;
+    remove(id: number): Promise<{
         id: number;
         email: string;
         userId: number;
         firstName: string;
         lastName: string;
         contactNumber: string;
-    }, never, import("@prisma/client/runtime/client").DefaultArgs, import(".prisma/client").Prisma.PrismaClientOptions>;
+    }>;
 }

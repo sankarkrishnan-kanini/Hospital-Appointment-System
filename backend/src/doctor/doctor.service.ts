@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateDoctorDto } from './DTOS/createDoctorDTO';
 import { UpdateDoctorDto } from './DTOS/updateDoctorDTO';
@@ -8,23 +8,151 @@ export class DoctorService {
 
   constructor(private readonly prisma: PrismaService) {}
 
-  findAll() {
+  // ─── ADMIN ONLY ───────────────────────────────────────────────────────────────
+
+  async findAll() {
     return this.prisma.doctor.findMany();
   }
 
-  findOne(id: number) {
-    return this.prisma.doctor.findUnique({ where: { id } });
-  }
-
-  create(data: CreateDoctorDto) {
-    return this.prisma.doctor.create({ data });
-  }
-
-  update(id: number, data: UpdateDoctorDto) {
-    return this.prisma.doctor.update({ where: { id }, data });
-  }
-
-  remove(id: number) {
+  async remove(id: number) {
+    const doctor = await this.prisma.doctor.findUnique({ where: { id } });
+    if (!doctor) throw new NotFoundException(`Doctor with id ${id} not found`);
     return this.prisma.doctor.delete({ where: { id } });
+  }
+
+  // ─── BUSINESS LOGIC ───────────────────────────────────────────────────────────
+
+  // GET /doctors — all verified doctors with flattened specializations and offices
+  async getVerifiedDoctors() {
+    const doctors = await this.prisma.doctor.findMany({
+      where: { isVerified: true },
+      include: {
+        specializations: { include: { specialization: true } },
+        offices: true
+      }
+    });
+
+    return doctors.map(doctor => ({
+      id: doctor.id,
+      firstName: doctor.firstName,
+      lastName: doctor.lastName,
+      professionalStatement: doctor.professionalStatement,
+      practicingFrom: doctor.practicingFrom,
+      offices: doctor.offices,
+      specializations: doctor.specializations.map(ds => ds.specialization.specializationName)
+    }));
+  }
+
+  // GET /doctors/:id — full doctor profile
+  async getDoctorProfile(id: number) {
+    const doctor = await this.prisma.doctor.findUnique({
+      where: { id },
+      include: {
+        specializations: { include: { specialization: true } },
+        offices: true,
+        qualifications: true,
+        hospitalAffiliations: true
+      }
+    });
+    if (!doctor) throw new NotFoundException(`Doctor with id ${id} not found`);
+
+    return {
+      id: doctor.id,
+      firstName: doctor.firstName,
+      lastName: doctor.lastName,
+      professionalStatement: doctor.professionalStatement,
+      practicingFrom: doctor.practicingFrom,
+      isVerified: doctor.isVerified,
+      specializations: doctor.specializations.map(ds => ds.specialization.specializationName),
+      offices: doctor.offices,
+      qualifications: doctor.qualifications.map(q => ({
+        name: q.qualificationName,
+        institute: q.instituteName,
+        year: q.procurementYear
+      })),
+      hospitalAffiliations: doctor.hospitalAffiliations.map(h => ({
+        hospitalName: h.hospitalName,
+        city: h.city,
+        country: h.country,
+        startDate: h.startDate,
+        endDate: h.endDate
+      }))
+    };
+  }
+
+  // POST /doctors — create doctor with validations
+  async create(data: CreateDoctorDto) {
+    // 1. Check user exists
+    const user = await this.prisma.user.findUnique({ where: { id: data.userId } });
+    if (!user) throw new NotFoundException(`User with id ${data.userId} not found`);
+
+    // 2. Check user role is DOCTOR
+    if (user.role !== 'DOCTOR')
+      throw new BadRequestException(`User with id ${data.userId} does not have DOCTOR role`);
+
+    // 3. Check no duplicate doctor for same user
+    const existing = await this.prisma.doctor.findUnique({ where: { userId: data.userId } });
+    if (existing)
+      throw new BadRequestException(`Doctor already exists for user with id ${data.userId}`);
+
+    return this.prisma.doctor.create({
+      data: {
+        ...data,
+        isVerified: false
+      }
+    });
+  }
+
+  // PATCH /doctors/:id/verify — admin only
+  async verifyDoctor(id: number) {
+
+    // 1. Fetch doctor with only needed fields + documents
+    const doctor = await this.prisma.doctor.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        isVerified: true,
+        documents: true
+      }
+    });
+    if (!doctor) throw new NotFoundException(`Doctor with id ${id} not found`);
+
+    // 2. Check not already verified
+    if (doctor.isVerified)
+      throw new BadRequestException(`Doctor with id ${id} is already verified`);
+
+    // 3. Check documents exist
+    if (doctor.documents.length === 0)
+      throw new BadRequestException(`Doctor must upload documents before verification`);
+
+    // 4. Concurrency-safe update
+    const updated = await this.prisma.doctor.updateMany({
+      where: { id, isVerified: false },
+      data: { isVerified: true }
+    });
+
+    if (updated.count === 0)
+      throw new BadRequestException(`Doctor is already verified`);
+
+    // 5. Return clean response
+    return {
+      id: doctor.id,
+      firstName: doctor.firstName,
+      lastName: doctor.lastName,
+      isVerified: true,
+      verifiedAt: new Date()
+    };
+  }
+  async update(id: number, data: UpdateDoctorDto) {
+    const doctor = await this.prisma.doctor.findUnique({ where: { id } });
+    if (!doctor) throw new NotFoundException(`Doctor with id ${id} not found`);
+
+    const { firstName, lastName, professionalStatement, practicingFrom } = data;
+    return this.prisma.doctor.update({
+      where: { id },
+      data: { firstName, lastName, professionalStatement, practicingFrom }
+    });
   }
 }

@@ -8,16 +8,16 @@ export class DoctorDocumentService {
 
   constructor(private readonly prisma: PrismaService) {}
 
-  findAll() {
-    return this.prisma.doctorDocument.findMany();
+  async findAll() {
+    return await this.prisma.doctorDocument.findMany();
   }
 
-  findOne(id: number) {
-    return this.prisma.doctorDocument.findUnique({ where: { id } });
+  async findOne(id: number) {
+    return await this.prisma.doctorDocument.findUnique({ where: { id } });
   }
 
-  create(data: CreateDoctorDocumentDto) {
-    return this.prisma.doctorDocument.create({
+  async create(data: CreateDoctorDocumentDto) {
+    return await this.prisma.doctorDocument.create({
       data: {
         doctorId: data.doctorId,
         documentType: data.documentType,
@@ -26,8 +26,8 @@ export class DoctorDocumentService {
     });
   }
 
-  update(id: number, data: UpdateDoctorDocumentDto) {
-    return this.prisma.doctorDocument.update({
+  async update(id: number, data: UpdateDoctorDocumentDto) {
+    return await this.prisma.doctorDocument.update({
       where: { id },
       data: {
         ...(data.doctorId && { doctorId: data.doctorId }),
@@ -37,7 +37,7 @@ export class DoctorDocumentService {
     });
   }
 
-  remove(id: number) {
-    return this.prisma.doctorDocument.delete({ where: { id } });
+  async remove(id: number) {
+    return await this.prisma.doctorDocument.delete({ where: { id } });
   }
 }

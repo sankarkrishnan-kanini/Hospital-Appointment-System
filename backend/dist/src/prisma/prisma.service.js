@@ -18,10 +18,13 @@ let PrismaService = class PrismaService extends client_1.PrismaClient {
         const adapter = new adapter_mariadb_1.PrismaMariaDb({
             host: "localhost",
             user: "root",
-            password: "Admin@123456789$1",
+            password: "Admin@123",
             database: "hospitalmanagementdb"
         });
         super({ adapter });
+    }
+    async onModuleInit() {
+        this.$connect();
     }
 };
 exports.PrismaService = PrismaService;

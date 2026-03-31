@@ -7,7 +7,7 @@ import { RescheduleAppointmentDto } from './DTOS/rescheduleAppointmentDTO';
 export declare class AppointmentController {
     private readonly appointmentService;
     constructor(appointmentService: AppointmentService);
-    findAll(): import(".prisma/client").Prisma.PrismaPromise<{
+    bookAppointment(dto: BookAppointmentDto): Promise<{
         id: number;
         createdAt: Date;
         updatedAt: Date;
@@ -20,7 +20,89 @@ export declare class AppointmentController {
         appointmentStatusId: number;
         appointmentTakenDate: Date;
         cancellationReason: string | null;
-    }[]>;
+    }>;
+    rescheduleAppointment(id: number, dto: RescheduleAppointmentDto): Promise<{
+        status: {
+            id: number;
+            status: string;
+        };
+        office: {
+            id: number;
+            doctorId: number;
+            city: string;
+            country: string;
+            hospitalAffiliationId: number | null;
+            timeSlotPerClientInMin: number;
+            firstConsultationFee: number;
+            followupConsultationFee: number;
+            streetAddress: string;
+            state: string;
+            zip: string;
+        };
+        timeSlot: {
+            id: number;
+            createdAt: Date;
+            updatedAt: Date;
+            officeId: number;
+            startTime: Date;
+            endTime: Date;
+            isBooked: boolean;
+        };
+    } & {
+        id: number;
+        createdAt: Date;
+        updatedAt: Date;
+        officeId: number;
+        userAccountId: number;
+        timeSlotId: number;
+        probableStartTime: Date;
+        actualEndTime: Date | null;
+        durationInMinutes: number;
+        appointmentStatusId: number;
+        appointmentTakenDate: Date;
+        cancellationReason: string | null;
+    }>;
+    cancelAppointment(id: number, dto: CancelAppointmentDto): Promise<{
+        status: {
+            id: number;
+            status: string;
+        };
+        office: {
+            id: number;
+            doctorId: number;
+            city: string;
+            country: string;
+            hospitalAffiliationId: number | null;
+            timeSlotPerClientInMin: number;
+            firstConsultationFee: number;
+            followupConsultationFee: number;
+            streetAddress: string;
+            state: string;
+            zip: string;
+        };
+        timeSlot: {
+            id: number;
+            createdAt: Date;
+            updatedAt: Date;
+            officeId: number;
+            startTime: Date;
+            endTime: Date;
+            isBooked: boolean;
+        };
+    } & {
+        id: number;
+        createdAt: Date;
+        updatedAt: Date;
+        officeId: number;
+        userAccountId: number;
+        timeSlotId: number;
+        probableStartTime: Date;
+        actualEndTime: Date | null;
+        durationInMinutes: number;
+        appointmentStatusId: number;
+        appointmentTakenDate: Date;
+        cancellationReason: string | null;
+    }>;
     getClientAppointments(clientId: number): Promise<({
         status: {
             id: number;
@@ -191,7 +273,7 @@ export declare class AppointmentController {
         newTimeSlotId: number;
         changedAt: Date;
     }[]>;
-    findOne(id: number): import(".prisma/client").Prisma.Prisma__AppointmentClient<{
+    findAll(): Promise<{
         id: number;
         createdAt: Date;
         updatedAt: Date;
@@ -204,8 +286,8 @@ export declare class AppointmentController {
         appointmentStatusId: number;
         appointmentTakenDate: Date;
         cancellationReason: string | null;
-    } | null, null, import("@prisma/client/runtime/client").DefaultArgs, import(".prisma/client").Prisma.PrismaClientOptions>;
-    bookAppointment(dto: BookAppointmentDto): Promise<{
+    }[]>;
+    findOne(id: number): Promise<{
         id: number;
         createdAt: Date;
         updatedAt: Date;
@@ -218,49 +300,8 @@ export declare class AppointmentController {
         appointmentStatusId: number;
         appointmentTakenDate: Date;
         cancellationReason: string | null;
-    }>;
-    create(createAppointmentDto: CreateAppointmentDto): import(".prisma/client").Prisma.Prisma__AppointmentClient<{
-        id: number;
-        createdAt: Date;
-        updatedAt: Date;
-        officeId: number;
-        userAccountId: number;
-        timeSlotId: number;
-        probableStartTime: Date;
-        actualEndTime: Date | null;
-        durationInMinutes: number;
-        appointmentStatusId: number;
-        appointmentTakenDate: Date;
-        cancellationReason: string | null;
-    }, never, import("@prisma/client/runtime/client").DefaultArgs, import(".prisma/client").Prisma.PrismaClientOptions>;
-    rescheduleAppointment(id: number, dto: RescheduleAppointmentDto): Promise<{
-        status: {
-            id: number;
-            status: string;
-        };
-        office: {
-            id: number;
-            doctorId: number;
-            city: string;
-            country: string;
-            hospitalAffiliationId: number | null;
-            timeSlotPerClientInMin: number;
-            firstConsultationFee: number;
-            followupConsultationFee: number;
-            streetAddress: string;
-            state: string;
-            zip: string;
-        };
-        timeSlot: {
-            id: number;
-            createdAt: Date;
-            updatedAt: Date;
-            officeId: number;
-            startTime: Date;
-            endTime: Date;
-            isBooked: boolean;
-        };
-    } & {
+    } | null>;
+    create(createAppointmentDto: CreateAppointmentDto): Promise<{
         id: number;
         createdAt: Date;
         updatedAt: Date;
@@ -274,34 +315,7 @@ export declare class AppointmentController {
         appointmentTakenDate: Date;
         cancellationReason: string | null;
     }>;
-    cancelAppointment(id: number, dto: CancelAppointmentDto): Promise<{
-        status: {
-            id: number;
-            status: string;
-        };
-        office: {
-            id: number;
-            doctorId: number;
-            city: string;
-            country: string;
-            hospitalAffiliationId: number | null;
-            timeSlotPerClientInMin: number;
-            firstConsultationFee: number;
-            followupConsultationFee: number;
-            streetAddress: string;
-            state: string;
-            zip: string;
-        };
-        timeSlot: {
-            id: number;
-            createdAt: Date;
-            updatedAt: Date;
-            officeId: number;
-            startTime: Date;
-            endTime: Date;
-            isBooked: boolean;
-        };
-    } & {
+    update(id: number, data: UpdateAppointmentDto): Promise<{
         id: number;
         createdAt: Date;
         updatedAt: Date;
@@ -315,7 +329,7 @@ export declare class AppointmentController {
         appointmentTakenDate: Date;
         cancellationReason: string | null;
     }>;
-    update(id: number, data: UpdateAppointmentDto): import(".prisma/client").Prisma.Prisma__AppointmentClient<{
+    remove(id: number): Promise<{
         id: number;
         createdAt: Date;
         updatedAt: Date;
@@ -328,19 +342,5 @@ export declare class AppointmentController {
         appointmentStatusId: number;
         appointmentTakenDate: Date;
         cancellationReason: string | null;
-    }, never, import("@prisma/client/runtime/client").DefaultArgs, import(".prisma/client").Prisma.PrismaClientOptions>;
-    remove(id: number): import(".prisma/client").Prisma.Prisma__AppointmentClient<{
-        id: number;
-        createdAt: Date;
-        updatedAt: Date;
-        officeId: number;
-        userAccountId: number;
-        timeSlotId: number;
-        probableStartTime: Date;
-        actualEndTime: Date | null;
-        durationInMinutes: number;
-        appointmentStatusId: number;
-        appointmentTakenDate: Date;
-        cancellationReason: string | null;
-    }, never, import("@prisma/client/runtime/client").DefaultArgs, import(".prisma/client").Prisma.PrismaClientOptions>;
+    }>;
 }

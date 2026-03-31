@@ -8,32 +8,23 @@ export class AppointmentHistoryService {
 
   constructor(private readonly prisma: PrismaService) {}
 
-  findAll() {
-    return this.prisma.appointmentHistory.findMany();
+  async findAll() {
+    return await this.prisma.appointmentHistory.findMany();
   }
 
-  findOne(id: number) {
-    return this.prisma.appointmentHistory.findUnique({
-      where: { id }
-    });
-
+  async findOne(id: number) {
+    return await this.prisma.appointmentHistory.findUnique({ where: { id } });
   }
 
-  create(data: CreateAppointmentHistoryDto) {
-    return this.prisma.appointmentHistory.create({ data });
+  async create(data: CreateAppointmentHistoryDto) {
+    return await this.prisma.appointmentHistory.create({ data });
   }
 
-  update(id: number, data: UpdateAppointmentHistoryDto) {
-    return this.prisma.appointmentHistory.update({
-      where: { id },
-      data
-    });
+  async update(id: number, data: UpdateAppointmentHistoryDto) {
+    return await this.prisma.appointmentHistory.update({ where: { id }, data });
   }
 
-  remove(id: number) {
-    return this.prisma.appointmentHistory.delete({
-      where: { id }
-    });
-
+  async remove(id: number) {
+    return await this.prisma.appointmentHistory.delete({ where: { id } });
   }
 }

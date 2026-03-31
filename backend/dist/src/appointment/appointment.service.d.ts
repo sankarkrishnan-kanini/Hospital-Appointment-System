@@ -7,7 +7,7 @@ import { RescheduleAppointmentDto } from './DTOS/rescheduleAppointmentDTO';
 export declare class AppointmentService {
     private readonly prisma;
     constructor(prisma: PrismaService);
-    findAll(): import(".prisma/client").Prisma.PrismaPromise<{
+    findAll(): Promise<{
         id: number;
         createdAt: Date;
         updatedAt: Date;
@@ -21,7 +21,7 @@ export declare class AppointmentService {
         appointmentTakenDate: Date;
         cancellationReason: string | null;
     }[]>;
-    findOne(id: number): import(".prisma/client").Prisma.Prisma__AppointmentClient<{
+    findOne(id: number): Promise<{
         id: number;
         createdAt: Date;
         updatedAt: Date;
@@ -34,8 +34,8 @@ export declare class AppointmentService {
         appointmentStatusId: number;
         appointmentTakenDate: Date;
         cancellationReason: string | null;
-    } | null, null, import("@prisma/client/runtime/client").DefaultArgs, import(".prisma/client").Prisma.PrismaClientOptions>;
-    create(data: CreateAppointmentDto): import(".prisma/client").Prisma.Prisma__AppointmentClient<{
+    } | null>;
+    create(data: CreateAppointmentDto): Promise<{
         id: number;
         createdAt: Date;
         updatedAt: Date;
@@ -48,8 +48,8 @@ export declare class AppointmentService {
         appointmentStatusId: number;
         appointmentTakenDate: Date;
         cancellationReason: string | null;
-    }, never, import("@prisma/client/runtime/client").DefaultArgs, import(".prisma/client").Prisma.PrismaClientOptions>;
-    update(id: number, data: UpdateAppointmentDto): import(".prisma/client").Prisma.Prisma__AppointmentClient<{
+    }>;
+    update(id: number, data: UpdateAppointmentDto): Promise<{
         id: number;
         createdAt: Date;
         updatedAt: Date;
@@ -62,8 +62,8 @@ export declare class AppointmentService {
         appointmentStatusId: number;
         appointmentTakenDate: Date;
         cancellationReason: string | null;
-    }, never, import("@prisma/client/runtime/client").DefaultArgs, import(".prisma/client").Prisma.PrismaClientOptions>;
-    remove(id: number): import(".prisma/client").Prisma.Prisma__AppointmentClient<{
+    }>;
+    remove(id: number): Promise<{
         id: number;
         createdAt: Date;
         updatedAt: Date;
@@ -76,7 +76,7 @@ export declare class AppointmentService {
         appointmentStatusId: number;
         appointmentTakenDate: Date;
         cancellationReason: string | null;
-    }, never, import("@prisma/client/runtime/client").DefaultArgs, import(".prisma/client").Prisma.PrismaClientOptions>;
+    }>;
     bookAppointment(dto: BookAppointmentDto): Promise<{
         id: number;
         createdAt: Date;

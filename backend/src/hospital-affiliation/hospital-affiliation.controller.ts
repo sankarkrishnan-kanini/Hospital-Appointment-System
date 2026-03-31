@@ -9,27 +9,27 @@ export class HospitalAffiliationController {
   constructor(private readonly hospitalAffiliationService: HospitalAffiliationService) {}
 
   @Get()
-  findAll() {
-    return this.hospitalAffiliationService.findAll();
+  async findAll() {
+    return await this.hospitalAffiliationService.findAll();
   }
 
   @Get(':id')
-  findOne(@Param('id', new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE })) id: number) {
-    return this.hospitalAffiliationService.findOne(id);
+  async findOne(@Param('id', new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE })) id: number) {
+    return await this.hospitalAffiliationService.findOne(id);
   }
 
   @Post()
-  create(@Body() dto: CreateHospitalAffiliationDto) {
-    return this.hospitalAffiliationService.create(dto);
+  async create(@Body() dto: CreateHospitalAffiliationDto) {
+    return await this.hospitalAffiliationService.create(dto);
   }
 
   @Patch(':id')
-  update(@Param('id', new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE })) id: number, @Body() dto: UpdateHospitalAffiliationDto) {
-    return this.hospitalAffiliationService.update(id, dto);
+  async update(@Param('id', new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE })) id: number, @Body() dto: UpdateHospitalAffiliationDto) {
+    return await this.hospitalAffiliationService.update(id, dto);
   }
 
   @Delete(':id')
-  remove(@Param('id', new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE })) id: number) {
-    return this.hospitalAffiliationService.remove(id);
+  async remove(@Param('id', new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE })) id: number) {
+    return await this.hospitalAffiliationService.remove(id);
   }
 }

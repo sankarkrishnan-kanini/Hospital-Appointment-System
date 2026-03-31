@@ -17,20 +17,20 @@ let AppointmentService = class AppointmentService {
     constructor(prisma) {
         this.prisma = prisma;
     }
-    findAll() {
-        return this.prisma.appointment.findMany();
+    async findAll() {
+        return await this.prisma.appointment.findMany();
     }
-    findOne(id) {
-        return this.prisma.appointment.findUnique({ where: { id } });
+    async findOne(id) {
+        return await this.prisma.appointment.findUnique({ where: { id } });
     }
-    create(data) {
-        return this.prisma.appointment.create({ data });
+    async create(data) {
+        return await this.prisma.appointment.create({ data });
     }
-    update(id, data) {
-        return this.prisma.appointment.update({ where: { id }, data });
+    async update(id, data) {
+        return await this.prisma.appointment.update({ where: { id }, data });
     }
-    remove(id) {
-        return this.prisma.appointment.delete({ where: { id } });
+    async remove(id) {
+        return await this.prisma.appointment.delete({ where: { id } });
     }
     async bookAppointment(dto) {
         const { clientId, officeId, timeSlotId } = dto;

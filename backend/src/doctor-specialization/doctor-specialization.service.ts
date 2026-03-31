@@ -8,23 +8,23 @@ export class DoctorSpecializationService {
 
   constructor(private readonly prisma: PrismaService) {}
 
-  findAll() {
-    return this.prisma.doctorSpecialization.findMany();
+  async findAll() {
+    return await this.prisma.doctorSpecialization.findMany();
   }
 
-  findOne(id: number) {
-    return this.prisma.doctorSpecialization.findUnique({ where: { id } });
+  async findOne(id: number) {
+    return await this.prisma.doctorSpecialization.findUnique({ where: { id } });
   }
 
-  create(data: CreateDoctorSpecializationDto) {
-    return this.prisma.doctorSpecialization.create({ data });
+  async create(data: CreateDoctorSpecializationDto) {
+    return await this.prisma.doctorSpecialization.create({ data });
   }
 
-  update(id: number, data: UpdateDoctorSpecializationDto) {
-    return this.prisma.doctorSpecialization.update({ where: { id }, data });
+  async update(id: number, data: UpdateDoctorSpecializationDto) {
+    return await this.prisma.doctorSpecialization.update({ where: { id }, data });
   }
 
-  remove(id: number) {
-    return this.prisma.doctorSpecialization.delete({ where: { id } });
+  async remove(id: number) {
+    return await this.prisma.doctorSpecialization.delete({ where: { id } });
   }
 }

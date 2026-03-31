@@ -9,27 +9,27 @@ export class InNetworkInsuranceController {
   constructor(private readonly inNetworkInsuranceService: InNetworkInsuranceService) {}
 
   @Get()
-  findAll() {
-    return this.inNetworkInsuranceService.findAll();
+  async findAll() {
+    return await this.inNetworkInsuranceService.findAll();
   }
 
   @Get(':id')
-  findOne(@Param('id', new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE })) id: number) {
-    return this.inNetworkInsuranceService.findOne(id);
+  async findOne(@Param('id', new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE })) id: number) {
+    return await this.inNetworkInsuranceService.findOne(id);
   }
 
   @Post()
-  create(@Body() dto: CreateInNetworkInsuranceDto) {
-    return this.inNetworkInsuranceService.create(dto);
+  async create(@Body() dto: CreateInNetworkInsuranceDto) {
+    return await this.inNetworkInsuranceService.create(dto);
   }
 
   @Patch(':id')
-  update(@Param('id', new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE })) id: number, @Body() dto: UpdateInNetworkInsuranceDto) {
-    return this.inNetworkInsuranceService.update(id, dto);
+  async update(@Param('id', new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE })) id: number, @Body() dto: UpdateInNetworkInsuranceDto) {
+    return await this.inNetworkInsuranceService.update(id, dto);
   }
 
   @Delete(':id')
-  remove(@Param('id', new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE })) id: number) {
-    return this.inNetworkInsuranceService.remove(id);
+  async remove(@Param('id', new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE })) id: number) {
+    return await this.inNetworkInsuranceService.remove(id);
   }
 }
