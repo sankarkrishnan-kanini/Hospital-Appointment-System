@@ -20,7 +20,7 @@ export class AuthGuard implements CanActivate{
        return true;
      }
         const request=context.switchToHttp().getRequest();
-        console.log(request.headers,request['user']);
+        console.log(request.headers.authorization);
         const token=this.extractedTokenFromHeader(request);
         if(!token)
 		{
@@ -30,7 +30,7 @@ export class AuthGuard implements CanActivate{
              
 			  const payload=await this.jwtService.verifyAsync(token);
 			  request['user']=payload;
-			  
+			  console.log(request['user']);
 
         }catch
         {
@@ -41,9 +41,14 @@ export class AuthGuard implements CanActivate{
   	  
    }
    private extractedTokenFromHeader(request:Request):string|undefined{
-        const[type,token]=request.headers.authorization?.split(' ')??[];
-        return type=='bearer' ? token:undefined;        
- 		 
+        const authHeader = request.headers.authorization;
+        if (!authHeader) return undefined;
+     
+        if (authHeader.startsWith('Bearer ')) {
+            return authHeader.substring(7);
+        }
+     
+        return authHeader;
    }
 	   
     
