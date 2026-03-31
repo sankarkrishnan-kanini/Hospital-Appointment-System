@@ -23,6 +23,9 @@ let PrismaService = class PrismaService extends client_1.PrismaClient {
         });
         super({ adapter });
     }
+    async onModuleInit() {
+        await this.$connect();
+    }
 };
 exports.PrismaService = PrismaService;
 exports.PrismaService = PrismaService = __decorate([
