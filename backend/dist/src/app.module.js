@@ -29,13 +29,15 @@ const qualification_module_1 = require("./qualification/qualification.module");
 const timeslot_module_1 = require("./timeslot/timeslot.module");
 const specialization_module_1 = require("./specialization/specialization.module");
 const auth_module_1 = require("./auth/auth.module");
+const admin_module_1 = require("./admin/admin.module");
+const doctor_role_module_1 = require("./doctor-role/doctor-role.module");
 const jwt_1 = require("@nestjs/jwt");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
 exports.AppModule = AppModule = __decorate([
     (0, common_1.Module)({
-        imports: [appointment_module_1.AppointmentModule, appointment_history_module_1.AppointmentHistoryModule, client_account_module_1.ClientAccountModule, doctor_module_1.DoctorModule, doctor_document_module_1.DoctorDocumentModule, appointment_status_module_1.AppointmentStatusModule, doctor_specialization_module_1.DoctorSpecializationModule, doctor_unavailability_module_1.DoctorUnavailabilityModule, hospital_affiliation_module_1.HospitalAffiliationModule, in_network_insurance_module_1.InNetworkInsuranceModule, notification_module_1.NotificationModule, office_module_1.OfficeModule, officedoctoravailability_module_1.OfficedoctoravailabilityModule, users_module_1.UsersModule, qualification_module_1.QualificationModule, timeslot_module_1.TimeslotModule, specialization_module_1.SpecializationModule, auth_module_1.AuthModule, jwt_1.JwtModule],
+        imports: [appointment_module_1.AppointmentModule, appointment_history_module_1.AppointmentHistoryModule, client_account_module_1.ClientAccountModule, doctor_module_1.DoctorModule, doctor_document_module_1.DoctorDocumentModule, appointment_status_module_1.AppointmentStatusModule, doctor_specialization_module_1.DoctorSpecializationModule, doctor_unavailability_module_1.DoctorUnavailabilityModule, hospital_affiliation_module_1.HospitalAffiliationModule, in_network_insurance_module_1.InNetworkInsuranceModule, notification_module_1.NotificationModule, office_module_1.OfficeModule, officedoctoravailability_module_1.OfficedoctoravailabilityModule, users_module_1.UsersModule, qualification_module_1.QualificationModule, timeslot_module_1.TimeslotModule, specialization_module_1.SpecializationModule, auth_module_1.AuthModule, jwt_1.JwtModule, admin_module_1.AdminModule, doctor_role_module_1.DoctorRoleModule],
         controllers: [app_controller_1.AppController],
         providers: [app_service_1.AppService, prisma_service_1.PrismaService],
     })

@@ -9,7 +9,7 @@ import { CustomExceptionFilter } from './CustomExceptionFilter';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-   app.useGlobalPipes(new ValidationPipe({transform:true,whitelist:true,forbidNonWhitelisted:true}));
+   app.useGlobalPipes(new ValidationPipe({ transform: true, whitelist: true, forbidNonWhitelisted: false }));
 
    const config = new DocumentBuilder()
     .setTitle('Hospital Appointment Management API')

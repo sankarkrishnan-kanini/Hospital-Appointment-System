@@ -8,14 +8,16 @@ import { HttpStatus } from '@nestjs/common';
 import {LoginDTO} from './DTOS/LoginDTO';
 import {AuthService} from './auth.service';
 import {AuthGuard} from './auth.guard';
+
 import { ApiBearerAuth } from '@nestjs/swagger';
+import { Public } from './auth.decorator';
 
 @Controller('auth')
 export class AuthController {
 	
 	constructor(private readonly service:AuthService,private readonly usersService:UsersService)
 	{}
-	
+	@Public()
 	@Post('/create')
 	@UseFilters(new CustomExceptionFilter())
 	create(@Body() dto:CreateUserDTO)
@@ -32,6 +34,7 @@ export class AuthController {
 	
 	}
 	
+	@Public()
 	@Post('/login')
 	@UseFilters(new CustomExceptionFilter())
 	login(@Body() dto:LoginDTO)

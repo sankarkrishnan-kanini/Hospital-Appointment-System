@@ -35,6 +35,7 @@ export declare class InNetworkInsuranceController {
                 professionalStatement: string | null;
                 practicingFrom: Date | null;
                 isVerified: boolean;
+                verificationRequested: boolean;
             };
         } & {
             id: number;

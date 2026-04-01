@@ -20,12 +20,14 @@ import { QualificationModule } from './qualification/qualification.module';
 import { TimeslotModule } from './timeslot/timeslot.module';
 import { SpecializationModule } from './specialization/specialization.module';
 import { AuthModule } from './auth/auth.module';
+import { AdminModule } from './admin/admin.module';
+import { DoctorRoleModule } from './doctor-role/doctor-role.module';
 import { JwtModule } from '@nestjs/jwt';
 import { AuthGuard } from './auth/auth.guard';
 import { APP_GUARD } from '@nestjs/core';
 
 @Module({
-  imports: [AppointmentModule, AppointmentHistoryModule, ClientAccountModule, DoctorModule, DoctorDocumentModule, AppointmentStatusModule, DoctorSpecializationModule, DoctorUnavailabilityModule, HospitalAffiliationModule, InNetworkInsuranceModule, NotificationModule, OfficeModule, OfficedoctoravailabilityModule, UsersModule, QualificationModule, TimeslotModule, SpecializationModule, AuthModule, JwtModule],
+  imports: [AppointmentModule, AppointmentHistoryModule, ClientAccountModule, DoctorModule, DoctorDocumentModule, AppointmentStatusModule, DoctorSpecializationModule, DoctorUnavailabilityModule, HospitalAffiliationModule, InNetworkInsuranceModule, NotificationModule, OfficeModule, OfficedoctoravailabilityModule, UsersModule, QualificationModule, TimeslotModule, SpecializationModule, AuthModule, JwtModule, AdminModule, DoctorRoleModule],
   controllers: [AppController],
   providers: [AppService, PrismaService],
 })

@@ -1,7 +1,9 @@
-import { Controller, Get, Post, Patch, Delete, Body, Param, ParseIntPipe, HttpStatus } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Body, Param, ParseIntPipe, HttpStatus, UseGuards, Request } from '@nestjs/common';
 import { DoctorService } from './doctor.service';
 import { CreateDoctorDto } from './DTOS/createDoctorDTO';
 import { UpdateDoctorDto } from './DTOS/updateDoctorDTO';
+import { AuthGuard } from '../auth/auth.guard';
+import { ApiBearerAuth } from '@nestjs/swagger';
 
 @Controller('doctors')
 export class DoctorController {
@@ -31,9 +33,11 @@ export class DoctorController {
   }
 
   // POST /doctors
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard)
   @Post()
-  create(@Body() dto: CreateDoctorDto) {
-    return this.doctorService.create(dto);
+  create(@Body() dto: CreateDoctorDto, @Request() req) {
+    return this.doctorService.create(dto, req.user.sub);
   }
 
   // PATCH /doctors/:id/verify — admin only

@@ -74,6 +74,7 @@ export declare class InNetworkInsuranceService {
                 professionalStatement: string | null;
                 practicingFrom: Date | null;
                 isVerified: boolean;
+                verificationRequested: boolean;
             };
         } & {
             id: number;

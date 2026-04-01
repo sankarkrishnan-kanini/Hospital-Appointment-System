@@ -81,23 +81,24 @@ export class DoctorService {
   }
 
   // POST /doctors — create doctor with validations
-  async create(data: CreateDoctorDto) {
+  async create(data: CreateDoctorDto, userId: number) {
     // 1. Check user exists
-    const user = await this.prisma.user.findUnique({ where: { id: data.userId } });
-    if (!user) throw new NotFoundException(`User with id ${data.userId} not found`);
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user) throw new NotFoundException(`User with id ${userId} not found`);
 
-    // 2. Check user role is DOCTOR
-    if (user.role !== 'DOCTOR')
-      throw new BadRequestException(`User with id ${data.userId} does not have DOCTOR role`);
+    // 2. Check user role is doctor
+    if (user.role !== 'doctor')
+      throw new BadRequestException(`User with id ${userId} does not have doctor role`);
 
     // 3. Check no duplicate doctor for same user
-    const existing = await this.prisma.doctor.findUnique({ where: { userId: data.userId } });
+    const existing = await this.prisma.doctor.findUnique({ where: { userId } });
     if (existing)
-      throw new BadRequestException(`Doctor already exists for user with id ${data.userId}`);
+      throw new BadRequestException(`Doctor already exists for user with id ${userId}`);
 
     return this.prisma.doctor.create({
       data: {
         ...data,
+        userId,
         isVerified: false
       }
     });

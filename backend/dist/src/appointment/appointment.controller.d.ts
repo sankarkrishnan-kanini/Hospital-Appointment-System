@@ -119,6 +119,7 @@ export declare class AppointmentController {
                 professionalStatement: string | null;
                 practicingFrom: Date | null;
                 isVerified: boolean;
+                verificationRequested: boolean;
             };
         } & {
             id: number;
@@ -221,6 +222,7 @@ export declare class AppointmentController {
                 professionalStatement: string | null;
                 practicingFrom: Date | null;
                 isVerified: boolean;
+                verificationRequested: boolean;
             };
         } & {
             id: number;
