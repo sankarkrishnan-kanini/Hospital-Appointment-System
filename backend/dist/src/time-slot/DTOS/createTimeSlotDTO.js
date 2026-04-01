@@ -14,7 +14,7 @@ const class_validator_1 = require("class-validator");
 const class_transformer_1 = require("class-transformer");
 const swagger_1 = require("@nestjs/swagger");
 class CreateTimeSlotDto {
-    officeId;
+    doctorHospitalId;
     startTime;
     endTime;
     isBooked;
@@ -25,7 +25,7 @@ __decorate([
     (0, class_validator_1.IsInt)(),
     (0, class_validator_1.IsNotEmpty)(),
     __metadata("design:type", Number)
-], CreateTimeSlotDto.prototype, "officeId", void 0);
+], CreateTimeSlotDto.prototype, "doctorHospitalId", void 0);
 __decorate([
     (0, swagger_1.ApiProperty)({ example: '2026-04-10T10:00:00.000Z' }),
     (0, class_validator_1.IsDate)(),

@@ -16,19 +16,8 @@ async function bootstrap() {
     .setDescription('The hospital appointment management API')
     .setVersion('1.0')
 
-    .addBearerAuth(
-      {
-        type: 'http',
-        scheme: 'bearer',
-        bearerFormat: 'JWT',
-        name: 'JWT',
-        description: 'Enter JWT token',
-        in: 'header',
-      },
-      'JWT-auth', 
-    )
-    .addTag('hospital-appointment-management')
     .addBearerAuth()
+    .addTag('hospital-appointment-management')
     .build();
   const documentFactory = () => SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, documentFactory);

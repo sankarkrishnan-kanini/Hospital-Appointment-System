@@ -22,41 +22,19 @@ export class AdminService {
   async deactivateUser(id: number) {
     const user = await this.prisma.user.findUnique({ where: { id } });
     if (!user) throw new NotFoundException(`User with id ${id} not found`);
+    if (!user.isActive) throw new BadRequestException(`User with id ${id} is already deactivated`);
 
-    if (!user.isActive)
-      throw new BadRequestException(`User with id ${id} is already deactivated`);
-
-    const updated = await this.prisma.user.update({
-      where: { id },
-      data: { isActive: false }
-    });
-
-    return {
-      id: updated.id,
-      email: updated.email,
-      role: updated.role,
-      isActive: updated.isActive
-    };
+    const updated = await this.prisma.user.update({ where: { id }, data: { isActive: false } });
+    return { id: updated.id, email: updated.email, role: updated.role, isActive: updated.isActive };
   }
 
   async activateUser(id: number) {
     const user = await this.prisma.user.findUnique({ where: { id } });
     if (!user) throw new NotFoundException(`User with id ${id} not found`);
+    if (user.isActive) throw new BadRequestException(`User with id ${id} is already active`);
 
-    if (user.isActive)
-      throw new BadRequestException(`User with id ${id} is already active`);
-
-    const updated = await this.prisma.user.update({
-      where: { id },
-      data: { isActive: true }
-    });
-
-    return {
-      id: updated.id,
-      email: updated.email,
-      role: updated.role,
-      isActive: updated.isActive
-    };
+    const updated = await this.prisma.user.update({ where: { id }, data: { isActive: true } });
+    return { id: updated.id, email: updated.email, role: updated.role, isActive: updated.isActive };
   }
 
   // ─── DOCTOR MANAGEMENT ───────────────────────────────────────────────────────
@@ -65,7 +43,7 @@ export class AdminService {
     const doctors = await this.prisma.doctor.findMany({
       include: {
         specializations: { include: { specialization: true } },
-        offices: true,
+        doctorHospitals: true,
         documents: true
       }
     });
@@ -78,20 +56,17 @@ export class AdminService {
       verificationRequested: doctor.verificationRequested,
       documentCount: doctor.documents.length,
       specializations: doctor.specializations.map(ds => ds.specialization.specializationName),
-      offices: doctor.offices
+      doctorHospitals: doctor.doctorHospitals
     }));
   }
 
   async getPendingDoctors() {
     const doctors = await this.prisma.doctor.findMany({
-      where: {
-        verificationRequested: true,
-        isVerified: false
-      },
+      where: { verificationRequested: true, isVerified: false },
       include: {
         specializations: { include: { specialization: true } },
         documents: true,
-        offices: true
+        doctorHospitals: true
       }
     });
 
@@ -103,7 +78,7 @@ export class AdminService {
       verificationRequested: doctor.verificationRequested,
       documentCount: doctor.documents.length,
       specializations: doctor.specializations.map(ds => ds.specialization.specializationName),
-      offices: doctor.offices
+      doctorHospitals: doctor.doctorHospitals
     }));
   }
 
@@ -112,10 +87,9 @@ export class AdminService {
       where: { id },
       include: {
         specializations: { include: { specialization: true } },
-        offices: true,
+        doctorHospitals: { include: { hospital: true } },
         documents: true,
-        qualifications: true,
-        hospitalAffiliations: true
+        qualifications: true
       }
     });
     if (!doctor) throw new NotFoundException(`Doctor with id ${id} not found`);
@@ -127,19 +101,12 @@ export class AdminService {
       isVerified: doctor.isVerified,
       verificationRequested: doctor.verificationRequested,
       specializations: doctor.specializations.map(ds => ds.specialization.specializationName),
-      offices: doctor.offices,
+      doctorHospitals: doctor.doctorHospitals,
       documentCount: doctor.documents.length,
       qualifications: doctor.qualifications.map(q => ({
         name: q.qualificationName,
         institute: q.instituteName,
         year: q.procurementYear
-      })),
-      hospitalAffiliations: doctor.hospitalAffiliations.map(h => ({
-        hospitalName: h.hospitalName,
-        city: h.city,
-        country: h.country,
-        startDate: h.startDate,
-        endDate: h.endDate
       }))
     };
   }
@@ -147,41 +114,17 @@ export class AdminService {
   async verifyDoctor(id: number) {
     const doctor = await this.prisma.doctor.findUnique({
       where: { id },
-      select: {
-        id: true,
-        firstName: true,
-        lastName: true,
-        isVerified: true,
-        verificationRequested: true,
-        documents: true
-      }
+      select: { id: true, firstName: true, lastName: true, isVerified: true, verificationRequested: true, documents: true }
     });
     if (!doctor) throw new NotFoundException(`Doctor with id ${id} not found`);
+    if (doctor.isVerified) throw new BadRequestException(`Doctor with id ${id} is already verified`);
+    if (!doctor.verificationRequested) throw new BadRequestException(`Doctor has not requested verification yet`);
+    if (doctor.documents.length === 0) throw new BadRequestException(`Doctor must upload documents before verification`);
 
-    if (doctor.isVerified)
-      throw new BadRequestException(`Doctor with id ${id} is already verified`);
+    const updated = await this.prisma.doctor.updateMany({ where: { id, isVerified: false }, data: { isVerified: true } });
+    if (updated.count === 0) throw new BadRequestException(`Doctor is already verified`);
 
-    if (!doctor.verificationRequested)
-      throw new BadRequestException(`Doctor has not requested verification yet`);
-
-    if (doctor.documents.length === 0)
-      throw new BadRequestException(`Doctor must upload documents before verification`);
-
-    const updated = await this.prisma.doctor.updateMany({
-      where: { id, isVerified: false },
-      data: { isVerified: true }
-    });
-
-    if (updated.count === 0)
-      throw new BadRequestException(`Doctor is already verified`);
-
-    return {
-      id: doctor.id,
-      firstName: doctor.firstName,
-      lastName: doctor.lastName,
-      isVerified: true,
-      verifiedAt: new Date()
-    };
+    return { id: doctor.id, firstName: doctor.firstName, lastName: doctor.lastName, isVerified: true, verifiedAt: new Date() };
   }
 
   // ─── APPOINTMENT MANAGEMENT ──────────────────────────────────────────────────
@@ -190,7 +133,7 @@ export class AdminService {
     return this.prisma.appointment.findMany({
       include: {
         client: true,
-        office: { include: { doctor: true } },
+        doctorHospital: { include: { doctor: true, hospital: true } },
         timeSlot: true,
         status: true
       }
@@ -202,7 +145,7 @@ export class AdminService {
       where: { id },
       include: {
         client: true,
-        office: { include: { doctor: true } },
+        doctorHospital: { include: { doctor: true, hospital: true } },
         timeSlot: true,
         status: true,
         history: true
@@ -215,10 +158,7 @@ export class AdminService {
   // ─── PATIENT MANAGEMENT ──────────────────────────────────────────────────────
 
   async getAllPatients() {
-    const patients = await this.prisma.clientAccount.findMany({
-      include: { user: true }
-    });
-
+    const patients = await this.prisma.clientAccount.findMany({ include: { user: true } });
     return patients.map(patient => ({
       id: patient.id,
       firstName: patient.firstName,
@@ -238,7 +178,7 @@ export class AdminService {
           include: {
             status: true,
             timeSlot: true,
-            office: { include: { doctor: true } }
+            doctorHospital: { include: { doctor: true, hospital: true } }
           }
         }
       }
@@ -256,7 +196,7 @@ export class AdminService {
     };
   }
 
-  // ─── SPECIALIZATION REQUESTS ──────────────────────────────────────────────────
+  // ─── SPECIALIZATION REQUESTS ─────────────────────────────────────────────────
 
   async getSpecializationRequests() {
     const documents = await this.prisma.doctorDocument.findMany({
@@ -280,13 +220,14 @@ export class AdminService {
     const specialization = await this.prisma.specialization.findUnique({ where: { id: specializationId } });
     if (!specialization) throw new NotFoundException(`Specialization not found`);
 
-    const existing = await this.prisma.doctorSpecialization.findFirst({
-      where: { doctorId, specializationId }
+    const requestDoc = await this.prisma.doctorDocument.findFirst({
+      where: { doctorId, documentType: `SPECIALIZATION_REQUEST_${specializationId}` }
     });
+    if (!requestDoc) throw new BadRequestException(`No specialization request found for this doctor and specialization`);
+
+    const existing = await this.prisma.doctorSpecialization.findFirst({ where: { doctorId, specializationId } });
     if (existing) throw new BadRequestException(`Doctor already has this specialization`);
 
-    return this.prisma.doctorSpecialization.create({
-      data: { doctorId, specializationId }
-    });
+    return this.prisma.doctorSpecialization.create({ data: { doctorId, specializationId } });
   }
 }

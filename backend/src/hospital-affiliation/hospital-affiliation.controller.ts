@@ -1,75 +1,41 @@
-import { Controller, Get, Post, Patch, Delete, Body, Param, Query, ParseIntPipe, HttpStatus, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Body, Param, ParseIntPipe, HttpStatus } from '@nestjs/common';
 import { HospitalAffiliationService } from './hospital-affiliation.service';
-import { CreateHospitalAffiliationDto } from './DTOS/createHospitalAffiliationDTO';
-import { UpdateHospitalAffiliationDto } from './DTOS/updateHospitalAffiliationDTO';
-import { AuthGuard } from 'src/auth/auth.guard';
-import { Roles } from 'src/auth/roles.decorator';
-import { Role } from 'src/auth/role.enum';
-import { RoleGuard } from 'src/auth/role.guard';
 
-@Controller('hospital-affiliation')
-@UseGuards(AuthGuard)
+@Controller('hospital')
 export class HospitalAffiliationController {
 
   constructor(private readonly hospitalAffiliationService: HospitalAffiliationService) {}
 
-  // GET /hospital-affiliation
   @Get()
-  async findAll() {
-    return await this.hospitalAffiliationService.findAll();
+  findAll() {
+    return this.hospitalAffiliationService.findAll();
   }
 
-  // GET /hospital-affiliation/search?city=city&country=country
-  @Get('search')
-  async search(
-    @Query('city') city?: string,
-    @Query('country') country?: string
-  ) {
-    return await this.hospitalAffiliationService.search(city, country);
-  }
-
-  // GET /hospital-affiliation/doctor/:doctorId
-  @Get('doctor/:doctorId')
-  async findByDoctor(@Param('doctorId', new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE })) doctorId: number) {
-    return await this.hospitalAffiliationService.findByDoctor(doctorId);
-  }
-
-  // GET /hospital-affiliation/doctor/:doctorId/active
-  @Get('doctor/:doctorId/active')
-  async findActiveByDoctor(@Param('doctorId', new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE })) doctorId: number) {
-    return await this.hospitalAffiliationService.findActiveByDoctor(doctorId);
-  }
-
-  // GET /hospital-affiliation/:id
   @Get(':id')
-  async findOne(@Param('id', new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE })) id: number) {
-    return await this.hospitalAffiliationService.findOne(id);
+  findOne(@Param('id', new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE })) id: number) {
+    return this.hospitalAffiliationService.findOne(id);
   }
 
-  // POST /hospital-affiliation
   @Post()
-  @Roles(Role.Doctor)
-  @UseGuards(RoleGuard)
-  async create(@Body() dto: CreateHospitalAffiliationDto) {
-    return await this.hospitalAffiliationService.create(dto);
+  create(@Body() dto: any) {
+    return this.hospitalAffiliationService.create(dto);
   }
 
-  // PATCH /hospital-affiliation/:id
   @Patch(':id')
-  @Roles(Role.Doctor)
-  @UseGuards(RoleGuard)
-  async update(
+  update(
     @Param('id', new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE })) id: number,
-    @Body() dto: UpdateHospitalAffiliationDto
+    @Body() dto: any
   ) {
-    return await this.hospitalAffiliationService.update(id, dto);
+    return this.hospitalAffiliationService.update(id, dto);
   }
 
-  // DELETE /hospital-affiliation/:id
   @Delete(':id')
-  @Roles(Role.Admin)
-  @UseGuards(RoleGuard)
-  async remove(@Param('id', new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE })) id: number) {
-    return await this.hospitalAffiliationService.remove(id);
+  remove(@Param('id', new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE })) id: number) {
+    return this.hospitalAffiliationService.remove(id);
+  }
+
+  @Get('office/:officeId')
+  findByOffice(@Param('officeId', new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE })) officeId: number) {
+    return this.hospitalAffiliationService.findByOffice(officeId);
   }
 }

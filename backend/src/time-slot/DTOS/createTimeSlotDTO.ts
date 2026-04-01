@@ -6,7 +6,7 @@ export class CreateTimeSlotDto {
   @ApiProperty({ example: 1 })
   @IsInt()
   @IsNotEmpty()
-  officeId: number;
+  doctorHospitalId: number;
 
   @ApiProperty({ example: '2026-04-10T10:00:00.000Z' })
   @IsDate()

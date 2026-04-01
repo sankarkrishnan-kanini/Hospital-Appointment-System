@@ -10,7 +10,7 @@ export class BookAppointmentDto {
   @ApiProperty({ example: 1 })
   @IsInt()
   @IsNotEmpty()
-  officeId: number;
+  doctorHospitalId: number;
 
   @ApiProperty({ example: 1 })
   @IsInt()
