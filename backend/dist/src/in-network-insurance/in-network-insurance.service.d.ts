@@ -19,8 +19,8 @@ export declare class InNetworkInsuranceService {
             zip: string;
         };
     } & {
-        officeId: number;
         id: number;
+        officeId: number;
         insuranceName: string;
     })[]>;
     findOne(id: number): Promise<{
@@ -38,28 +38,28 @@ export declare class InNetworkInsuranceService {
             zip: string;
         };
     } & {
-        officeId: number;
         id: number;
+        officeId: number;
         insuranceName: string;
     }>;
     create(data: CreateInNetworkInsuranceDto): Promise<{
-        officeId: number;
         id: number;
+        officeId: number;
         insuranceName: string;
     }>;
     update(id: number, data: UpdateInNetworkInsuranceDto): Promise<{
-        officeId: number;
         id: number;
+        officeId: number;
         insuranceName: string;
     }>;
     remove(id: number): Promise<{
-        officeId: number;
         id: number;
+        officeId: number;
         insuranceName: string;
     }>;
     findByOffice(officeId: number): Promise<{
-        officeId: number;
         id: number;
+        officeId: number;
         insuranceName: string;
     }[]>;
     search(name: string): Promise<({
@@ -74,6 +74,7 @@ export declare class InNetworkInsuranceService {
                 professionalStatement: string | null;
                 practicingFrom: Date | null;
                 isVerified: boolean;
+                verificationRequested: boolean;
             };
         } & {
             id: number;
@@ -89,8 +90,8 @@ export declare class InNetworkInsuranceService {
             zip: string;
         };
     } & {
-        officeId: number;
         id: number;
+        officeId: number;
         insuranceName: string;
     })[]>;
     removeAllByOffice(officeId: number): Promise<{

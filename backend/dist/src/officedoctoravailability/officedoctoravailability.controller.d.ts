@@ -4,46 +4,46 @@ import { OfficedoctoravailabilityService } from './officedoctoravailability.serv
 export declare class OfficedoctoravailabilityController {
     private readonly service;
     constructor(service: OfficedoctoravailabilityService);
-    create(dto: createofficedoctoravailabilityDTO): Promise<{
-        officeId: number;
+    create(dto: createofficedoctoravailabilityDTO): Promise<import("@nestjs/common").BadRequestException | {
         id: number;
         reason: string | null;
+        officeId: number;
         dayOfWeek: string;
         startTime: Date;
         endTime: Date;
         isAvailable: boolean;
-    } | import("@nestjs/common").BadRequestException>;
+    }>;
     findAll(officeId: number): Promise<{
-        officeId: number;
         id: number;
         reason: string | null;
+        officeId: number;
         dayOfWeek: string;
         startTime: Date;
         endTime: Date;
         isAvailable: boolean;
     }[]>;
     findOne(id: number): Promise<{
-        officeId: number;
         id: number;
         reason: string | null;
+        officeId: number;
         dayOfWeek: string;
         startTime: Date;
         endTime: Date;
         isAvailable: boolean;
     }>;
     update(id: number, dto: UpdateOfficeDoctorAvailabilityDTO): Promise<{
-        officeId: number;
         id: number;
         reason: string | null;
+        officeId: number;
         dayOfWeek: string;
         startTime: Date;
         endTime: Date;
         isAvailable: boolean;
     }>;
     remove(id: number): Promise<{
-        officeId: number;
         id: number;
         reason: string | null;
+        officeId: number;
         dayOfWeek: string;
         startTime: Date;
         endTime: Date;

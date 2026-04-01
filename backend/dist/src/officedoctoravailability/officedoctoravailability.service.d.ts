@@ -5,46 +5,46 @@ import { UpdateOfficeDoctorAvailabilityDTO } from './DTOS/updateofficedoctoravai
 export declare class OfficedoctoravailabilityService {
     private readonly prisma;
     constructor(prisma: PrismaService);
-    create(dto: createofficedoctoravailabilityDTO): Promise<{
-        officeId: number;
+    create(dto: createofficedoctoravailabilityDTO): Promise<BadRequestException | {
         id: number;
         reason: string | null;
+        officeId: number;
         dayOfWeek: string;
         startTime: Date;
         endTime: Date;
         isAvailable: boolean;
-    } | BadRequestException>;
+    }>;
     findAll(officeId: number): Promise<{
-        officeId: number;
         id: number;
         reason: string | null;
+        officeId: number;
         dayOfWeek: string;
         startTime: Date;
         endTime: Date;
         isAvailable: boolean;
     }[]>;
     findOne(id: number): Promise<{
-        officeId: number;
         id: number;
         reason: string | null;
+        officeId: number;
         dayOfWeek: string;
         startTime: Date;
         endTime: Date;
         isAvailable: boolean;
     }>;
     update(id: number, dto: UpdateOfficeDoctorAvailabilityDTO): Promise<{
-        officeId: number;
         id: number;
         reason: string | null;
+        officeId: number;
         dayOfWeek: string;
         startTime: Date;
         endTime: Date;
         isAvailable: boolean;
     }>;
     remove(id: number): Promise<{
-        officeId: number;
         id: number;
         reason: string | null;
+        officeId: number;
         dayOfWeek: string;
         startTime: Date;
         endTime: Date;

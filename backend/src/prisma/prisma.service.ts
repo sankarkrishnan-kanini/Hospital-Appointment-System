@@ -7,10 +7,10 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
 	
 	constructor(){
 	   const adapter = new PrismaMariaDb({
-			host: "127.0.0.1",
+			host: "localhost",
 			user: "root",
-			password: "Admin@123456789$1",
-			database: "hospitalbookingdb"
+			password: "Admin@123",
+			database: "hospitalmanagementdb"
 
 	   });
 	   
@@ -18,7 +18,9 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
 	}
 
 	async onModuleInit() {
+
 		await this.$connect();
+
 	}
 
 	

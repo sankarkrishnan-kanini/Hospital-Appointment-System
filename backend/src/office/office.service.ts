@@ -38,7 +38,20 @@ export class OfficeService {
 
   // POST /office
   async create(data: CreateOfficeDto) {
-    return await this.prisma.office.create({ data });
+    return await this.prisma.office.create({
+      data: {
+        doctorId: 0,
+        hospitalAffiliationId: data.hospitalAffiliationId ?? null,
+        timeSlotPerClientInMin: data.timeSlotPerClientInMin,
+        firstConsultationFee: data.firstConsultationFee,
+        followupConsultationFee: data.followupConsultationFee,
+        streetAddress: data.streetAddress,
+        city: data.city,
+        state: data.state,
+        country: data.country,
+        zip: data.zip
+      }
+    });
   }
 
   // PATCH /office/:id
