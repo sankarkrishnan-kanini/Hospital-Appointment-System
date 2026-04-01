@@ -2,7 +2,11 @@ import { Injectable, NotFoundException, BadRequestException } from '@nestjs/comm
 import { PrismaService } from '../prisma/prisma.service';
 import { UpdateDoctorDto } from '../doctor/DTOS/updateDoctorDTO';
 import { SetupProfileDto } from './DTOS/setupProfileDto';
-import { CreateOfficeDto } from '../doctor-role/DTOS/createPrivatePracticeDto';
+import { CreatePrivatePracticeDto } from '../doctor-role/DTOS/createPrivatePracticeDto';
+import { AffiliateHospitalDto } from '../doctor-role/DTOS/affiliateHospitalDto';
+import { SetAvailabilityDto } from '../doctor-role/DTOS/setAvailabilityDto';
+import { GenerateTimeSlotsDto } from '../doctor-role/DTOS/generateTimeSlotsDto';
+import { MarkUnavailabilityDto } from '../doctor-role/DTOS/markUnavailabilityDto';
 
 @Injectable()
 export class DoctorRoleService {
@@ -231,9 +235,307 @@ export class DoctorRoleService {
     };
   }
 
+  // ─── AVAILABILITY ────────────────────────────────────────────────────
+
+  async setAvailability(userId: number, dto: SetAvailabilityDto) {
+    const doctor = await this.prisma.doctor.findUnique({ where: { userId } });
+    if (!doctor) throw new NotFoundException(`Doctor profile not found`);
+
+    const doctorHospital = await this.prisma.doctorHospital.findUnique({ where: { id: dto.doctorHospitalId } });
+    if (!doctorHospital) throw new NotFoundException(`DoctorHospital with id ${dto.doctorHospitalId} not found`);
+    if (doctorHospital.doctorId !== doctor.id) throw new BadRequestException(`This practice does not belong to you`);
+
+    const existing = await this.prisma.officeDoctorAvailability.findFirst({
+      where: { doctorHospitalId: dto.doctorHospitalId, dayOfWeek: dto.dayOfWeek }
+    });
+    if (existing) throw new BadRequestException(`Availability for ${dto.dayOfWeek} already set for this practice`);
+
+    const newStart = new Date(`1970-01-01T${dto.startTime}:00.000Z`);
+    const newEnd = new Date(`1970-01-01T${dto.endTime}:00.000Z`);
+
+    if (newEnd <= newStart) throw new BadRequestException(`End time must be after start time`);
+
+    // Check for time conflicts across all doctor's practices on the same day
+    const allDoctorHospitals = await this.prisma.doctorHospital.findMany({
+      where: { doctorId: doctor.id },
+      select: { id: true }
+    });
+    const allIds = allDoctorHospitals.map(dh => dh.id);
+
+    const conflict = await this.prisma.officeDoctorAvailability.findFirst({
+      where: {
+        doctorHospitalId: { in: allIds },
+        dayOfWeek: dto.dayOfWeek,
+        startTime: { lt: newEnd },
+        endTime: { gt: newStart }
+      }
+    });
+    if (conflict) throw new BadRequestException(`Doctor already has overlapping availability on ${dto.dayOfWeek}`);
+
+    return this.prisma.officeDoctorAvailability.create({
+      data: {
+        doctorHospitalId: dto.doctorHospitalId,
+        dayOfWeek: dto.dayOfWeek,
+        startTime: newStart,
+        endTime: newEnd,
+        isAvailable: true
+      }
+    });
+  }
+
+  async getAvailability(userId: number, doctorHospitalId: number) {
+    const doctor = await this.prisma.doctor.findUnique({ where: { userId } });
+    if (!doctor) throw new NotFoundException(`Doctor profile not found`);
+
+    const doctorHospital = await this.prisma.doctorHospital.findUnique({ where: { id: doctorHospitalId } });
+    if (!doctorHospital) throw new NotFoundException(`DoctorHospital with id ${doctorHospitalId} not found`);
+    if (doctorHospital.doctorId !== doctor.id) throw new BadRequestException(`This practice does not belong to you`);
+
+    return this.prisma.officeDoctorAvailability.findMany({ where: { doctorHospitalId } });
+  }
+
+  // ─── TIMESLOT GENERATION ──────────────────────────────────────────────────────
+
+  async generateTimeSlots(userId: number, dto: GenerateTimeSlotsDto) {
+    const doctor = await this.prisma.doctor.findUnique({ where: { userId } });
+    if (!doctor) throw new NotFoundException(`Doctor profile not found`);
+
+    const doctorHospital = await this.prisma.doctorHospital.findUnique({ where: { id: dto.doctorHospitalId } });
+    if (!doctorHospital) throw new NotFoundException(`DoctorHospital with id ${dto.doctorHospitalId} not found`);
+    if (doctorHospital.doctorId !== doctor.id) throw new BadRequestException(`This practice does not belong to you`);
+
+    const date = new Date(dto.date);
+    const dayOfWeek = date.toLocaleDateString('en-US', { weekday: 'long' }).toUpperCase();
+
+    const availability = await this.prisma.officeDoctorAvailability.findFirst({
+      where: { doctorHospitalId: dto.doctorHospitalId, dayOfWeek, isAvailable: true }
+    });
+    if (!availability) throw new BadRequestException(`No availability set for ${dayOfWeek} at this practice`);
+
+    // Check doctor unavailability for this date
+    const dayStart = new Date(dto.date);
+    dayStart.setUTCHours(0, 0, 0, 0);
+    const dayEnd = new Date(dto.date);
+    dayEnd.setUTCHours(23, 59, 59, 999);
+
+    const unavailability = await this.prisma.doctorUnavailability.findFirst({
+      where: { doctorId: doctor.id, date: { gte: dayStart, lte: dayEnd } }
+    });
+    if (unavailability) throw new BadRequestException(`Doctor is marked unavailable on ${dto.date}`);
+
+    // Generate slots
+    const slotDuration = doctorHospital.timeSlotPerClientInMin;
+    const startH = availability.startTime.getUTCHours();
+    const startM = availability.startTime.getUTCMinutes();
+    const endH = availability.endTime.getUTCHours();
+    const endM = availability.endTime.getUTCMinutes();
+
+    const slots: { startTime: Date; endTime: Date }[] = [];
+    let current = startH * 60 + startM;
+    const end = endH * 60 + endM;
+
+    while (current + slotDuration <= end) {
+      const slotStart = new Date(dto.date);
+      slotStart.setUTCHours(Math.floor(current / 60), current % 60, 0, 0);
+
+      const slotEnd = new Date(dto.date);
+      slotEnd.setUTCHours(Math.floor((current + slotDuration) / 60), (current + slotDuration) % 60, 0, 0);
+
+      slots.push({ startTime: slotStart, endTime: slotEnd });
+      current += slotDuration;
+    }
+
+    if (slots.length === 0) throw new BadRequestException(`No slots can be generated for the given availability`);
+
+    // Skip already existing slots for this date
+    const existingSlots = await this.prisma.timeSlot.findMany({
+      where: { doctorHospitalId: dto.doctorHospitalId, startTime: { gte: dayStart, lte: dayEnd } }
+    });
+    const existingTimes = new Set(existingSlots.map(s => s.startTime.toISOString()));
+    const newSlots = slots.filter(s => !existingTimes.has(s.startTime.toISOString()));
+
+    if (newSlots.length === 0) throw new BadRequestException(`Time slots already generated for ${dto.date}`);
+
+    await this.prisma.timeSlot.createMany({
+      data: newSlots.map(s => ({
+        doctorHospitalId: dto.doctorHospitalId,
+        startTime: s.startTime,
+        endTime: s.endTime,
+        isBooked: false
+      }))
+    });
+
+    return { message: `${newSlots.length} time slots generated for ${dto.date}`, slots: newSlots };
+  }
+
+  // ─── UNAVAILABILITY ────────────────────────────────────────────────────
+
+  async markUnavailability(userId: number, dto: MarkUnavailabilityDto) {
+    const doctor = await this.prisma.doctor.findUnique({ where: { userId } });
+    if (!doctor) throw new NotFoundException(`Doctor profile not found`);
+
+    const isFullDay = !dto.startTime || !dto.endTime;
+
+    const dayStart = new Date(dto.date);
+    dayStart.setUTCHours(0, 0, 0, 0);
+    const dayEnd = new Date(dto.date);
+    dayEnd.setUTCHours(23, 59, 59, 999);
+
+    const rangeStart = isFullDay ? dayStart : new Date(`${dto.date}T${dto.startTime}:00.000Z`);
+    const rangeEnd = isFullDay ? dayEnd : new Date(`${dto.date}T${dto.endTime}:00.000Z`);
+
+    if (!isFullDay && rangeEnd <= rangeStart)
+      throw new BadRequestException(`End time must be after start time`);
+
+    // Get all doctor's DoctorHospital ids
+    const allDoctorHospitals = await this.prisma.doctorHospital.findMany({
+      where: { doctorId: doctor.id },
+      select: { id: true }
+    });
+    const allIds = allDoctorHospitals.map(dh => dh.id);
+
+    // Find all slots in the unavailable range
+    const affectedSlots = await this.prisma.timeSlot.findMany({
+      where: {
+        doctorHospitalId: { in: allIds },
+        startTime: { gte: rangeStart, lt: rangeEnd }
+      },
+      include: { appointments: { include: { status: true } } }
+    });
+
+    const cancelledStatus = await this.prisma.appointmentStatus.findFirst({ where: { status: 'CANCELLED' } });
+    if (!cancelledStatus) throw new NotFoundException(`AppointmentStatus 'CANCELLED' not found in DB`);
+
+    await this.prisma.$transaction(async (tx) => {
+      for (const slot of affectedSlots) {
+        if (slot.isBooked) {
+          // Cancel active appointments on this slot
+          await tx.appointment.updateMany({
+            where: {
+              timeSlotId: slot.id,
+              appointmentStatusId: { not: cancelledStatus.id }
+            },
+            data: {
+              appointmentStatusId: cancelledStatus.id,
+              cancellationReason: `Doctor unavailability: ${dto.reason || 'No reason provided'}`
+            }
+          });
+          // Free the slot
+          await tx.timeSlot.update({ where: { id: slot.id }, data: { isBooked: false } });
+        }
+        // Delete the slot
+        await tx.timeSlot.delete({ where: { id: slot.id } });
+      }
+
+      // Create unavailability record
+      await tx.doctorUnavailability.create({
+        data: {
+          doctorId: doctor.id,
+          date: dayStart,
+          startTime: isFullDay ? null : rangeStart,
+          endTime: isFullDay ? null : rangeEnd,
+          reason: dto.reason
+        }
+      });
+    });
+
+    const bookedCount = affectedSlots.filter(s => s.isBooked).length;
+    const unbookedCount = affectedSlots.filter(s => !s.isBooked).length;
+
+    return {
+      message: `Unavailability marked for ${dto.date}${isFullDay ? ' (full day)' : ` ${dto.startTime}-${dto.endTime}`}`,
+      slotsDeleted: unbookedCount,
+      appointmentsCancelled: bookedCount
+    };
+  }
+
+  // ─── APPOINTMENTS ────────────────────────────────────────────────────
+
+  async getOwnAppointments(userId: number) {
+    const doctor = await this.prisma.doctor.findUnique({ where: { userId } });
+    if (!doctor) throw new NotFoundException(`Doctor profile not found`);
+
+    return this.prisma.appointment.findMany({
+      where: { doctorHospital: { doctorId: doctor.id } },
+      include: {
+        client: true,
+        timeSlot: true,
+        status: true,
+        doctorHospital: { include: { hospital: true } }
+      }
+    });
+  }
+
+  async completeAppointment(userId: number, appointmentId: number) {
+    const doctor = await this.prisma.doctor.findUnique({ where: { userId } });
+    if (!doctor) throw new NotFoundException(`Doctor profile not found`);
+
+    const appointment = await this.prisma.appointment.findUnique({
+      where: { id: appointmentId },
+      include: { status: true, doctorHospital: true }
+    });
+    if (!appointment) throw new NotFoundException(`Appointment with id ${appointmentId} not found`);
+    if (appointment.doctorHospital.doctorId !== doctor.id)
+      throw new BadRequestException(`This appointment does not belong to you`);
+
+    if (appointment.status.status === 'COMPLETED')
+      throw new BadRequestException(`Appointment is already completed`);
+    if (appointment.status.status === 'CANCELLED')
+      throw new BadRequestException(`Cannot complete a cancelled appointment`);
+
+    const completedStatus = await this.prisma.appointmentStatus.findFirst({ where: { status: 'Completed' } });
+    if (!completedStatus) throw new NotFoundException(`AppointmentStatus 'Completed' not found in DB`);
+
+    return this.prisma.appointment.update({
+      where: { id: appointmentId },
+      data: {
+        appointmentStatusId: completedStatus.id,
+        actualEndTime: new Date()
+      },
+      include: { status: true, timeSlot: true, client: true }
+    });
+  }
+
+  // ─── HOSPITAL AFFILIATION ────────────────────────────────────────────────────
+
+  async affiliateWithHospital(userId: number, dto: AffiliateHospitalDto) {
+    const doctor = await this.prisma.doctor.findUnique({ where: { userId } });
+    if (!doctor) throw new NotFoundException(`Doctor profile not found`);
+    if (!doctor.isVerified) throw new BadRequestException(`Only verified doctors can affiliate with hospitals`);
+
+    const hospital = await this.prisma.hospital.findUnique({ where: { id: dto.hospitalId } });
+    if (!hospital) throw new NotFoundException(`Hospital with id ${dto.hospitalId} not found`);
+
+    const existing = await this.prisma.doctorHospital.findFirst({
+      where: { doctorId: doctor.id, hospitalId: dto.hospitalId }
+    });
+    if (existing) throw new BadRequestException(`Doctor is already affiliated with this hospital`);
+
+    return this.prisma.doctorHospital.create({
+      data: {
+        doctorId: doctor.id,
+        hospitalId: dto.hospitalId,
+        isPrivate: false,
+        firstConsultationFee: dto.firstConsultationFee,
+        followupConsultationFee: dto.followupConsultationFee,
+        timeSlotPerClientInMin: dto.timeSlotPerClientInMin
+      },
+      include: { hospital: true }
+    }).then(dh => ({
+      id: dh.id,
+      doctorId: dh.doctorId,
+      hospitalId: dh.hospitalId,
+      isPrivate: dh.isPrivate,
+      firstConsultationFee: dh.firstConsultationFee,
+      followupConsultationFee: dh.followupConsultationFee,
+      timeSlotPerClientInMin: dh.timeSlotPerClientInMin,
+      hospital: dh.hospital
+    }));
+  }
+
   // ─── OFFICE MANAGEMENT ──────────────────────────────────────────────────────
 
-  async createOffice(userId: number, dto: CreateOfficeDto) {
+  async createOffice(userId: number, dto: CreatePrivatePracticeDto) {
     const doctor = await this.prisma.doctor.findUnique({ where: { userId } });
     if (!doctor) throw new NotFoundException(`Doctor profile not found`);
 
@@ -254,16 +556,57 @@ export class DoctorRoleService {
         followupConsultationFee: dto.followupConsultationFee,
         timeSlotPerClientInMin: dto.timeSlotPerClientInMin
       }
-    });
+    }).then(dh => ({
+      id: dh.id,
+      doctorId: dh.doctorId,
+      isPrivate: dh.isPrivate,
+      streetAddress: dh.streetAddress,
+      city: dh.city,
+      state: dh.state,
+      country: dh.country,
+      zip: dh.zip,
+      firstConsultationFee: dh.firstConsultationFee,
+      followupConsultationFee: dh.followupConsultationFee,
+      timeSlotPerClientInMin: dh.timeSlotPerClientInMin
+    }));
   }
 
   async getOffices(userId: number) {
     const doctor = await this.prisma.doctor.findUnique({ where: { userId } });
     if (!doctor) throw new NotFoundException(`Doctor profile not found`);
 
-    return this.prisma.doctorHospital.findMany({
+    const doctorHospitals = await this.prisma.doctorHospital.findMany({
       where: { doctorId: doctor.id },
       include: { hospital: true }
+    });
+
+    return doctorHospitals.map(dh => {
+      if (dh.isPrivate) {
+        return {
+          id: dh.id,
+          doctorId: dh.doctorId,
+          isPrivate: dh.isPrivate,
+          streetAddress: dh.streetAddress,
+          city: dh.city,
+          state: dh.state,
+          country: dh.country,
+          zip: dh.zip,
+          firstConsultationFee: dh.firstConsultationFee,
+          followupConsultationFee: dh.followupConsultationFee,
+          timeSlotPerClientInMin: dh.timeSlotPerClientInMin
+        };
+      } else {
+        return {
+          id: dh.id,
+          doctorId: dh.doctorId,
+          hospitalId: dh.hospitalId,
+          isPrivate: dh.isPrivate,
+          firstConsultationFee: dh.firstConsultationFee,
+          followupConsultationFee: dh.followupConsultationFee,
+          timeSlotPerClientInMin: dh.timeSlotPerClientInMin,
+          hospital: dh.hospital
+        };
+      }
     });
   }
 }

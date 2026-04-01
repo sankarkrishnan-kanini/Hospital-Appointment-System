@@ -10,12 +10,17 @@ import { AuthGuard } from './auth/auth.guard';
 import { RoleGuard } from './auth/role.guard';
 import { APP_GUARD } from '@nestjs/core';
 
+import { OfficeHospitalModule } from './office-hospital/office-hospital.module';
+import { PatientModule } from './patient/patient.module';
+
 @Module({
   imports: [
     UsersModule,
     AuthModule,
     AdminModule,
     DoctorRoleModule,
+    OfficeHospitalModule,
+    PatientModule,
   ],
   controllers: [AppController],
   providers: [

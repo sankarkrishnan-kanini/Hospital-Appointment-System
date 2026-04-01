@@ -18,6 +18,8 @@ const doctor_role_module_1 = require("./doctor-role/doctor-role.module");
 const auth_guard_1 = require("./auth/auth.guard");
 const role_guard_1 = require("./auth/role.guard");
 const core_1 = require("@nestjs/core");
+const office_hospital_module_1 = require("./office-hospital/office-hospital.module");
+const patient_module_1 = require("./patient/patient.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -28,6 +30,8 @@ exports.AppModule = AppModule = __decorate([
             auth_module_1.AuthModule,
             admin_module_1.AdminModule,
             doctor_role_module_1.DoctorRoleModule,
+            office_hospital_module_1.OfficeHospitalModule,
+            patient_module_1.PatientModule,
         ],
         controllers: [app_controller_1.AppController],
         providers: [
