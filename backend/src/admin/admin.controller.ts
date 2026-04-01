@@ -1,10 +1,11 @@
-import { Controller, Get, Post, Patch, Param, ParseIntPipe, HttpStatus, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Param, ParseIntPipe, HttpStatus } from '@nestjs/common';
 import { AdminService } from './admin.service';
-import { AuthGuard } from '../auth/auth.guard';
 import { ApiBearerAuth } from '@nestjs/swagger';
+import { Roles } from '../auth/roles.decorator';
+import { Role } from '../auth/role.enum';
 
 @ApiBearerAuth()
-@UseGuards(AuthGuard)
+@Roles(Role.Admin)
 @Controller('admin')
 export class AdminController {
 
@@ -38,7 +39,6 @@ export class AdminController {
     return this.adminService.getAllDoctors();
   }
 
-  // static routes before /:id
   @Get('doctors/pending')
   getPendingDoctors() {
     return this.adminService.getPendingDoctors();
@@ -86,7 +86,7 @@ export class AdminController {
     return this.adminService.getPatientById(id);
   }
 
-  // ─── SPECIALIZATION REQUESTS ──────────────────────────────────────────────────────
+  // ─── SPECIALIZATION REQUESTS ─────────────────────────────────────────────────
 
   @Get('specialization-requests')
   getSpecializationRequests() {

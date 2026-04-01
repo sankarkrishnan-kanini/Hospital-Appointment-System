@@ -2,7 +2,7 @@ import { Injectable, NotFoundException, BadRequestException } from '@nestjs/comm
 import { PrismaService } from '../prisma/prisma.service';
 import { UpdateDoctorDto } from '../doctor/DTOS/updateDoctorDTO';
 import { SetupProfileDto } from './DTOS/setupProfileDto';
-import { CreateOfficeDto } from '../office/DTOS/createOfficeDTO';
+import { CreateOfficeDto } from '../doctor-role/DTOS/createPrivatePracticeDto';
 
 @Injectable()
 export class DoctorRoleService {
@@ -80,21 +80,7 @@ export class DoctorRoleService {
         }))
       });
 
-      // 4. Delete existing hospital affiliations and re-add
-      await tx.hospitalAffiliation.deleteMany({ where: { doctorId: doctor.id } });
-      if (dto.hospitalAffiliations && dto.hospitalAffiliations.length > 0) {
-        await tx.hospitalAffiliation.createMany({
-          data: dto.hospitalAffiliations.map((h: any) => ({
-            doctorId: doctor.id,
-            hospitalName: h.hospitalName,
-            city: h.city,
-            country: h.country,
-            startDate: h.startDate ? new Date(h.startDate) : undefined,
-            endDate: h.endDate ? new Date(h.endDate) : undefined
-          }))
-        });
-      }
-
+      // 4. Skip hospital affiliations — now managed via DoctorHospital junction table
       // 5. Delete existing documents and re-upload
       await tx.doctorDocument.deleteMany({ where: { doctorId: doctor.id } });
       await tx.doctorDocument.createMany({
@@ -119,9 +105,8 @@ export class DoctorRoleService {
       where: { userId },
       include: {
         specializations: { include: { specialization: true } },
-        offices: true,
+        doctorHospitals: { include: { hospital: true } },
         qualifications: true,
-        hospitalAffiliations: true,
         documents: true
       }
     });
@@ -136,18 +121,11 @@ export class DoctorRoleService {
       isVerified: doctor.isVerified,
       verificationRequested: doctor.verificationRequested,
       specializations: doctor.specializations.map(ds => ds.specialization.specializationName),
-      offices: doctor.offices,
+      doctorHospitals: doctor.doctorHospitals,
       qualifications: doctor.qualifications.map(q => ({
         name: q.qualificationName,
         institute: q.instituteName,
         year: q.procurementYear
-      })),
-      hospitalAffiliations: doctor.hospitalAffiliations.map(h => ({
-        hospitalName: h.hospitalName,
-        city: h.city,
-        country: h.country,
-        startDate: h.startDate,
-        endDate: h.endDate
       })),
       documentCount: doctor.documents.length
     };
@@ -260,20 +238,21 @@ export class DoctorRoleService {
     if (!doctor) throw new NotFoundException(`Doctor profile not found`);
 
     if (!doctor.isVerified)
-      throw new BadRequestException(`Only verified doctors can create offices`);
+      throw new BadRequestException(`Only verified doctors can create practices`);
 
-    return this.prisma.office.create({
+    return this.prisma.doctorHospital.create({
       data: {
         doctorId: doctor.id,
-        hospitalAffiliationId: dto.hospitalAffiliationId ?? null,
-        timeSlotPerClientInMin: dto.timeSlotPerClientInMin,
-        firstConsultationFee: dto.firstConsultationFee,
-        followupConsultationFee: dto.followupConsultationFee,
+        hospitalId: null,
+        isPrivate: true,
         streetAddress: dto.streetAddress,
         city: dto.city,
         state: dto.state,
         country: dto.country,
-        zip: dto.zip
+        zip: dto.zip,
+        firstConsultationFee: dto.firstConsultationFee,
+        followupConsultationFee: dto.followupConsultationFee,
+        timeSlotPerClientInMin: dto.timeSlotPerClientInMin
       }
     });
   }
@@ -282,8 +261,9 @@ export class DoctorRoleService {
     const doctor = await this.prisma.doctor.findUnique({ where: { userId } });
     if (!doctor) throw new NotFoundException(`Doctor profile not found`);
 
-    return this.prisma.office.findMany({
-      where: { doctorId: doctor.id }
+    return this.prisma.doctorHospital.findMany({
+      where: { doctorId: doctor.id },
+      include: { hospital: true }
     });
   }
 }

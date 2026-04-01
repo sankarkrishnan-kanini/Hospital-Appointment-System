@@ -2,11 +2,15 @@ import { Controller, Get, Post, Patch, Body, Request, UseGuards, UseInterceptors
 import { DoctorRoleService } from './doctor-role.service';
 import { UpdateDoctorDto } from '../doctor/DTOS/updateDoctorDTO';
 import { SetupProfileDto } from './DTOS/setupProfileDto';
-import { CreateOfficeDto } from '../office/DTOS/createOfficeDTO';
+import { CreateOfficeDto } from './DTOS/createPrivatePracticeDto';
 import { AuthGuard } from '../auth/auth.guard';
 import { ApiBearerAuth, ApiConsumes, ApiBody } from '@nestjs/swagger';
 import { FilesInterceptor, FileInterceptor } from '@nestjs/platform-express';
 import { Response } from 'express';
+import { RoleGuard } from 'src/auth/role.guard';
+import { Role } from 'src/auth/role.enum';
+import { Roles } from 'src/auth/roles.decorator';
+
 
 @ApiBearerAuth()
 @UseGuards(AuthGuard)
@@ -55,6 +59,8 @@ export class DoctorRoleController {
   // ─── GET PROFILE ─────────────────────────────────────────────────────────────
 
   @Get('profile')
+   @Roles(Role.Doctor)
+  @UseGuards(RoleGuard)
   getProfile(@Request() req) {
     return this.doctorRoleService.getProfile(req.user.sub);
   }
@@ -62,6 +68,8 @@ export class DoctorRoleController {
   // ─── UPDATE BASIC INFO (AFTER VERIFICATION) ──────────────────────────────────
 
   @Patch('profile')
+  @Roles(Role.Doctor)
+  @UseGuards(RoleGuard)
   updateProfile(@Request() req, @Body() dto: UpdateDoctorDto) {
     return this.doctorRoleService.updateProfile(req.user.sub, dto);
   }

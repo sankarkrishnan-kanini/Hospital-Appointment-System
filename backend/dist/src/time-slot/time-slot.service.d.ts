@@ -8,45 +8,45 @@ export declare class TimeSlotService {
         id: number;
         createdAt: Date;
         updatedAt: Date;
-        officeId: number;
         startTime: Date;
         endTime: Date;
         isBooked: boolean;
+        doctorHospitalId: number;
     }[]>;
     findOne(id: number): import(".prisma/client").Prisma.Prisma__TimeSlotClient<{
         id: number;
         createdAt: Date;
         updatedAt: Date;
-        officeId: number;
         startTime: Date;
         endTime: Date;
         isBooked: boolean;
+        doctorHospitalId: number;
     } | null, null, import("@prisma/client/runtime/client").DefaultArgs, import(".prisma/client").Prisma.PrismaClientOptions>;
     create(data: CreateTimeSlotDto): import(".prisma/client").Prisma.Prisma__TimeSlotClient<{
         id: number;
         createdAt: Date;
         updatedAt: Date;
-        officeId: number;
         startTime: Date;
         endTime: Date;
         isBooked: boolean;
+        doctorHospitalId: number;
     }, never, import("@prisma/client/runtime/client").DefaultArgs, import(".prisma/client").Prisma.PrismaClientOptions>;
     update(id: number, data: UpdateTimeSlotDto): import(".prisma/client").Prisma.Prisma__TimeSlotClient<{
         id: number;
         createdAt: Date;
         updatedAt: Date;
-        officeId: number;
         startTime: Date;
         endTime: Date;
         isBooked: boolean;
+        doctorHospitalId: number;
     }, never, import("@prisma/client/runtime/client").DefaultArgs, import(".prisma/client").Prisma.PrismaClientOptions>;
     remove(id: number): import(".prisma/client").Prisma.Prisma__TimeSlotClient<{
         id: number;
         createdAt: Date;
         updatedAt: Date;
-        officeId: number;
         startTime: Date;
         endTime: Date;
         isBooked: boolean;
+        doctorHospitalId: number;
     }, never, import("@prisma/client/runtime/client").DefaultArgs, import(".prisma/client").Prisma.PrismaClientOptions>;
 }

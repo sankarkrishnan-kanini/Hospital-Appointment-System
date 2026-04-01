@@ -24,7 +24,14 @@ let TimeSlotService = class TimeSlotService {
         return this.prisma.timeSlot.findUnique({ where: { id } });
     }
     create(data) {
-        return this.prisma.timeSlot.create({ data });
+        return this.prisma.timeSlot.create({
+            data: {
+                doctorHospitalId: data.doctorHospitalId,
+                startTime: data.startTime,
+                endTime: data.endTime,
+                isBooked: data.isBooked ?? false
+            }
+        });
     }
     update(id, data) {
         return this.prisma.timeSlot.update({ where: { id }, data });

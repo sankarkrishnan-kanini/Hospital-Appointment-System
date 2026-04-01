@@ -17,7 +17,14 @@ export class TimeSlotService {
   }
 
   create(data: CreateTimeSlotDto) {
-    return this.prisma.timeSlot.create({ data });
+    return this.prisma.timeSlot.create({
+      data: {
+        doctorHospitalId: data.doctorHospitalId,
+        startTime: data.startTime,
+        endTime: data.endTime,
+        isBooked: data.isBooked ?? false
+      }
+    });
   }
 
   update(id: number, data: UpdateTimeSlotDto) {

@@ -1,5 +1,5 @@
 export declare class BookAppointmentDto {
     clientId: number;
-    officeId: number;
+    doctorHospitalId: number;
     timeSlotId: number;
 }

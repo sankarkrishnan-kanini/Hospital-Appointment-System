@@ -1,5 +1,5 @@
 export declare class CreateTimeSlotDto {
-    officeId: number;
+    doctorHospitalId: number;
     startTime: Date;
     endTime: Date;
     isBooked?: boolean;

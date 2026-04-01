@@ -28,7 +28,7 @@ export class DoctorService {
       where: { isVerified: true },
       include: {
         specializations: { include: { specialization: true } },
-        offices: true
+        doctorHospitals: true
       }
     });
 
@@ -38,7 +38,7 @@ export class DoctorService {
       lastName: doctor.lastName,
       professionalStatement: doctor.professionalStatement,
       practicingFrom: doctor.practicingFrom,
-      offices: doctor.offices,
+      doctorHospitals: doctor.doctorHospitals,
       specializations: doctor.specializations.map(ds => ds.specialization.specializationName)
     }));
   }
@@ -49,9 +49,8 @@ export class DoctorService {
       where: { id },
       include: {
         specializations: { include: { specialization: true } },
-        offices: true,
-        qualifications: true,
-        hospitalAffiliations: true
+        doctorHospitals: { include: { hospital: true } },
+        qualifications: true
       }
     });
     if (!doctor) throw new NotFoundException(`Doctor with id ${id} not found`);
@@ -64,18 +63,11 @@ export class DoctorService {
       practicingFrom: doctor.practicingFrom,
       isVerified: doctor.isVerified,
       specializations: doctor.specializations.map(ds => ds.specialization.specializationName),
-      offices: doctor.offices,
+      doctorHospitals: doctor.doctorHospitals,
       qualifications: doctor.qualifications.map(q => ({
         name: q.qualificationName,
         institute: q.instituteName,
         year: q.procurementYear
-      })),
-      hospitalAffiliations: doctor.hospitalAffiliations.map(h => ({
-        hospitalName: h.hospitalName,
-        city: h.city,
-        country: h.country,
-        startDate: h.startDate,
-        endDate: h.endDate
       }))
     };
   }

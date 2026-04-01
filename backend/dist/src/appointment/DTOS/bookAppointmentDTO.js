@@ -14,7 +14,7 @@ const class_validator_1 = require("class-validator");
 const swagger_1 = require("@nestjs/swagger");
 class BookAppointmentDto {
     clientId;
-    officeId;
+    doctorHospitalId;
     timeSlotId;
 }
 exports.BookAppointmentDto = BookAppointmentDto;
@@ -29,7 +29,7 @@ __decorate([
     (0, class_validator_1.IsInt)(),
     (0, class_validator_1.IsNotEmpty)(),
     __metadata("design:type", Number)
-], BookAppointmentDto.prototype, "officeId", void 0);
+], BookAppointmentDto.prototype, "doctorHospitalId", void 0);
 __decorate([
     (0, swagger_1.ApiProperty)({ example: 1 }),
     (0, class_validator_1.IsInt)(),
