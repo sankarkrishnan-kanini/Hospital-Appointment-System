@@ -2,7 +2,7 @@ import { Controller, Get, Post, Patch, Delete, Body, Param, ParseIntPipe, HttpSt
 import { NotificationService } from './notification.service';
 import { CreateNotificationDto } from './DTOS/createNotificationDTO';
 import { UpdateNotificationDto } from './DTOS/updateNotificationDTO';
-import { AuthGuard } from '@nestjs/passport';
+import { AuthGuard } from 'src/auth/auth.guard';
 import { Roles } from 'src/auth/roles.decorator';
 import { Role } from 'src/auth/role.enum';
 import { RoleGuard } from 'src/auth/role.guard';
