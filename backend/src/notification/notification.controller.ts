@@ -1,9 +1,14 @@
-import { Controller, Get, Post, Patch, Delete, Body, Param, ParseIntPipe, HttpStatus } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Body, Param, ParseIntPipe, HttpStatus, UseGuards } from '@nestjs/common';
 import { NotificationService } from './notification.service';
 import { CreateNotificationDto } from './DTOS/createNotificationDTO';
 import { UpdateNotificationDto } from './DTOS/updateNotificationDTO';
+import { AuthGuard } from '@nestjs/passport';
+import { Roles } from 'src/auth/roles.decorator';
+import { Role } from 'src/auth/role.enum';
+import { RoleGuard } from 'src/auth/role.guard';
 
 @Controller('notification')
+@UseGuards(AuthGuard)
 export class NotificationController {
 
   constructor(private readonly notificationService: NotificationService) {}
@@ -16,6 +21,8 @@ export class NotificationController {
 
   // GET /notification/user/:userId
   @Get('user/:userId')
+  @Roles(Role.Admin, Role.Doctor, Role.Patient)
+  @UseGuards(RoleGuard)
   async findByUser(@Param('userId', new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE })) userId: number) {
     return await this.notificationService.findByUser(userId);
   }

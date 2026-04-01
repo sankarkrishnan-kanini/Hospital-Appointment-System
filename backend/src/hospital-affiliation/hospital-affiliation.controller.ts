@@ -1,9 +1,14 @@
-import { Controller, Get, Post, Patch, Delete, Body, Param, Query, ParseIntPipe, HttpStatus } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Body, Param, Query, ParseIntPipe, HttpStatus, UseGuards } from '@nestjs/common';
 import { HospitalAffiliationService } from './hospital-affiliation.service';
 import { CreateHospitalAffiliationDto } from './DTOS/createHospitalAffiliationDTO';
 import { UpdateHospitalAffiliationDto } from './DTOS/updateHospitalAffiliationDTO';
+import { AuthGuard } from 'src/auth/auth.guard';
+import { Roles } from 'src/auth/roles.decorator';
+import { Role } from 'src/auth/role.enum';
+import { RoleGuard } from 'src/auth/role.guard';
 
 @Controller('hospital-affiliation')
+@UseGuards(AuthGuard)
 export class HospitalAffiliationController {
 
   constructor(private readonly hospitalAffiliationService: HospitalAffiliationService) {}
@@ -43,12 +48,16 @@ export class HospitalAffiliationController {
 
   // POST /hospital-affiliation
   @Post()
+  @Roles(Role.Doctor)
+  @UseGuards(RoleGuard)
   async create(@Body() dto: CreateHospitalAffiliationDto) {
     return await this.hospitalAffiliationService.create(dto);
   }
 
   // PATCH /hospital-affiliation/:id
   @Patch(':id')
+  @Roles(Role.Doctor)
+  @UseGuards(RoleGuard)
   async update(
     @Param('id', new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE })) id: number,
     @Body() dto: UpdateHospitalAffiliationDto
@@ -58,6 +67,8 @@ export class HospitalAffiliationController {
 
   // DELETE /hospital-affiliation/:id
   @Delete(':id')
+  @Roles(Role.Admin)
+  @UseGuards(RoleGuard)
   async remove(@Param('id', new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE })) id: number) {
     return await this.hospitalAffiliationService.remove(id);
   }
