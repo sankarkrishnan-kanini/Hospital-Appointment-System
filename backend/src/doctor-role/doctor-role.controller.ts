@@ -2,7 +2,11 @@ import { Controller, Get, Post, Patch, Body, Request, UseGuards, UseInterceptors
 import { DoctorRoleService } from './doctor-role.service';
 import { UpdateDoctorDto } from '../doctor/DTOS/updateDoctorDTO';
 import { SetupProfileDto } from './DTOS/setupProfileDto';
-import { CreateOfficeDto } from './DTOS/createPrivatePracticeDto';
+import { CreatePrivatePracticeDto } from './DTOS/createPrivatePracticeDto';
+import { AffiliateHospitalDto } from './DTOS/affiliateHospitalDto';
+import { SetAvailabilityDto } from './DTOS/setAvailabilityDto';
+import { GenerateTimeSlotsDto } from './DTOS/generateTimeSlotsDto';
+import { MarkUnavailabilityDto } from './DTOS/markUnavailabilityDto';
 import { AuthGuard } from '../auth/auth.guard';
 import { ApiBearerAuth, ApiConsumes, ApiBody } from '@nestjs/swagger';
 import { FilesInterceptor, FileInterceptor } from '@nestjs/platform-express';
@@ -126,10 +130,68 @@ export class DoctorRoleController {
     return this.doctorRoleService.requestSpecialization(req.user.sub, specializationId, file);
   }
 
+  // ─── AVAILABILITY ────────────────────────────────────────────────────
+
+  @Post('availability')
+  @Roles(Role.Doctor)
+  setAvailability(@Request() req, @Body() dto: SetAvailabilityDto) {
+    return this.doctorRoleService.setAvailability(req.user.sub, dto);
+  }
+
+  @Get('availability/:doctorHospitalId')
+  @Roles(Role.Doctor)
+  getAvailability(
+    @Request() req,
+    @Param('doctorHospitalId', new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE })) doctorHospitalId: number
+  ) {
+    return this.doctorRoleService.getAvailability(req.user.sub, doctorHospitalId);
+  }
+
+  // ─── TIMESLOT GENERATION ────────────────────────────────────────────────────
+
+  @Post('timeslots/generate')
+  @Roles(Role.Doctor)
+  generateTimeSlots(@Request() req, @Body() dto: GenerateTimeSlotsDto) {
+    return this.doctorRoleService.generateTimeSlots(req.user.sub, dto);
+  }
+
+  // ─── UNAVAILABILITY ────────────────────────────────────────────────────
+
+  @Post('unavailability')
+  @Roles(Role.Doctor)
+  markUnavailability(@Request() req, @Body() dto: MarkUnavailabilityDto) {
+    return this.doctorRoleService.markUnavailability(req.user.sub, dto);
+  }
+
+  // ─── APPOINTMENTS ────────────────────────────────────────────────────
+
+  @Get('appointments')
+  @Roles(Role.Doctor)
+  getOwnAppointments(@Request() req) {
+    return this.doctorRoleService.getOwnAppointments(req.user.sub);
+  }
+
+  @Patch('appointments/:id/complete')
+  @Roles(Role.Doctor)
+  completeAppointment(
+    @Request() req,
+    @Param('id', new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE })) id: number
+  ) {
+    return this.doctorRoleService.completeAppointment(req.user.sub, id);
+  }
+
+  // ─── HOSPITAL AFFILIATION ────────────────────────────────────────────────────
+
+  @Post('affiliate')
+  @Roles(Role.Doctor)
+  affiliateWithHospital(@Request() req, @Body() dto: AffiliateHospitalDto) {
+    return this.doctorRoleService.affiliateWithHospital(req.user.sub, dto);
+  }
+
   // ─── OFFICE MANAGEMENT ──────────────────────────────────────────────────────
 
   @Post('office')
-  createOffice(@Request() req, @Body() dto: CreateOfficeDto) {
+  createOffice(@Request() req, @Body() dto: CreatePrivatePracticeDto) {
     return this.doctorRoleService.createOffice(req.user.sub, dto);
   }
 
