@@ -28,7 +28,7 @@ export class AuthService {
 		const payload = {
 		  sub: user.id,
 		  email: user.email,
-		  roles: Array.isArray(user.role) ? user.role : [user.role],
+		  roles: Array.isArray(user.role) ? user.role.map((r) => r.toLowerCase()) : [user.role.toLowerCase()],
 		};
         return {
 		    access_token: await this.jwtservice.signAsync(payload),
