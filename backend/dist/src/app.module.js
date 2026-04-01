@@ -32,6 +32,9 @@ const auth_module_1 = require("./auth/auth.module");
 const admin_module_1 = require("./admin/admin.module");
 const doctor_role_module_1 = require("./doctor-role/doctor-role.module");
 const jwt_1 = require("@nestjs/jwt");
+const auth_guard_1 = require("./auth/auth.guard");
+const core_1 = require("@nestjs/core");
+const role_guard_1 = require("./auth/role.guard");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -39,7 +42,13 @@ exports.AppModule = AppModule = __decorate([
     (0, common_1.Module)({
         imports: [appointment_module_1.AppointmentModule, appointment_history_module_1.AppointmentHistoryModule, client_account_module_1.ClientAccountModule, doctor_module_1.DoctorModule, doctor_document_module_1.DoctorDocumentModule, appointment_status_module_1.AppointmentStatusModule, doctor_specialization_module_1.DoctorSpecializationModule, doctor_unavailability_module_1.DoctorUnavailabilityModule, hospital_affiliation_module_1.HospitalAffiliationModule, in_network_insurance_module_1.InNetworkInsuranceModule, notification_module_1.NotificationModule, office_module_1.OfficeModule, officedoctoravailability_module_1.OfficedoctoravailabilityModule, users_module_1.UsersModule, qualification_module_1.QualificationModule, timeslot_module_1.TimeslotModule, specialization_module_1.SpecializationModule, auth_module_1.AuthModule, jwt_1.JwtModule, admin_module_1.AdminModule, doctor_role_module_1.DoctorRoleModule],
         controllers: [app_controller_1.AppController],
-        providers: [app_service_1.AppService, prisma_service_1.PrismaService],
+        providers: [app_service_1.AppService, prisma_service_1.PrismaService, {
+                provide: core_1.APP_GUARD,
+                useClass: auth_guard_1.AuthGuard,
+            }, {
+                provide: core_1.APP_GUARD,
+                useClass: role_guard_1.RoleGuard,
+            }],
     })
 ], AppModule);
 //# sourceMappingURL=app.module.js.map

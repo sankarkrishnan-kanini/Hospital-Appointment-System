@@ -8,27 +8,38 @@ import { HttpStatus } from '@nestjs/common';
 import {LoginDTO} from './DTOS/LoginDTO';
 import {AuthService} from './auth.service';
 import {AuthGuard} from './auth.guard';
-
-import { ApiBearerAuth } from '@nestjs/swagger';
 import { Public } from './auth.decorator';
-
+import { ApiBearerAuth } from '@nestjs/swagger';
+import { Role } from './role.enum';
+import { user } from './user.decorator';
 @Controller('auth')
+@ApiBearerAuth('JWT-auth')
 export class AuthController {
 	
 	constructor(private readonly service:AuthService,private readonly usersService:UsersService)
 	{}
 	@Public()
-	@Post('/create')
+
+	@Post('/create-patient')
 	@UseFilters(new CustomExceptionFilter())
 	create(@Body() dto:CreateUserDTO)
 	{
-	   return this.usersService.createUser(dto);	
+	   return this.usersService.createUser(dto,Role.Patient);	
+	}
+
+	@Public()
+	@Post('/create-doctor')
+	@UseFilters(new CustomExceptionFilter())
+	createdoctor(@Body() dto:CreateUserDTO)
+	{
+	   return this.usersService.createUser(dto,Role.Doctor);	
 	}
 	
-	@Patch('/update/:id')
+	@Patch('/update')
 	@UseFilters(new CustomExceptionFilter())
-	update(@Param('id',new ParseIntPipe({ errorHttpStatusCode:HttpStatus.NOT_ACCEPTABLE
-	}))id:number,dto:UpdateUserDTO)
+	@UseGuards(AuthGuard)
+	update(@user('sub',new ParseIntPipe({ errorHttpStatusCode:HttpStatus.NOT_ACCEPTABLE
+	}))id:number,@Body()dto:UpdateUserDTO)
 	{
        return this.usersService.updateUser(id,dto);	
 	
@@ -41,8 +52,7 @@ export class AuthController {
 	{
 		return this.service.Login(dto);
 	}
-	
-	@ApiBearerAuth()
+
 	@UseGuards(AuthGuard)
 	@Get('profile')
 	getProfile(@Request() req)

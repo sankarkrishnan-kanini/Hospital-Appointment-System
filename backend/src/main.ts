@@ -15,6 +15,18 @@ async function bootstrap() {
     .setTitle('Hospital Appointment Management API')
     .setDescription('The hospital appointment management API')
     .setVersion('1.0')
+
+    .addBearerAuth(
+      {
+        type: 'http',
+        scheme: 'bearer',
+        bearerFormat: 'JWT',
+        name: 'JWT',
+        description: 'Enter JWT token',
+        in: 'header',
+      },
+      'JWT-auth', 
+    )
     .addTag('hospital-appointment-management')
     .addBearerAuth()
     .build();

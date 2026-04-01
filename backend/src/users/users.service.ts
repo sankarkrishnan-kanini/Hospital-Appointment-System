@@ -8,36 +8,67 @@ import * as bcrypt from 'bcryptjs';
 @Injectable()
 export class UsersService {
 
-  constructor(private readonly prisma: PrismaService) {}
 
-  async createUser(dto: CreateUserDTO): Promise<User> {
-    const check = await this.prisma.user.findFirst({
-      where: { email: dto.email }
-    });
-    if (check) throw new BadRequestException('User already exists');
+    constructor(private readonly prisma:PrismaService)
+    {
+       
+    }
+    async createUser(dto:CreateUserDTO,role:string):Promise<User>
+    {
+        const check =await this.prisma.user.findFirst({
+            where:{
+                email:dto.email,
+                
+            }
+        });
+        if(check)
+        {
+            throw new BadRequestException( "User already exists");
+        }
+		
+		const salt=await bcrypt.genSalt();
+		dto.password=await bcrypt.hash(dto.password,salt);
 
-    const salt = await bcrypt.genSalt();
-    const hashedPassword = await bcrypt.hash(dto.password, salt);
-
-    return this.prisma.user.create({
-      data: {
-        email: dto.email,
-        password: hashedPassword,
-        role: dto.role ?? 'Patient',
-        isActive: true,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      }
-    });
-  }
-
-  async updateUser(id: number, dto: UpdateUserDTO) {
-    return this.prisma.user.update({
-      where: { id },
-      data: {
-        ...dto,
-        updatedAt: new Date()
-      }
-    });
-  }
+		const created=await this.prisma.user.create(
+		{
+		   data:{
+              ...dto,
+			  role:role,
+			  isActive:true,
+			  createdAt:new Date(),
+			  updatedAt:new Date()
+		    
+		   },		   
+			
+		}
+		);
+		
+		return created;
+        
+    }
+	
+	async updateUser(id:number,dto:UpdateUserDTO)
+	{
+        
+		const salt=await bcrypt.genSalt();
+		if(dto.password)
+		{
+			dto.password=await bcrypt.hash(dto.password,salt);
+		}
+		return await this.prisma.user.update(
+		{
+		   where:{id},
+           data:{
+              
+			  ...dto,
+			  updatedAt:new Date()
+		   },			   
+		}
+		
+		);
+		 
+		
+	}
 }
+
+   

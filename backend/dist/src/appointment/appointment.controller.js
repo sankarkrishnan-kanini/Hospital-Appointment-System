@@ -20,6 +20,11 @@ const updateAppointmentDTO_1 = require("./DTOS/updateAppointmentDTO");
 const bookAppointmentDTO_1 = require("./DTOS/bookAppointmentDTO");
 const cancelAppointmentDTO_1 = require("./DTOS/cancelAppointmentDTO");
 const rescheduleAppointmentDTO_1 = require("./DTOS/rescheduleAppointmentDTO");
+const auth_guard_1 = require("../auth/auth.guard");
+const role_guard_1 = require("../auth/role.guard");
+const roles_decorator_1 = require("../auth/roles.decorator");
+const role_enum_1 = require("../auth/role.enum");
+const swagger_1 = require("@nestjs/swagger");
 let AppointmentController = class AppointmentController {
     appointmentService;
     constructor(appointmentService) {
@@ -64,6 +69,7 @@ let AppointmentController = class AppointmentController {
 };
 exports.AppointmentController = AppointmentController;
 __decorate([
+    (0, roles_decorator_1.Roles)(role_enum_1.Role.Patient),
     (0, common_1.Post)('book'),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
@@ -71,6 +77,7 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], AppointmentController.prototype, "bookAppointment", null);
 __decorate([
+    (0, roles_decorator_1.Roles)(role_enum_1.Role.Patient),
     (0, common_1.Patch)(':id/reschedule'),
     __param(0, (0, common_1.Param)('id', new common_1.ParseIntPipe({ errorHttpStatusCode: common_1.HttpStatus.NOT_ACCEPTABLE }))),
     __param(1, (0, common_1.Body)()),
@@ -79,6 +86,7 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], AppointmentController.prototype, "rescheduleAppointment", null);
 __decorate([
+    (0, roles_decorator_1.Roles)(role_enum_1.Role.Patient),
     (0, common_1.Patch)(':id/cancel'),
     __param(0, (0, common_1.Param)('id', new common_1.ParseIntPipe({ errorHttpStatusCode: common_1.HttpStatus.NOT_ACCEPTABLE }))),
     __param(1, (0, common_1.Body)()),
@@ -87,6 +95,7 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], AppointmentController.prototype, "cancelAppointment", null);
 __decorate([
+    (0, roles_decorator_1.Roles)(role_enum_1.Role.Patient),
     (0, common_1.Get)('client/:clientId'),
     __param(0, (0, common_1.Param)('clientId', new common_1.ParseIntPipe({ errorHttpStatusCode: common_1.HttpStatus.NOT_ACCEPTABLE }))),
     __metadata("design:type", Function),
@@ -94,6 +103,7 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], AppointmentController.prototype, "getClientAppointments", null);
 __decorate([
+    (0, roles_decorator_1.Roles)(role_enum_1.Role.Doctor),
     (0, common_1.Get)('doctor/:doctorId'),
     __param(0, (0, common_1.Param)('doctorId', new common_1.ParseIntPipe({ errorHttpStatusCode: common_1.HttpStatus.NOT_ACCEPTABLE }))),
     __metadata("design:type", Function),
@@ -115,12 +125,14 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], AppointmentController.prototype, "getAppointmentHistory", null);
 __decorate([
+    (0, roles_decorator_1.Roles)(role_enum_1.Role.Admin),
     (0, common_1.Get)(),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", void 0)
 ], AppointmentController.prototype, "findAll", null);
 __decorate([
+    (0, roles_decorator_1.Roles)(role_enum_1.Role.Admin),
     (0, common_1.Get)(':id'),
     __param(0, (0, common_1.Param)('id', new common_1.ParseIntPipe({ errorHttpStatusCode: common_1.HttpStatus.NOT_ACCEPTABLE }))),
     __metadata("design:type", Function),
@@ -128,6 +140,7 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], AppointmentController.prototype, "findOne", null);
 __decorate([
+    (0, roles_decorator_1.Roles)(role_enum_1.Role.Admin),
     (0, common_1.Post)(),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
@@ -135,6 +148,7 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], AppointmentController.prototype, "create", null);
 __decorate([
+    (0, roles_decorator_1.Roles)(role_enum_1.Role.Admin, role_enum_1.Role.Doctor, role_enum_1.Role.Patient),
     (0, common_1.Patch)(':id'),
     __param(0, (0, common_1.Param)('id', new common_1.ParseIntPipe({ errorHttpStatusCode: common_1.HttpStatus.NOT_ACCEPTABLE }))),
     __param(1, (0, common_1.Body)()),
@@ -143,6 +157,7 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], AppointmentController.prototype, "update", null);
 __decorate([
+    (0, roles_decorator_1.Roles)(role_enum_1.Role.Admin),
     (0, common_1.Delete)(':id'),
     __param(0, (0, common_1.Param)('id', new common_1.ParseIntPipe({ errorHttpStatusCode: common_1.HttpStatus.NOT_ACCEPTABLE }))),
     __metadata("design:type", Function),
@@ -150,6 +165,8 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], AppointmentController.prototype, "remove", null);
 exports.AppointmentController = AppointmentController = __decorate([
+    (0, swagger_1.ApiBearerAuth)(),
+    (0, common_1.UseGuards)(auth_guard_1.AuthGuard, role_guard_1.RoleGuard),
     (0, common_1.Controller)('appointments'),
     __metadata("design:paramtypes", [appointment_service_1.AppointmentService])
 ], AppointmentController);

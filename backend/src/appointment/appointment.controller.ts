@@ -1,25 +1,34 @@
-import { Controller, Get, Post, Patch, Delete, Body, Param, ParseIntPipe, HttpStatus } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Body, Param, ParseIntPipe, HttpStatus, UseGuards } from '@nestjs/common';
 import { AppointmentService } from './appointment.service';
 import { CreateAppointmentDto } from './DTOS/createAppointmentDTO';
 import { UpdateAppointmentDto } from './DTOS/updateAppointmentDTO';
 import { BookAppointmentDto } from './DTOS/bookAppointmentDTO';
 import { CancelAppointmentDto } from './DTOS/cancelAppointmentDTO';
 import { RescheduleAppointmentDto } from './DTOS/rescheduleAppointmentDTO';
+import { AuthGuard } from '../auth/auth.guard';
+import { RoleGuard } from '../auth/role.guard';
+import { Roles } from '../auth/roles.decorator';
+import { Role } from '../auth/role.enum';
+import { ApiBearerAuth } from '@nestjs/swagger';
 
+@ApiBearerAuth()
+@UseGuards(AuthGuard, RoleGuard)
 @Controller('appointments')
 export class AppointmentController {
 
   constructor(private readonly appointmentService: AppointmentService) {}
 
-  // ─── BUSINESS LOGIC ENDPOINTS ───────────────────────────────────────────────
+  // ─── BUSINESS LOGIC ENDPOINTS ────────────────────────────────────────────────
 
   // POST /appointments/book
+  @Roles(Role.Patient)
   @Post('book')
   bookAppointment(@Body() dto: BookAppointmentDto) {
     return this.appointmentService.bookAppointment(dto);
   }
 
   // PATCH /appointments/:id/reschedule
+  @Roles(Role.Patient)
   @Patch(':id/reschedule')
   rescheduleAppointment(
     @Param('id', new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE })) id: number,
@@ -29,6 +38,7 @@ export class AppointmentController {
   }
 
   // PATCH /appointments/:id/cancel
+  @Roles(Role.Patient)
   @Patch(':id/cancel')
   cancelAppointment(
     @Param('id', new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE })) id: number,
@@ -38,6 +48,7 @@ export class AppointmentController {
   }
 
   // GET /appointments/client/:clientId
+  @Roles(Role.Patient)
   @Get('client/:clientId')
   getClientAppointments(
     @Param('clientId', new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE })) clientId: number
@@ -46,6 +57,7 @@ export class AppointmentController {
   }
 
   // GET /appointments/doctor/:doctorId
+  @Roles(Role.Doctor)
   @Get('doctor/:doctorId')
   getDoctorAppointments(
     @Param('doctorId', new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE })) doctorId: number
@@ -53,7 +65,7 @@ export class AppointmentController {
     return this.appointmentService.getDoctorAppointments(doctorId);
   }
 
-  // GET /appointments/:id/details — specific routes before generic /:id
+  // GET /appointments/:id/details
   @Get(':id/details')
   getAppointmentDetails(
     @Param('id', new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE })) id: number
@@ -69,27 +81,27 @@ export class AppointmentController {
     return this.appointmentService.getAppointmentHistory(id);
   }
 
-  // ─── ADMIN ONLY ENDPOINTS (restrict when auth is added) ─────────────────────
+  // ─── ADMIN ONLY ENDPOINTS ────────────────────────────────────────────────────
 
-  // GET /appointments
+  @Roles(Role.Admin)
   @Get()
   findAll() {
     return this.appointmentService.findAll();
   }
 
-  // GET /appointments/:id
+  @Roles(Role.Admin)
   @Get(':id')
   findOne(@Param('id', new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE })) id: number) {
     return this.appointmentService.findOne(id);
   }
 
-  // POST /appointments
+  @Roles(Role.Admin)
   @Post()
   create(@Body() createAppointmentDto: CreateAppointmentDto) {
     return this.appointmentService.create(createAppointmentDto);
   }
 
-  // PATCH /appointments/:id
+  @Roles(Role.Admin, Role.Doctor, Role.Patient)
   @Patch(':id')
   update(
     @Param('id', new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE })) id: number,
@@ -98,7 +110,7 @@ export class AppointmentController {
     return this.appointmentService.update(id, data);
   }
 
-  // DELETE /appointments/:id
+  @Roles(Role.Admin)
   @Delete(':id')
   remove(@Param('id', new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE })) id: number) {
     return this.appointmentService.remove(id);

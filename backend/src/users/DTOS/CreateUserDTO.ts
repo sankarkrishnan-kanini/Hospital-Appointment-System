@@ -12,8 +12,5 @@ export class CreateUserDTO {
   @MinLength(6)
   password: string;
 
-  @ApiProperty({ example: 'DOCTOR', required: false })
-  @IsOptional()
-  @IsString()
-  role?: string;
 }
+
