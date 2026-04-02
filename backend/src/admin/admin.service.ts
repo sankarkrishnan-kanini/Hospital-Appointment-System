@@ -230,4 +230,21 @@ export class AdminService {
 
     return this.prisma.doctorSpecialization.create({ data: { doctorId, specializationId } });
   }
+
+  async rejectSpecialization(doctorId: number, specializationId: number) {
+    const doctor = await this.prisma.doctor.findUnique({ where: { id: doctorId } });
+    if (!doctor) throw new NotFoundException(`Doctor not found`);
+
+    const specialization = await this.prisma.specialization.findUnique({ where: { id: specializationId } });
+    if (!specialization) throw new NotFoundException(`Specialization not found`);
+
+    const requestDoc = await this.prisma.doctorDocument.findFirst({
+      where: { doctorId, documentType: `SPECIALIZATION_REQUEST_${specializationId}` }
+    });
+    if (!requestDoc) throw new BadRequestException(`No specialization request found for this doctor and specialization`);
+
+    await this.prisma.doctorDocument.delete({ where: { id: requestDoc.id } });
+
+    return { message: `Specialization request rejected and document removed for doctor ${doctorId}` };
+  }
 }

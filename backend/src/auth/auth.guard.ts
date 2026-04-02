@@ -20,7 +20,6 @@ export class AuthGuard implements CanActivate{
        return true;
      }
         const request=context.switchToHttp().getRequest();
-        console.log(request.headers.authorization);
         const token=this.extractedTokenFromHeader(request);
         if(!token)
 		{
@@ -30,7 +29,6 @@ export class AuthGuard implements CanActivate{
              
 			  const payload=await this.jwtService.verifyAsync(token);
 			  request['user']=payload;
-			  console.log(request['user']);
 
         }catch
         {
