@@ -8,55 +8,55 @@ export declare class InNetworkInsuranceService {
         doctorHospital: {
             id: number;
             doctorId: number;
-            hospitalId: number | null;
-            isPrivate: boolean;
-            streetAddress: string | null;
             city: string | null;
-            state: string | null;
             country: string | null;
-            zip: string | null;
+            timeSlotPerClientInMin: number;
             firstConsultationFee: number;
             followupConsultationFee: number;
-            timeSlotPerClientInMin: number;
+            streetAddress: string | null;
+            state: string | null;
+            zip: string | null;
+            hospitalId: number | null;
+            isPrivate: boolean;
         };
     } & {
         id: number;
-        doctorHospitalId: number;
         insuranceName: string;
+        doctorHospitalId: number;
     })[]>;
     findOne(id: number): Promise<{
         doctorHospital: {
             id: number;
             doctorId: number;
-            hospitalId: number | null;
-            isPrivate: boolean;
-            streetAddress: string | null;
             city: string | null;
-            state: string | null;
             country: string | null;
-            zip: string | null;
+            timeSlotPerClientInMin: number;
             firstConsultationFee: number;
             followupConsultationFee: number;
-            timeSlotPerClientInMin: number;
+            streetAddress: string | null;
+            state: string | null;
+            zip: string | null;
+            hospitalId: number | null;
+            isPrivate: boolean;
         };
     } & {
         id: number;
-        doctorHospitalId: number;
         insuranceName: string;
+        doctorHospitalId: number;
     }>;
     create(userId: number, data: CreateInNetworkInsuranceDto): Promise<{
         id: number;
-        doctorHospitalId: number;
         insuranceName: string;
+        doctorHospitalId: number;
     }>;
     update(userId: number, id: number, data: UpdateInNetworkInsuranceDto): Promise<{
         id: number;
-        doctorHospitalId: number;
         insuranceName: string;
+        doctorHospitalId: number;
     }>;
     remove(userId: number, id: number): Promise<{
         id: number;
-        doctorHospitalId: number;
         insuranceName: string;
+        doctorHospitalId: number;
     }>;
 }

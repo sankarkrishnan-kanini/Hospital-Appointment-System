@@ -1,3 +1,4 @@
+
 import { Controller, Get, Post, Patch, Delete, Body, Param, ParseIntPipe, HttpStatus, UseGuards } from '@nestjs/common';
 import { OfficeHospitalService } from './office-hospital.service';
 import { CreateOfficeDTO } from './DTOS/createOfficeDTO';
@@ -38,10 +39,13 @@ export class OfficeHospitalController {
   @Patch('offices/:id')
   updateOffice(
     @Param('id', new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE })) id: number,
+
     @Body() dto: Partial<CreateOfficeDTO>
+
   ) {
     return this.officeHospitalService.updateOffice(id, dto);
   }
+
 
   @Delete('offices/:id')
   deleteOffice(
@@ -49,7 +53,6 @@ export class OfficeHospitalController {
   ) {
     return this.officeHospitalService.deleteOffice(id);
   }
-
   // ─── HOSPITAL ─────────────────────────────────────────────────────────────────
 
   @Post('offices/:officeId/hospitals')
