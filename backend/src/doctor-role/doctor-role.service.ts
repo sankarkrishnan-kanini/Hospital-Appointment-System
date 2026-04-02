@@ -3,15 +3,20 @@ import { PrismaService } from '../prisma/prisma.service';
 import { UpdateDoctorDto } from '../doctor/DTOS/updateDoctorDTO';
 import { SetupProfileDto } from './DTOS/setupProfileDto';
 import { CreatePrivatePracticeDto } from '../doctor-role/DTOS/createPrivatePracticeDto';
+import { UpdatePrivatePracticeDto } from '../doctor-role/DTOS/updatePrivatePracticeDto';
 import { AffiliateHospitalDto } from '../doctor-role/DTOS/affiliateHospitalDto';
 import { SetAvailabilityDto } from '../doctor-role/DTOS/setAvailabilityDto';
 import { GenerateTimeSlotsDto } from '../doctor-role/DTOS/generateTimeSlotsDto';
 import { MarkUnavailabilityDto } from '../doctor-role/DTOS/markUnavailabilityDto';
+import { NotificationService } from '../notification-module/notification.service';
 
 @Injectable()
 export class DoctorRoleService {
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly notificationService: NotificationService
+  ) {}
 
   // ─── SETUP PROFILE (ALL IN ONE) ──────────────────────────────────────────────
 
@@ -410,6 +415,11 @@ export class DoctorRoleService {
       for (const slot of affectedSlots) {
         if (slot.isBooked) {
           // Cancel active appointments on this slot
+          const affectedAppointments = await tx.appointment.findMany({
+            where: { timeSlotId: slot.id, appointmentStatusId: { not: cancelledStatus.id } },
+            include: { client: true, doctorHospital: { include: { doctor: true } } }
+          });
+
           await tx.appointment.updateMany({
             where: {
               timeSlotId: slot.id,
@@ -420,7 +430,16 @@ export class DoctorRoleService {
               cancellationReason: `Doctor unavailability: ${dto.reason || 'No reason provided'}`
             }
           });
-          // Free the slot
+
+          // Notify patients
+          for (const appt of affectedAppointments) {
+            await this.notificationService.notifyAppointmentCancelledByUnavailability(
+              appt.client.userId,
+              `${appt.doctorHospital.doctor.firstName} ${appt.doctorHospital.doctor.lastName}`,
+              slot.startTime
+            );
+          }
+
           await tx.timeSlot.update({ where: { id: slot.id }, data: { isBooked: false } });
         }
         // Delete the slot
@@ -493,6 +512,12 @@ export class DoctorRoleService {
         actualEndTime: new Date()
       },
       include: { status: true, timeSlot: true, client: true }
+    }).then(async (updated) => {
+      await this.notificationService.notifyAppointmentCompleted(
+        updated.client.userId,
+        `${doctor.firstName} ${doctor.lastName}`
+      );
+      return updated;
     });
   }
 
@@ -569,6 +594,21 @@ export class DoctorRoleService {
       followupConsultationFee: dh.followupConsultationFee,
       timeSlotPerClientInMin: dh.timeSlotPerClientInMin
     }));
+  }
+
+  async updatePrivatePractice(userId: number, doctorHospitalId: number, dto: UpdatePrivatePracticeDto) {
+    const doctor = await this.prisma.doctor.findUnique({ where: { userId } });
+    if (!doctor) throw new NotFoundException(`Doctor profile not found`);
+
+    const doctorHospital = await this.prisma.doctorHospital.findUnique({ where: { id: doctorHospitalId } });
+    if (!doctorHospital) throw new NotFoundException(`Practice with id ${doctorHospitalId} not found`);
+    if (doctorHospital.doctorId !== doctor.id) throw new BadRequestException(`This practice does not belong to you`);
+    if (!doctorHospital.isPrivate) throw new BadRequestException(`This is not a private practice`);
+
+    return this.prisma.doctorHospital.update({
+      where: { id: doctorHospitalId },
+      data: dto
+    });
   }
 
   async getOffices(userId: number) {

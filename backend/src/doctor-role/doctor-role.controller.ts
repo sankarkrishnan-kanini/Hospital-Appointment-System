@@ -3,6 +3,7 @@ import { DoctorRoleService } from './doctor-role.service';
 import { UpdateDoctorDto } from '../doctor/DTOS/updateDoctorDTO';
 import { SetupProfileDto } from './DTOS/setupProfileDto';
 import { CreatePrivatePracticeDto } from './DTOS/createPrivatePracticeDto';
+import { UpdatePrivatePracticeDto } from './DTOS/updatePrivatePracticeDto';
 import { AffiliateHospitalDto } from './DTOS/affiliateHospitalDto';
 import { SetAvailabilityDto } from './DTOS/setAvailabilityDto';
 import { GenerateTimeSlotsDto } from './DTOS/generateTimeSlotsDto';
@@ -193,6 +194,16 @@ export class DoctorRoleController {
   @Post('office')
   createOffice(@Request() req, @Body() dto: CreatePrivatePracticeDto) {
     return this.doctorRoleService.createOffice(req.user.sub, dto);
+  }
+
+  @Patch('office/:id')
+  @Roles(Role.Doctor)
+  updatePrivatePractice(
+    @Request() req,
+    @Param('id', new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE })) id: number,
+    @Body() dto: UpdatePrivatePracticeDto
+  ) {
+    return this.doctorRoleService.updatePrivatePractice(req.user.sub, id, dto);
   }
 
   @Get('offices')

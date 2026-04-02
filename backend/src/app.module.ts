@@ -12,6 +12,7 @@ import { APP_GUARD } from '@nestjs/core';
 
 import { OfficeHospitalModule } from './office-hospital/office-hospital.module';
 import { PatientModule } from './patient/patient.module';
+import { NotificationModule } from './notification-module/notification.module';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { PatientModule } from './patient/patient.module';
     DoctorRoleModule,
     OfficeHospitalModule,
     PatientModule,
+    NotificationModule,
   ],
   controllers: [AppController],
   providers: [
