@@ -6,13 +6,19 @@ import { BookAppointmentDto } from './DTOS/bookAppointmentDto';
 import { CancelAppointmentDto } from './DTOS/cancelAppointmentDto';
 import { RescheduleAppointmentDto } from './DTOS/rescheduleAppointmentDto';
 import { NotificationService } from '../notification-module/notification.service';
+import { AppointmentHistoryService } from '../appointment-history/appointment-history.service';
+
 
 @Injectable()
 export class PatientService {
 
   constructor(
     private readonly prisma: PrismaService,
-    private readonly notificationService: NotificationService
+
+    private readonly notificationService: NotificationService,
+
+    private readonly appointmentHistoryService: AppointmentHistoryService
+
   ) {}
 
   // ─── CREATE CLIENT ACCOUNT ────────────────────────────────────────────────────
@@ -34,6 +40,12 @@ export class PatientService {
         email: dto.email
       }
     });
+  }
+
+  async getClientAccount(userId: number) {
+    const client = await this.prisma.clientAccount.findUnique({ where: { userId } });
+    if (!client) throw new NotFoundException(`Client account not found`);
+    return client;
   }
 
   // ─── SEARCH DOCTORS ───────────────────────────────────────────────────────────
@@ -190,7 +202,7 @@ export class PatientService {
         doctorId: dto.doctorId,
         date: slotDate,
         OR: [
-          { startTime: null, endTime: null },
+          { startTime: null },
           { startTime: { lte: timeSlot.startTime }, endTime: { gte: slotEnd } }
         ]
       }
@@ -371,19 +383,6 @@ export class PatientService {
   // ─── VIEW APPOINTMENT HISTORY ────────────────────────────────────────────────────
 
   async getAppointmentHistory(userId: number, appointmentId: number) {
-    const client = await this.prisma.clientAccount.findUnique({ where: { userId } });
-    if (!client) throw new NotFoundException(`Client account not found`);
-
-    const appointment = await this.prisma.appointment.findUnique({ where: { id: appointmentId } });
-    if (!appointment) throw new NotFoundException(`Appointment with id ${appointmentId} not found`);
-    if (appointment.userAccountId !== client.id) throw new BadRequestException(`This appointment does not belong to you`);
-
-    return this.prisma.appointmentHistory.findMany({
-      where: { appointmentId },
-      include: {
-        appointment: { include: { status: true } }
-      },
-      orderBy: { changedAt: 'desc' }
-    });
+    return this.appointmentHistoryService.findByAppointment(userId, appointmentId);
   }
 }

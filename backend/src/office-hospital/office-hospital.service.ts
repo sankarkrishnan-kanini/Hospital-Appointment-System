@@ -1,8 +1,7 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { CreateOfficeDto } from '../office/DTOS/createOfficeDTO';
+import { CreateOfficeDTO } from './DTOS/createOfficeDTO';
 import { CreateHospitalDto } from './DTOS/createHospitalDto';
-import { UpdateOfficeDto, UpdateHospitalDto } from './DTOS/updateOfficeHospitalDto';
 
 @Injectable()
 export class OfficeHospitalService {
@@ -11,7 +10,7 @@ export class OfficeHospitalService {
 
   // ─── OFFICE ───────────────────────────────────────────────────────────────────
 
-  async createOffice(dto: CreateOfficeDto) {
+  async createOffice(dto: CreateOfficeDTO) {
     return this.prisma.office.create({ data: dto });
   }
 
@@ -28,10 +27,23 @@ export class OfficeHospitalService {
     return office;
   }
 
-  async updateOffice(id: number, dto: UpdateOfficeDto) {
+
+  async updateOffice(id: number, dto: Partial<CreateOfficeDTO>) {
     const office = await this.prisma.office.findUnique({ where: { id } });
     if (!office) throw new NotFoundException(`Office with id ${id} not found`);
     return this.prisma.office.update({ where: { id }, data: dto });
+  }
+
+
+  async deleteOffice(id: number) {
+    const office = await this.prisma.office.findUnique({
+      where: { id },
+      include: { hospitals: { include: { doctorHospitals: true } } }
+    });
+    if (!office) throw new NotFoundException(`Office with id ${id} not found`);
+    const hasAffiliatedDoctors = office.hospitals.some(h => h.doctorHospitals.length > 0);
+    if (hasAffiliatedDoctors) throw new BadRequestException(`Cannot delete office with affiliated doctors`);
+    return this.prisma.office.delete({ where: { id } });
   }
 
   // ─── HOSPITAL ─────────────────────────────────────────────────────────────────
@@ -57,9 +69,23 @@ export class OfficeHospitalService {
     return hospital;
   }
 
-  async updateHospital(id: number, dto: UpdateHospitalDto) {
+
+  async updateHospital(id: number, dto: Partial<CreateHospitalDto>) {
     const hospital = await this.prisma.hospital.findUnique({ where: { id } });
     if (!hospital) throw new NotFoundException(`Hospital with id ${id} not found`);
     return this.prisma.hospital.update({ where: { id }, data: dto });
   }
+
+
+  async deleteHospital(id: number) {
+    const hospital = await this.prisma.hospital.findUnique({
+      where: { id },
+      include: { doctorHospitals: true }
+    });
+    if (!hospital) throw new NotFoundException(`Hospital with id ${id} not found`);
+    if (hospital.doctorHospitals.length > 0)
+      throw new BadRequestException(`Cannot delete hospital with affiliated doctors`);
+    return this.prisma.hospital.delete({ where: { id } });
+  }
+
 }

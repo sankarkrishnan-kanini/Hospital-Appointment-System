@@ -44,19 +44,19 @@ export declare class InNetworkInsuranceController {
         insuranceName: string;
         doctorHospitalId: number;
     }>;
-    create(dto: CreateInNetworkInsuranceDto): import(".prisma/client").Prisma.Prisma__InNetworkInsuranceClient<{
+    create(userId: number, dto: CreateInNetworkInsuranceDto): Promise<{
         id: number;
         insuranceName: string;
         doctorHospitalId: number;
-    }, never, import("@prisma/client/runtime/client").DefaultArgs, import(".prisma/client").Prisma.PrismaClientOptions>;
-    update(id: number, dto: UpdateInNetworkInsuranceDto): import(".prisma/client").Prisma.Prisma__InNetworkInsuranceClient<{
+    }>;
+    update(userId: number, id: number, dto: UpdateInNetworkInsuranceDto): Promise<{
         id: number;
         insuranceName: string;
         doctorHospitalId: number;
-    }, never, import("@prisma/client/runtime/client").DefaultArgs, import(".prisma/client").Prisma.PrismaClientOptions>;
-    remove(id: number): import(".prisma/client").Prisma.Prisma__InNetworkInsuranceClient<{
+    }>;
+    remove(userId: number, id: number): Promise<{
         id: number;
         insuranceName: string;
         doctorHospitalId: number;
-    }, never, import("@prisma/client/runtime/client").DefaultArgs, import(".prisma/client").Prisma.PrismaClientOptions>;
+    }>;
 }

@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { UpdateDoctorDto } from '../doctor/DTOS/updateDoctorDTO';
+import { UpdateDoctorSetupProfileDTO } from './DTOS/UpdateDoctorSetupProfileDTO';
 import { SetupProfileDto } from './DTOS/setupProfileDto';
 import { CreatePrivatePracticeDto } from '../doctor-role/DTOS/createPrivatePracticeDto';
 import { UpdatePrivatePracticeDto } from '../doctor-role/DTOS/updatePrivatePracticeDto';
@@ -9,6 +9,7 @@ import { SetAvailabilityDto } from '../doctor-role/DTOS/setAvailabilityDto';
 import { GenerateTimeSlotsDto } from '../doctor-role/DTOS/generateTimeSlotsDto';
 import { MarkUnavailabilityDto } from '../doctor-role/DTOS/markUnavailabilityDto';
 import { NotificationService } from '../notification-module/notification.service';
+import {QualificationDTO} from '../doctor-role/DTOS/QualificationDTO';
 
 @Injectable()
 export class DoctorRoleService {
@@ -18,24 +19,23 @@ export class DoctorRoleService {
     private readonly notificationService: NotificationService
   ) {}
 
-  // ─── SETUP PROFILE (ALL IN ONE) ──────────────────────────────────────────────
-
   async setupProfile(userId: number, dto: SetupProfileDto, files: Express.Multer.File[]) {
-    // Check user exists and has doctor role
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!user) throw new NotFoundException(`User not found`);
     if (user.role !== 'doctor') throw new BadRequestException(`User does not have doctor role`);
-
-    // Get or create doctor profile
     let doctor = await this.prisma.doctor.findUnique({ where: { userId } });
     if (!doctor) {
       doctor = await this.prisma.doctor.create({
         data: {
-          userId,
-          firstName: dto.firstName,
-          lastName: dto.lastName,
+          user: { connect: { id: userId } },
+          firstName:dto.firstName,
+          lastName:dto.lastName,
           isVerified: false,
-          verificationRequested: false
+          createdAt:new Date(),
+          updatedAt:new Date(),
+		   professionalStatement: dto.professionalStatement,
+          practicingFrom: dto.practicingFrom ? new Date(dto.practicingFrom) : undefined,
+          verificationRequested: false, 
         }
       });
     }
@@ -49,7 +49,6 @@ export class DoctorRoleService {
     if (files.length !== dto.documentTypes.length)
       throw new BadRequestException(`Number of files must match number of document types`);
 
-    // Validate specializations exist
     for (const specId of dto.specializations) {
       const spec = await this.prisma.specialization.findUnique({ where: { id: specId } });
       if (!spec) throw new NotFoundException(`Specialization with id ${specId} not found`);
@@ -58,18 +57,6 @@ export class DoctorRoleService {
     return await this.prisma.$transaction(async (tx) => {
       try {
 
-      // 1. Update basic profile
-      await tx.doctor.update({
-        where: { userId },
-        data: {
-          firstName: dto.firstName,
-          lastName: dto.lastName,
-          professionalStatement: dto.professionalStatement,
-          practicingFrom: dto.practicingFrom ? new Date(dto.practicingFrom) : undefined
-        }
-      });
-
-      // 2. Delete existing specializations and re-add
       await tx.doctorSpecialization.deleteMany({ where: { doctorId: doctor.id } });
       await tx.doctorSpecialization.createMany({
         data: dto.specializations.map(specializationId => ({
@@ -77,11 +64,9 @@ export class DoctorRoleService {
           specializationId
         }))
       });
-
-      // 3. Delete existing qualifications and re-add
       await tx.qualification.deleteMany({ where: { doctorId: doctor.id } });
       await tx.qualification.createMany({
-        data: dto.qualifications.map((q: any) => ({
+        data: dto.qualifications.map((q: QualificationDTO) => ({
           doctorId: doctor.id,
           qualificationName: q.qualificationName,
           instituteName: q.instituteName,
@@ -142,7 +127,7 @@ export class DoctorRoleService {
 
   // ─── UPDATE BASIC INFO (AFTER VERIFICATION) ──────────────────────────────────
 
-  async updateProfile(userId: number, dto: UpdateDoctorDto) {
+  async updateProfile(userId: number, dto: UpdateDoctorSetupProfileDTO) {
     const doctor = await this.prisma.doctor.findUnique({ where: { userId } });
     if (!doctor) throw new NotFoundException(`Doctor profile not found for user ${userId}`);
 
@@ -152,8 +137,6 @@ export class DoctorRoleService {
       data: { firstName, lastName, professionalStatement, practicingFrom }
     });
   }
-
-  // ─── DOCUMENT DOWNLOAD ───────────────────────────────────────────────────────
 
   async downloadDocument(userId: number, documentId: number) {
     const doctor = await this.prisma.doctor.findUnique({ where: { userId } });
@@ -218,7 +201,7 @@ export class DoctorRoleService {
     if (!specialization) throw new NotFoundException(`Specialization not found`);
 
     const existing = await this.prisma.doctorSpecialization.findFirst({
-      where: { doctorId: doctor.id, specializationId }
+      where: { doctorId: doctor.id, specializationId: specializationId }
     });
     if (existing) throw new BadRequestException(`Doctor already has this specialization`);
 
@@ -240,7 +223,6 @@ export class DoctorRoleService {
     };
   }
 
-  // ─── AVAILABILITY ────────────────────────────────────────────────────
 
   async setAvailability(userId: number, dto: SetAvailabilityDto) {
     const doctor = await this.prisma.doctor.findUnique({ where: { userId } });
@@ -297,6 +279,19 @@ export class DoctorRoleService {
     if (doctorHospital.doctorId !== doctor.id) throw new BadRequestException(`This practice does not belong to you`);
 
     return this.prisma.officeDoctorAvailability.findMany({ where: { doctorHospitalId } });
+  }
+
+  async deleteAvailability(userId: number, availabilityId: number) {
+    const doctor = await this.prisma.doctor.findUnique({ where: { userId } });
+    if (!doctor) throw new NotFoundException(`Doctor profile not found`);
+
+    const availability = await this.prisma.officeDoctorAvailability.findUnique({ where: { id: availabilityId } });
+    if (!availability) throw new NotFoundException(`Availability with id ${availabilityId} not found`);
+
+    const doctorHospital = await this.prisma.doctorHospital.findUnique({ where: { id: availability.doctorHospitalId } });
+    if (doctorHospital?.doctorId !== doctor.id) throw new BadRequestException(`This availability does not belong to you`);
+
+    return this.prisma.officeDoctorAvailability.delete({ where: { id: availabilityId } });
   }
 
   // ─── TIMESLOT GENERATION ──────────────────────────────────────────────────────
@@ -451,8 +446,8 @@ export class DoctorRoleService {
         data: {
           doctorId: doctor.id,
           date: dayStart,
-          startTime: isFullDay ? null : rangeStart,
-          endTime: isFullDay ? null : rangeEnd,
+          startTime: isFullDay ? undefined : rangeStart,
+          endTime: isFullDay ? undefined : rangeEnd,
           reason: dto.reason
         }
       });
@@ -497,7 +492,7 @@ export class DoctorRoleService {
     if (appointment.doctorHospital.doctorId !== doctor.id)
       throw new BadRequestException(`This appointment does not belong to you`);
 
-    if (appointment.status.status === 'COMPLETED')
+    if (appointment.status.status === 'Completed')
       throw new BadRequestException(`Appointment is already completed`);
     if (appointment.status.status === 'CANCELLED')
       throw new BadRequestException(`Cannot complete a cancelled appointment`);
@@ -563,7 +558,6 @@ export class DoctorRoleService {
   async createOffice(userId: number, dto: CreatePrivatePracticeDto) {
     const doctor = await this.prisma.doctor.findUnique({ where: { userId } });
     if (!doctor) throw new NotFoundException(`Doctor profile not found`);
-
     if (!doctor.isVerified)
       throw new BadRequestException(`Only verified doctors can create practices`);
 
@@ -596,7 +590,8 @@ export class DoctorRoleService {
     }));
   }
 
-  async updatePrivatePractice(userId: number, doctorHospitalId: number, dto: UpdatePrivatePracticeDto) {
+
+  async updatePractice(userId: number, doctorHospitalId: number, dto: Partial<CreatePrivatePracticeDto & { firstConsultationFee: number; followupConsultationFee: number; timeSlotPerClientInMin: number }>) {
     const doctor = await this.prisma.doctor.findUnique({ where: { userId } });
     if (!doctor) throw new NotFoundException(`Doctor profile not found`);
 
@@ -605,10 +600,31 @@ export class DoctorRoleService {
     if (doctorHospital.doctorId !== doctor.id) throw new BadRequestException(`This practice does not belong to you`);
     if (!doctorHospital.isPrivate) throw new BadRequestException(`This is not a private practice`);
 
+
     return this.prisma.doctorHospital.update({
       where: { id: doctorHospitalId },
       data: dto
     });
+  }
+
+
+  async deletePractice(userId: number, doctorHospitalId: number) {
+    const doctor = await this.prisma.doctor.findUnique({ where: { userId } });
+    if (!doctor) throw new NotFoundException(`Doctor profile not found`);
+
+    const doctorHospital = await this.prisma.doctorHospital.findUnique({
+      where: { id: doctorHospitalId },
+      include: { timeSlots: { include: { appointments: true } } }
+    });
+    if (!doctorHospital) throw new NotFoundException(`Practice with id ${doctorHospitalId} not found`);
+    if (doctorHospital.doctorId !== doctor.id) throw new BadRequestException(`This practice does not belong to you`);
+
+    const hasActiveAppointments = doctorHospital.timeSlots.some(ts =>
+      ts.appointments.some(a => a.appointmentStatusId !== null)
+    );
+    if (hasActiveAppointments) throw new BadRequestException(`Cannot remove practice with existing appointments`);
+
+    return this.prisma.doctorHospital.delete({ where: { id: doctorHospitalId } });
   }
 
   async getOffices(userId: number) {
@@ -647,6 +663,20 @@ export class DoctorRoleService {
           hospital: dh.hospital
         };
       }
+    });
+  }
+
+  async getTimeSlots(userId: number, doctorHospitalId: number) {
+    const doctor = await this.prisma.doctor.findUnique({ where: { userId } });
+    if (!doctor) throw new NotFoundException(`Doctor profile not found`);
+
+    const doctorHospital = await this.prisma.doctorHospital.findUnique({ where: { id: doctorHospitalId } });
+    if (!doctorHospital) throw new NotFoundException(`DoctorHospital with id ${doctorHospitalId} not found`);
+    if (doctorHospital.doctorId !== doctor.id) throw new BadRequestException(`This practice does not belong to you`);
+
+    return this.prisma.timeSlot.findMany({
+      where: { doctorHospitalId },
+      orderBy: { startTime: 'asc' }
     });
   }
 }
