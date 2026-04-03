@@ -1,0 +1,43 @@
+"use strict";
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.AppModule = void 0;
+const common_1 = require("@nestjs/common");
+const app_controller_1 = require("./app.controller");
+const app_service_1 = require("./app.service");
+const prisma_service_1 = require("./prisma/prisma.service");
+const users_module_1 = require("./users/users.module");
+const auth_module_1 = require("./auth/auth.module");
+const admin_module_1 = require("./admin/admin.module");
+const doctor_role_module_1 = require("./doctor-role/doctor-role.module");
+const office_hospital_module_1 = require("./office-hospital/office-hospital.module");
+const patient_module_1 = require("./patient/patient.module");
+const notification_module_1 = require("./notification-module/notification.module");
+const appointment_status_module_1 = require("./appointment-status/appointment-status.module");
+const appointment_history_module_1 = require("./appointment-history/appointment-history.module");
+let AppModule = class AppModule {
+};
+exports.AppModule = AppModule;
+exports.AppModule = AppModule = __decorate([
+    (0, common_1.Module)({
+        imports: [
+            users_module_1.UsersModule,
+            auth_module_1.AuthModule,
+            admin_module_1.AdminModule,
+            doctor_role_module_1.DoctorRoleModule,
+            office_hospital_module_1.OfficeHospitalModule,
+            patient_module_1.PatientModule,
+            notification_module_1.NotificationModule,
+            appointment_status_module_1.AppointmentStatusModule,
+            appointment_history_module_1.AppointmentHistoryModule,
+        ],
+        controllers: [app_controller_1.AppController],
+        providers: [app_service_1.AppService, prisma_service_1.PrismaService],
+    })
+], AppModule);
+//# sourceMappingURL=app.module.js.map

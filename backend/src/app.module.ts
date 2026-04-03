@@ -1,23 +1,31 @@
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { AppointmentModule } from './appointment/appointment.module';
-import { AppointmentHistoryModule } from './appointment-history/appointment-history.module';
-import { ClientAccountModule } from './client-account/client-account.module';
-import { DoctorModule } from './doctor/doctor.module';
-import { DoctorDocumentModule } from './doctor-document/doctor-document.module';
-import { AppointmentStatusModule } from './appointment-status/appointment-status.module';
-import { DoctorSpecializationModule } from './doctor-specialization/doctor-specialization.module';
-import { DoctorUnavailabilityModule } from './doctor-unavailability/doctor-unavailability.module';
-import { HospitalAffiliationModule } from './hospital-affiliation/hospital-affiliation.module';
-import { InNetworkInsuranceModule } from './in-network-insurance/in-network-insurance.module';
-import { NotificationModule } from './notification/notification.module';
-import { OfficeModule } from './office/office.module';
-import { OfficedoctoravailabilityModule } from './officedoctoravailability/officedoctoravailability.module';
 import { PrismaService } from './prisma/prisma.service';
+import { UsersModule } from './users/users.module';
+import { AuthModule } from './auth/auth.module';
+import { AdminModule } from './admin/admin.module';
+import { DoctorRoleModule } from './doctor-role/doctor-role.module';
+import { OfficeHospitalModule } from './office-hospital/office-hospital.module';
+import { PatientModule } from './patient/patient.module';
+
+import { NotificationModule } from './notification-module/notification.module';
+import { AppointmentStatusModule } from './appointment-status/appointment-status.module';
+import { AppointmentHistoryModule } from './appointment-history/appointment-history.module';
 
 @Module({
-  imports: [AppointmentModule, AppointmentHistoryModule, ClientAccountModule, DoctorModule, DoctorDocumentModule, AppointmentStatusModule, DoctorSpecializationModule, DoctorUnavailabilityModule, HospitalAffiliationModule, InNetworkInsuranceModule, NotificationModule, OfficeModule, OfficedoctoravailabilityModule],
+  imports: [
+    UsersModule,
+    AuthModule,
+    AdminModule,
+    DoctorRoleModule,
+    OfficeHospitalModule,
+    PatientModule,
+    NotificationModule,
+    AppointmentStatusModule,
+    AppointmentHistoryModule,
+
+  ],
   controllers: [AppController],
   providers: [AppService, PrismaService],
 })
