@@ -3,6 +3,7 @@ import { DoctorRoleService } from './doctor-role.service';
 import { UpdateDoctorSetupProfileDTO } from './DTOS/UpdateDoctorSetupProfileDTO';
 import { SetupProfileDto } from './DTOS/setupProfileDto';
 import { CreatePrivatePracticeDto } from './DTOS/createPrivatePracticeDto';
+import { UpdatePrivatePracticeDto } from './DTOS/updatePrivatePracticeDto';
 import { AffiliateHospitalDto } from './DTOS/affiliateHospitalDto';
 import { SetAvailabilityDto } from './DTOS/setAvailabilityDto';
 import { GenerateTimeSlotsDto } from './DTOS/generateTimeSlotsDto';
@@ -10,6 +11,7 @@ import { MarkUnavailabilityDto } from './DTOS/markUnavailabilityDto';
 import { AuthGuard } from '../auth/auth.guard';
 import { ApiBearerAuth, ApiConsumes, ApiBody } from '@nestjs/swagger';
 import { FilesInterceptor, FileInterceptor } from '@nestjs/platform-express';
+
 import { Response } from 'express';
 import { RoleGuard } from 'src/auth/role.guard';
 import { Role } from 'src/auth/role.enum';
@@ -260,6 +262,16 @@ export class DoctorRoleController {
     @Param('id', new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE })) id: number
   ) {
     return this.doctorRoleService.deletePractice(userid, id);
+  }
+
+  @Patch('office/:id')
+  @Roles(Role.Doctor)
+  updatePrivatePractice(
+   @User('sub', new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE })) userid: number,
+    @Param('id', new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE })) id: number,
+    @Body() dto: UpdatePrivatePracticeDto
+  ) {
+    return this.doctorRoleService.updatePractice(userid, id, dto);
   }
 
   @Get('offices')

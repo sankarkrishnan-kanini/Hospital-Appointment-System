@@ -3,15 +3,21 @@ import { PrismaService } from '../prisma/prisma.service';
 import { UpdateDoctorSetupProfileDTO } from './DTOS/UpdateDoctorSetupProfileDTO';
 import { SetupProfileDto } from './DTOS/setupProfileDto';
 import { CreatePrivatePracticeDto } from '../doctor-role/DTOS/createPrivatePracticeDto';
+import { UpdatePrivatePracticeDto } from '../doctor-role/DTOS/updatePrivatePracticeDto';
 import { AffiliateHospitalDto } from '../doctor-role/DTOS/affiliateHospitalDto';
 import { SetAvailabilityDto } from '../doctor-role/DTOS/setAvailabilityDto';
 import { GenerateTimeSlotsDto } from '../doctor-role/DTOS/generateTimeSlotsDto';
 import { MarkUnavailabilityDto } from '../doctor-role/DTOS/markUnavailabilityDto';
+import { NotificationService } from '../notification-module/notification.service';
 import {QualificationDTO} from '../doctor-role/DTOS/QualificationDTO';
+
 @Injectable()
 export class DoctorRoleService {
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly notificationService: NotificationService
+  ) {}
 
   async setupProfile(userId: number, dto: SetupProfileDto, files: Express.Multer.File[]) {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
@@ -404,6 +410,11 @@ export class DoctorRoleService {
       for (const slot of affectedSlots) {
         if (slot.isBooked) {
           // Cancel active appointments on this slot
+          const affectedAppointments = await tx.appointment.findMany({
+            where: { timeSlotId: slot.id, appointmentStatusId: { not: cancelledStatus.id } },
+            include: { client: true, doctorHospital: { include: { doctor: true } } }
+          });
+
           await tx.appointment.updateMany({
             where: {
               timeSlotId: slot.id,
@@ -414,7 +425,16 @@ export class DoctorRoleService {
               cancellationReason: `Doctor unavailability: ${dto.reason || 'No reason provided'}`
             }
           });
-          // Free the slot
+
+          // Notify patients
+          for (const appt of affectedAppointments) {
+            await this.notificationService.notifyAppointmentCancelledByUnavailability(
+              appt.client.userId,
+              `${appt.doctorHospital.doctor.firstName} ${appt.doctorHospital.doctor.lastName}`,
+              slot.startTime
+            );
+          }
+
           await tx.timeSlot.update({ where: { id: slot.id }, data: { isBooked: false } });
         }
         // Delete the slot
@@ -426,8 +446,8 @@ export class DoctorRoleService {
         data: {
           doctorId: doctor.id,
           date: dayStart,
-          startTime: isFullDay ? null : rangeStart,
-          endTime: isFullDay ? null : rangeEnd,
+          startTime: isFullDay ? undefined : rangeStart,
+          endTime: isFullDay ? undefined : rangeEnd,
           reason: dto.reason
         }
       });
@@ -487,6 +507,12 @@ export class DoctorRoleService {
         actualEndTime: new Date()
       },
       include: { status: true, timeSlot: true, client: true }
+    }).then(async (updated) => {
+      await this.notificationService.notifyAppointmentCompleted(
+        updated.client.userId,
+        `${doctor.firstName} ${doctor.lastName}`
+      );
+      return updated;
     });
   }
 
@@ -564,6 +590,7 @@ export class DoctorRoleService {
     }));
   }
 
+
   async updatePractice(userId: number, doctorHospitalId: number, dto: Partial<CreatePrivatePracticeDto & { firstConsultationFee: number; followupConsultationFee: number; timeSlotPerClientInMin: number }>) {
     const doctor = await this.prisma.doctor.findUnique({ where: { userId } });
     if (!doctor) throw new NotFoundException(`Doctor profile not found`);
@@ -571,12 +598,15 @@ export class DoctorRoleService {
     const doctorHospital = await this.prisma.doctorHospital.findUnique({ where: { id: doctorHospitalId } });
     if (!doctorHospital) throw new NotFoundException(`Practice with id ${doctorHospitalId} not found`);
     if (doctorHospital.doctorId !== doctor.id) throw new BadRequestException(`This practice does not belong to you`);
+    if (!doctorHospital.isPrivate) throw new BadRequestException(`This is not a private practice`);
+
 
     return this.prisma.doctorHospital.update({
       where: { id: doctorHospitalId },
       data: dto
     });
   }
+
 
   async deletePractice(userId: number, doctorHospitalId: number) {
     const doctor = await this.prisma.doctor.findUnique({ where: { userId } });

@@ -17,6 +17,7 @@ const admin_module_1 = require("./admin/admin.module");
 const doctor_role_module_1 = require("./doctor-role/doctor-role.module");
 const office_hospital_module_1 = require("./office-hospital/office-hospital.module");
 const patient_module_1 = require("./patient/patient.module");
+const notification_module_1 = require("./notification-module/notification.module");
 const appointment_status_module_1 = require("./appointment-status/appointment-status.module");
 const appointment_history_module_1 = require("./appointment-history/appointment-history.module");
 let AppModule = class AppModule {
@@ -31,6 +32,7 @@ exports.AppModule = AppModule = __decorate([
             doctor_role_module_1.DoctorRoleModule,
             office_hospital_module_1.OfficeHospitalModule,
             patient_module_1.PatientModule,
+            notification_module_1.NotificationModule,
             appointment_status_module_1.AppointmentStatusModule,
             appointment_history_module_1.AppointmentHistoryModule,
         ],
