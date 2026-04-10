@@ -1,0 +1,389 @@
+'use client';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useAuthStore } from '@/store/auth.store';
+import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import Sidebar from '@/components/Sidebar';
+import { getAllDoctorsApi, getPendingDoctorsApi, verifyDoctorApi, getDoctorByIdApi, downloadDoctorDocumentApi } from '@/lib/api/admin.api';
+import toast from 'react-hot-toast';
+import { X, CheckCircle, FileText, Stethoscope, GraduationCap, Building2, Download } from 'lucide-react';
+
+const navItems = [
+  { label: 'Dashboard', href: '/admin', icon: '🏠' },
+  { label: 'Users', href: '/admin/users', icon: '👥' },
+  { label: 'Doctors', href: '/admin/doctors', icon: '🩺' },
+  { label: 'Patients', href: '/admin/patients', icon: '🧑⚕️' },
+  { label: 'Appointments', href: '/admin/appointments', icon: '📅' },
+  { label: 'Hospitals', href: '/admin/hospitals', icon: '🏥' },
+  { label: 'Specializations', href: '/admin/specializations', icon: '🎓' },
+];
+
+function DoctorDetailModal({ doctorId, onClose, onVerify, verifying }: {
+  doctorId: number;
+  onClose: () => void;
+  onVerify: (id: number) => void;
+  verifying: boolean;
+}) {
+  const { data, isLoading } = useQuery({
+    queryKey: ['admin-doctor', doctorId],
+    queryFn: () => getDoctorByIdApi(doctorId),
+  });
+
+  const doctor = data?.data;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+      <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto">
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+          <h2 className="text-base font-bold text-gray-900">Doctor Details</h2>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition">
+            <X size={18} />
+          </button>
+        </div>
+
+        {isLoading ? (
+          <div className="flex items-center justify-center py-16">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#2d6be4]" />
+          </div>
+        ) : doctor ? (
+          <div className="p-6 space-y-5">
+            {/* Basic Info */}
+            <div className="flex items-center gap-4">
+              <div className="w-14 h-14 bg-[#eef3ff] rounded-full flex items-center justify-center text-[#2d6be4] font-bold text-xl">
+                {doctor.firstName?.[0]}
+              </div>
+              <div>
+                <p className="text-lg font-bold text-gray-900">Dr. {doctor.firstName} {doctor.lastName}</p>
+                <p className="text-xs text-gray-400">ID: #{doctor.id}</p>
+                {doctor.professionalStatement && (
+                  <p className="text-sm text-gray-500 mt-0.5">{doctor.professionalStatement}</p>
+                )}
+                {doctor.practicingFrom && (
+                  <p className="text-xs text-gray-400 mt-0.5">
+                    Practicing since {new Date(doctor.practicingFrom).getFullYear()}
+                  </p>
+                )}
+              </div>
+            </div>
+
+            {/* Specializations */}
+            {doctor.specializations?.length > 0 && (
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <Stethoscope size={14} className="text-[#2d6be4]" />
+                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Specializations</p>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {doctor.specializations.map((s: string) => (
+                    <span key={s} className="text-xs bg-blue-50 text-blue-600 px-2.5 py-1 rounded-full font-medium">{s}</span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Qualifications */}
+            {doctor.qualifications?.length > 0 && (
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <GraduationCap size={14} className="text-[#2d6be4]" />
+                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Qualifications</p>
+                </div>
+                <div className="space-y-2">
+                  {doctor.qualifications.map((q: any, i: number) => (
+                    <div key={i} className="bg-gray-50 rounded-xl px-4 py-2.5">
+                      <p className="text-sm font-medium text-gray-800">{q.name}</p>
+                      <p className="text-xs text-gray-400">{q.institute} {q.year ? `· ${q.year}` : ''}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Hospitals */}
+            {doctor.doctorHospitals?.length > 0 && (
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <Building2 size={14} className="text-[#2d6be4]" />
+                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Affiliated Hospitals</p>
+                </div>
+                <div className="space-y-2">
+                  {doctor.doctorHospitals.map((dh: any, i: number) => (
+                    <div key={i} className="bg-gray-50 rounded-xl px-4 py-2.5">
+                      <p className="text-sm font-medium text-gray-800">{dh.hospital?.name ?? `Hospital #${dh.hospitalId}`}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Documents */}
+            {doctor.documents?.length > 0 && (
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <FileText size={14} className="text-[#2d6be4]" />
+                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Documents ({doctor.documents.length})</p>
+                </div>
+                <div className="space-y-2">
+                  {doctor.documents.map((doc: any) => (
+                    <div key={doc.id} className="bg-gray-50 rounded-xl px-4 py-2.5 flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-gray-800">{doc.documentType}</p>
+                        <p className="text-xs text-gray-400">{new Date(doc.uploadedAt).toLocaleDateString()}</p>
+                      </div>
+                      <button
+                        onClick={async () => {
+                          const res = await downloadDoctorDocumentApi(doctor.id, doc.id);
+                          const url = URL.createObjectURL(new Blob([res.data]));
+                          const a = document.createElement('a');
+                          a.href = url;
+                          a.download = `${doc.documentType}-${doc.id}`;
+                          a.click();
+                          URL.revokeObjectURL(url);
+                        }}
+                        className="flex items-center gap-1.5 text-xs font-medium text-[#2d6be4] bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg transition"
+                      >
+                        <Download size={12} /> Download
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Verification status */}
+            <div className="flex items-center gap-2">
+              {doctor.isVerified ? (
+                <span className="text-xs bg-green-100 text-green-700 font-semibold px-3 py-1 rounded-full">✅ Verified</span>
+              ) : (
+                <span className="text-xs bg-yellow-100 text-yellow-700 font-semibold px-3 py-1 rounded-full">⏳ Pending Verification</span>
+              )}
+            </div>
+
+            {/* Action */}
+            {!doctor.isVerified && doctor.verificationRequested && (
+              <button
+                onClick={() => onVerify(doctor.id)}
+                disabled={verifying}
+                className="w-full flex items-center justify-center gap-2 bg-[#2d6be4] hover:bg-blue-700 text-white font-semibold py-2.5 rounded-xl transition disabled:opacity-60 text-sm"
+              >
+                <CheckCircle size={15} />
+                {verifying ? 'Verifying...' : 'Approve & Verify Doctor'}
+              </button>
+            )}
+          </div>
+        ) : (
+          <p className="text-center text-gray-400 py-10 text-sm">Failed to load doctor details.</p>
+        )}
+      </div>
+    </div>
+  );
+}
+
+export default function AdminDoctorsPage() {
+  const { user } = useAuthStore();
+  const router = useRouter();
+  const queryClient = useQueryClient();
+  const [search, setSearch] = useState('');
+  const [tab, setTab] = useState<'all' | 'pending'>('all');
+  const [selectedDoctorId, setSelectedDoctorId] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (!user || user.role !== 'admin') router.replace('/auth/login');
+  }, [user, router]);
+
+  const { data: allRes, isLoading } = useQuery({
+    queryKey: ['admin-doctors'],
+    queryFn: getAllDoctorsApi,
+    retry: false,
+  });
+
+  const { data: pendingRes } = useQuery({
+    queryKey: ['admin-pending'],
+    queryFn: getPendingDoctorsApi,
+    retry: false,
+  });
+
+  const { mutate: verify, isPending: verifying } = useMutation({
+    mutationFn: verifyDoctorApi,
+    onSuccess: () => {
+      toast.success('Doctor verified successfully');
+      setSelectedDoctorId(null);
+      queryClient.invalidateQueries({ queryKey: ['admin-doctors'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-pending'] });
+    },
+    onError: () => toast.error('Failed to verify doctor'),
+  });
+
+  if (!user) return null;
+
+  const allDoctors = Array.isArray(allRes?.data) ? allRes.data : [];
+  const pendingDoctors = Array.isArray(pendingRes?.data) ? pendingRes.data : [];
+  const displayList = tab === 'all' ? allDoctors : pendingDoctors;
+
+  const filtered = displayList.filter((d: any) =>
+    `${d.firstName} ${d.lastName}`.toLowerCase().includes(search.toLowerCase())
+  );
+
+  return (
+    <div className="min-h-screen bg-gray-50 flex">
+      <Sidebar items={navItems} />
+      <main className="flex-1 flex flex-col ml-64">
+        <header className="h-16 bg-white border-b border-gray-100 shadow-sm flex items-center justify-between px-6 sticky top-0 z-30">
+          <div>
+            <h1 className="text-lg font-bold text-gray-900">Doctors</h1>
+            <p className="text-xs text-gray-400">Manage and verify doctor profiles</p>
+          </div>
+          <div className="flex items-center gap-2">
+            {pendingDoctors.length > 0 && (
+              <span className="text-xs bg-yellow-100 text-yellow-700 font-semibold px-3 py-1 rounded-full">
+                {pendingDoctors.length} Pending
+              </span>
+            )}
+            <span className="text-xs bg-green-100 text-green-700 font-semibold px-3 py-1 rounded-full">
+              {allDoctors.length} Total
+            </span>
+          </div>
+        </header>
+
+        <div className="flex-1 p-6 space-y-5">
+          {/* Tabs + Search */}
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex gap-2">
+              <button
+                onClick={() => setTab('all')}
+                className={`px-4 py-2 rounded-xl text-sm font-semibold transition ${tab === 'all' ? 'bg-[#2d6be4] text-white' : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'}`}
+              >
+                All Doctors
+              </button>
+              <button
+                onClick={() => setTab('pending')}
+                className={`px-4 py-2 rounded-xl text-sm font-semibold transition flex items-center gap-2 ${tab === 'pending' ? 'bg-yellow-500 text-white' : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'}`}
+              >
+                Pending Verification
+                {pendingDoctors.length > 0 && (
+                  <span className={`text-xs px-1.5 py-0.5 rounded-full ${tab === 'pending' ? 'bg-white text-yellow-600' : 'bg-yellow-100 text-yellow-700'}`}>
+                    {pendingDoctors.length}
+                  </span>
+                )}
+              </button>
+            </div>
+            <div className="flex items-center gap-2 bg-white border border-gray-200 rounded-xl px-4 py-2 w-64">
+              <span className="text-gray-400 text-sm">🔍</span>
+              <input
+                type="text"
+                placeholder="Search doctors..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="flex-1 text-sm outline-none text-gray-700 placeholder:text-gray-400"
+              />
+            </div>
+          </div>
+
+          {/* Table */}
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+            {isLoading ? (
+              <div className="flex items-center justify-center py-16">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#2d6be4]" />
+              </div>
+            ) : !filtered.length ? (
+              <div className="text-center py-16">
+                <p className="text-4xl mb-3">🩺</p>
+                <p className="text-gray-400 text-sm">
+                  {tab === 'pending' ? 'No pending verifications' : 'No doctors found'}
+                </p>
+              </div>
+            ) : (
+              <table className="w-full text-sm">
+                <thead className="bg-gray-50 border-b border-gray-100">
+                  <tr className="text-left text-gray-500">
+                    <th className="px-6 py-4 font-medium">#</th>
+                    <th className="px-6 py-4 font-medium">Doctor</th>
+                    <th className="px-6 py-4 font-medium">Practicing From</th>
+                    <th className="px-6 py-4 font-medium">Verification</th>
+                    <th className="px-6 py-4 font-medium">Status</th>
+                    <th className="px-6 py-4 font-medium">Action</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-50">
+                  {filtered.map((doc: any, i: number) => (
+                    <tr
+                      key={doc.id}
+                      className="hover:bg-gray-50 transition cursor-pointer"
+                      onClick={() => setSelectedDoctorId(doc.id)}
+                    >
+                      <td className="px-6 py-4 text-gray-400">{i + 1}</td>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-9 h-9 bg-green-100 rounded-full flex items-center justify-center text-green-700 font-bold text-sm">
+                            {doc.firstName?.[0] ?? '?'}
+                          </div>
+                          <div>
+                            <p className="font-semibold text-gray-800">
+                              Dr. {doc.firstName} {doc.lastName}
+                            </p>
+                            <p className="text-xs text-gray-400">ID: #{doc.id}</p>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 text-gray-500">
+                        {doc.practicingFrom
+                          ? new Date(doc.practicingFrom).getFullYear()
+                          : '—'}
+                      </td>
+                      <td className="px-6 py-4">
+                        {doc.isVerified ? (
+                          <span className="text-xs bg-green-100 text-green-700 font-semibold px-2.5 py-1 rounded-full">
+                            ✅ Verified
+                          </span>
+                        ) : doc.verificationRequested ? (
+                          <span className="text-xs bg-yellow-100 text-yellow-700 font-semibold px-2.5 py-1 rounded-full">
+                            ⏳ Pending
+                          </span>
+                        ) : (
+                          <span className="text-xs bg-gray-100 text-gray-500 font-semibold px-2.5 py-1 rounded-full">
+                            Not Requested
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${doc.user?.isActive !== false ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-600'}`}>
+                          {doc.user?.isActive !== false ? '● Active' : '● Inactive'}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4" onClick={(e) => e.stopPropagation()}>
+                        {!doc.isVerified && doc.verificationRequested && (
+                          <button
+                            onClick={() => setSelectedDoctorId(doc.id)}
+                            className="text-xs font-semibold text-white bg-[#2d6be4] hover:bg-blue-700 px-3 py-1.5 rounded-lg transition"
+                          >
+                            View & Verify
+                          </button>
+                        )}
+                        {doc.isVerified && (
+                          <span className="text-xs text-gray-400">No action needed</span>
+                        )}
+                        {!doc.isVerified && !doc.verificationRequested && (
+                          <span className="text-xs text-gray-400">Awaiting request</span>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+        </div>
+      </main>
+
+      {selectedDoctorId !== null && (
+        <DoctorDetailModal
+          doctorId={selectedDoctorId}
+          onClose={() => setSelectedDoctorId(null)}
+          onVerify={verify}
+          verifying={verifying}
+        />
+      )}
+    </div>
+  );
+}

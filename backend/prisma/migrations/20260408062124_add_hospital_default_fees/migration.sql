@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE `hospital` ADD COLUMN `defaultFirstConsultationFee` DOUBLE NOT NULL DEFAULT 0,
+    ADD COLUMN `defaultFollowupFee` DOUBLE NOT NULL DEFAULT 0;

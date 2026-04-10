@@ -131,11 +131,18 @@ export class DoctorRoleService {
     const doctor = await this.prisma.doctor.findUnique({ where: { userId } });
     if (!doctor) throw new NotFoundException(`Doctor profile not found for user ${userId}`);
 
-    const { firstName, lastName, professionalStatement, practicingFrom } = dto;
-    return this.prisma.doctor.update({
-      where: { userId },
-      data: { firstName, lastName, professionalStatement, practicingFrom }
-    });
+    const data: any = {};
+    if (dto.firstName) data.firstName = dto.firstName;
+    if (dto.lastName) data.lastName = dto.lastName;
+    if (dto.professionalStatement !== undefined) data.professionalStatement = dto.professionalStatement;
+    if (dto.practicingFrom) {
+      try {
+        data.practicingFrom = new Date(dto.practicingFrom);
+        if (isNaN(data.practicingFrom.getTime())) delete data.practicingFrom;
+      } catch { /* skip invalid date */ }
+    }
+
+    return this.prisma.doctor.update({ where: { userId }, data });
   }
 
   async downloadDocument(userId: number, documentId: number) {
@@ -380,6 +387,12 @@ export class DoctorRoleService {
     dayStart.setUTCHours(0, 0, 0, 0);
     const dayEnd = new Date(dto.date);
     dayEnd.setUTCHours(23, 59, 59, 999);
+
+    // Check if unavailability already exists for this date
+    const existingUnavail = await this.prisma.doctorUnavailability.findFirst({
+      where: { doctorId: doctor.id, date: dayStart }
+    });
+    if (existingUnavail) throw new BadRequestException(`Unavailability already marked for ${dto.date}`);
 
     const rangeStart = isFullDay ? dayStart : new Date(`${dto.date}T${dto.startTime}:00.000Z`);
     const rangeEnd = isFullDay ? dayEnd : new Date(`${dto.date}T${dto.endTime}:00.000Z`);

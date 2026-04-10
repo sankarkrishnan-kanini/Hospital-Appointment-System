@@ -102,17 +102,31 @@ export class AdminService {
       id: doctor.id,
       firstName: doctor.firstName,
       lastName: doctor.lastName,
+      professionalStatement: doctor.professionalStatement,
+      practicingFrom: doctor.practicingFrom,
       isVerified: doctor.isVerified,
       verificationRequested: doctor.verificationRequested,
       specializations: doctor.specializations.map(ds => ds.specialization.specializationName),
       doctorHospitals: doctor.doctorHospitals,
       documentCount: doctor.documents.length,
+      documents: doctor.documents.map(d => ({
+        id: d.id,
+        documentType: d.documentType,
+        uploadedAt: d.uploadedAt
+      })),
       qualifications: doctor.qualifications.map(q => ({
         name: q.qualificationName,
         institute: q.instituteName,
         year: q.procurementYear
       }))
     };
+  }
+
+  async getDoctorDocument(doctorId: number, docId: number) {
+    const doc = await this.prisma.doctorDocument.findUnique({ where: { id: docId } });
+    if (!doc) throw new NotFoundException(`Document not found`);
+    if (doc.doctorId !== doctorId) throw new NotFoundException(`Document does not belong to this doctor`);
+    return { buffer: Buffer.from(doc.fileUrl), documentType: doc.documentType };
   }
 
   async verifyDoctor(id: number) {
