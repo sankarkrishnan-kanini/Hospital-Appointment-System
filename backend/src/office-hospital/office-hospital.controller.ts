@@ -25,11 +25,13 @@ export class OfficeHospitalController {
   }
 
   @Get('offices')
+  @Roles(Role.Admin, Role.Doctor)
   getAllOffices() {
     return this.officeHospitalService.getAllOffices();
   }
 
   @Get('offices/:id')
+  @Roles(Role.Admin, Role.Doctor)
   getOfficeById(
     @Param('id', new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE })) id: number
   ) {
@@ -64,6 +66,7 @@ export class OfficeHospitalController {
   }
 
   @Get('offices/:officeId/hospitals')
+  @Roles(Role.Admin, Role.Doctor)
   getHospitalsByOffice(
     @Param('officeId', new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE })) officeId: number
   ) {

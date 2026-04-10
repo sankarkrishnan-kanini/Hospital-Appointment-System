@@ -11,11 +11,14 @@ class CustomExceptionFilter {
         let message;
         if (exception instanceof common_1.HttpException) {
             status = exception.getStatus();
-            message = exception.getResponse();
+            const res = exception.getResponse();
+            message = typeof res === 'string' ? res : res?.message || res;
+            if (Array.isArray(message))
+                message = message[0];
         }
         else {
             status = common_1.HttpStatus.INTERNAL_SERVER_ERROR;
-            message = exception || "Internal server error";
+            message = exception?.message || 'Internal server error';
         }
         response.status(status).json({
             statusCode: status,

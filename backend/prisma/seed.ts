@@ -4,8 +4,9 @@ import { PrismaClient } from '@prisma/client';
 const adapter = new PrismaMariaDb({
   host: '127.0.0.1',
   user: 'root',
-  password: 'Admin@123456789$1',
-  database: 'hospitalbookingdb'
+  password: 'admin',
+  database: 'hospitalmanagementdb',
+  allowPublicKeyRetrieval: true,
 });
 
 const prisma = new PrismaClient({ adapter });

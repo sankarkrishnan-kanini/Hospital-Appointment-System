@@ -1,5 +1,6 @@
-import { IsString, IsNotEmpty } from 'class-validator';
+import { IsString, IsNotEmpty, IsNumber, IsOptional } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
+import { Type } from 'class-transformer';
 
 export class CreateHospitalDto {
   @ApiProperty({ example: 'Apollo Hospital' })
@@ -31,4 +32,16 @@ export class CreateHospitalDto {
   @IsString()
   @IsNotEmpty()
   zip: string;
+
+  @ApiProperty({ example: 500 })
+  @IsNumber()
+  @IsOptional()
+  @Type(() => Number)
+  defaultFirstConsultationFee?: number;
+
+  @ApiProperty({ example: 300 })
+  @IsNumber()
+  @IsOptional()
+  @Type(() => Number)
+  defaultFollowupFee?: number;
 }

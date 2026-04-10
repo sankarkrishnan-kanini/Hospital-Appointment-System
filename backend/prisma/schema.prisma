@@ -121,14 +121,16 @@ model Office {
 // ─── HOSPITAL (Under an office) ──────────────────────────────────────────────
 
 model Hospital {
-  id            Int    @id @default(autoincrement())
-  officeId      Int
-  name          String
-  streetAddress String
-  city          String
-  state         String
-  country       String
-  zip           String
+  id                          Int    @id @default(autoincrement())
+  officeId                    Int
+  name                        String
+  streetAddress               String
+  city                        String
+  state                       String
+  country                     String
+  zip                         String
+  defaultFirstConsultationFee Float  @default(0)
+  defaultFollowupFee          Float  @default(0)
 
   office          Office           @relation(fields: [officeId], references: [id], onDelete: NoAction)
   doctorHospitals DoctorHospital[]

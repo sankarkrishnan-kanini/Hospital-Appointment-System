@@ -1,5 +1,6 @@
 import { IsString, IsOptional } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
+import { Transform } from 'class-transformer';
 
 export class UpdateDoctorSetupProfileDTO {
   @ApiProperty({ example: 'Mounika', required: false })
@@ -17,7 +18,8 @@ export class UpdateDoctorSetupProfileDTO {
   @IsOptional()
   professionalStatement?: string;
 
-  @ApiProperty({ example: '2020-01-01T00:00:00.000Z', required: false })
+  @ApiProperty({ example: '2020-01-01', required: false })
   @IsOptional()
+  @Transform(({ value }) => value ? new Date(value) : undefined)
   practicingFrom?: Date;
 }

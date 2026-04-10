@@ -16,10 +16,11 @@ const client_1 = require("@prisma/client");
 let PrismaService = class PrismaService extends client_1.PrismaClient {
     constructor() {
         const adapter = new adapter_mariadb_1.PrismaMariaDb({
-            host: "127.0.0.1",
-            user: "root",
-            password: "Admin@123456789$1",
-            database: "hospitalbookingdb"
+            host: process.env.DB_HOST || '127.0.0.1',
+            port: parseInt(process.env.DB_PORT || '3306'),
+            user: process.env.DB_USER || 'root',
+            password: process.env.DB_PASSWORD,
+            database: process.env.DB_NAME || 'hospitalmanagementdb'
         });
         super({ adapter });
     }
