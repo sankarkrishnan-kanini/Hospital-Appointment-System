@@ -117,10 +117,10 @@ export default function AdminAppointmentsPage() {
                         {a.client ? `${a.client.firstName} ${a.client.lastName}` : `Patient #${a.userAccountId}`}
                       </td>
                       <td className="px-6 py-4 text-gray-500">
-                        {new Date(a.appointmentTakenDate).toLocaleDateString()}
+                        {new Date(a.appointmentTakenDate).toLocaleDateString('en-GB', { timeZone: 'UTC' })}
                       </td>
                       <td className="px-6 py-4 text-gray-500">
-                        {new Date(a.probableStartTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        {new Date(a.probableStartTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', timeZone: 'UTC' })}
                       </td>
                       <td className="px-6 py-4 text-gray-500">{a.durationInMinutes} min</td>
                       <td className="px-6 py-4">

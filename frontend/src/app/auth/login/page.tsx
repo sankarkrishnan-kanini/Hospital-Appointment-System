@@ -2,7 +2,7 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
@@ -21,6 +21,7 @@ type FormData = z.infer<typeof schema>;
 export default function LoginPage() {
   const router = useRouter();
   const { setAuth, logout } = useAuthStore();
+  const queryClient = useQueryClient();
   const [showPassword, setShowPassword] = useState(false);
   const [showModal, setShowModal] = useState(false);
 
@@ -36,8 +37,8 @@ export default function LoginPage() {
       setLoginError(null);
       const decoded = jwtDecode<DecodedToken>(data.access_token);
       const role = decoded.roles[0] as 'admin' | 'doctor' | 'patient';
-      // Clear old auth before setting new one
       logout();
+      queryClient.clear();
       setAuth(data.access_token, { id: decoded.sub, email: decoded.email, role });
       toast.success('Login successful!');
       if (role === 'admin') router.replace('/admin');

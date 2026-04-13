@@ -141,7 +141,7 @@ export default function AdminDashboard() {
                   {appointments.slice(0, 5).map((apt: any) => (
                     <tr key={apt.id}>
                       <td className="py-3 text-gray-500">#{apt.id}</td>
-                      <td className="py-3 text-gray-500">{new Date(apt.appointmentTakenDate).toLocaleDateString()}</td>
+                      <td className="py-3 text-gray-500">{new Date(apt.appointmentTakenDate).toLocaleDateString('en-GB', { timeZone: 'UTC' })}</td>
                       <td className="py-3">
                         <span className="bg-blue-50 text-blue-600 text-xs px-2 py-1 rounded-full">
                           {apt.status?.status ?? 'Scheduled'}

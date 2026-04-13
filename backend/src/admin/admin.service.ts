@@ -56,6 +56,7 @@ export class AdminService {
       id: doctor.id,
       firstName: doctor.firstName,
       lastName: doctor.lastName,
+      practicingFrom: doctor.practicingFrom,
       isVerified: doctor.isVerified,
       verificationRequested: doctor.verificationRequested,
       documentCount: doctor.documents.length,
@@ -78,6 +79,7 @@ export class AdminService {
       id: doctor.id,
       firstName: doctor.firstName,
       lastName: doctor.lastName,
+      practicingFrom: doctor.practicingFrom,
       isVerified: doctor.isVerified,
       verificationRequested: doctor.verificationRequested,
       documentCount: doctor.documents.length,
@@ -126,7 +128,7 @@ export class AdminService {
     const doc = await this.prisma.doctorDocument.findUnique({ where: { id: docId } });
     if (!doc) throw new NotFoundException(`Document not found`);
     if (doc.doctorId !== doctorId) throw new NotFoundException(`Document does not belong to this doctor`);
-    return { buffer: Buffer.from(doc.fileUrl), documentType: doc.documentType };
+    return { buffer: Buffer.isBuffer(doc.fileUrl) ? doc.fileUrl : Buffer.from(doc.fileUrl), documentType: doc.documentType };
   }
 
   async verifyDoctor(id: number) {
@@ -250,7 +252,9 @@ export class AdminService {
     const existing = await this.prisma.doctorSpecialization.findFirst({ where: { doctorId, specializationId } });
     if (existing) throw new BadRequestException(`Doctor already has this specialization`);
 
-    return this.prisma.doctorSpecialization.create({ data: { doctorId, specializationId } });
+    const result = await this.prisma.doctorSpecialization.create({ data: { doctorId, specializationId } });
+    await this.notificationService.notifySpecializationApproved(doctor.userId, specialization.specializationName);
+    return result;
   }
 
   async rejectSpecialization(doctorId: number, specializationId: number) {
@@ -266,7 +270,7 @@ export class AdminService {
     if (!requestDoc) throw new BadRequestException(`No specialization request found for this doctor and specialization`);
 
     await this.prisma.doctorDocument.delete({ where: { id: requestDoc.id } });
-
+    await this.notificationService.notifySpecializationRejected(doctor.userId, specialization.specializationName);
     return { message: `Specialization request rejected and document removed for doctor ${doctorId}` };
   }
 }

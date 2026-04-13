@@ -43,6 +43,26 @@ export class NotificationService {
     await this.notify(doctorUserId, `Your profile has been verified. You can now start accepting appointments`);
   }
 
+  async notifyVerificationRequested(adminUserIds: number[], doctorName: string) {
+    for (const adminId of adminUserIds) {
+      await this.notify(adminId, `Dr. ${doctorName} has requested profile verification. Please review their documents`);
+    }
+  }
+
+  async notifySpecializationRequested(adminUserIds: number[], doctorName: string, specializationName: string) {
+    for (const adminId of adminUserIds) {
+      await this.notify(adminId, `Dr. ${doctorName} has requested a new specialization: ${specializationName}`);
+    }
+  }
+
+  async notifySpecializationApproved(doctorUserId: number, specializationName: string) {
+    await this.notify(doctorUserId, `Your specialization request for ${specializationName} has been approved`);
+  }
+
+  async notifySpecializationRejected(doctorUserId: number, specializationName: string) {
+    await this.notify(doctorUserId, `Your specialization request for ${specializationName} has been rejected`);
+  }
+
   // ─── VIEW & READ ──────────────────────────────────────────────────────────────
 
   async getNotifications(userId: number) {
@@ -56,10 +76,10 @@ export class NotificationService {
     const notification = await this.prisma.notification.findUnique({ where: { id: notificationId } });
     if (!notification) throw new Error(`Notification not found`);
     if (notification.userId !== userId) throw new Error(`This notification does not belong to you`);
+    return this.prisma.notification.update({ where: { id: notificationId }, data: { isRead: true } });
+  }
 
-    return this.prisma.notification.update({
-      where: { id: notificationId },
-      data: { isRead: true }
-    });
+  async markAllAsRead(userId: number) {
+    return this.prisma.notification.updateMany({ where: { userId, isRead: false }, data: { isRead: true } });
   }
 }

@@ -74,7 +74,7 @@ export class PatientService {
       include: {
         specializations: { include: { specialization: true } },
         doctorHospitals: {
-          include: { hospital: { include: { office: true } } }
+          include: { hospital: { include: { office: true } }, insurances: true }
         }
       }
     });
@@ -89,10 +89,13 @@ export class PatientService {
         isPrivate: dh.isPrivate,
         firstConsultationFee: dh.firstConsultationFee,
         followupConsultationFee: dh.followupConsultationFee,
+        timeSlotPerClientInMin: dh.timeSlotPerClientInMin,
+        insurances: dh.insurances.map(i => i.insuranceName),
         city: dh.isPrivate ? dh.city : dh.hospital?.city,
         hospital: dh.isPrivate ? null : { name: dh.hospital?.name, city: dh.hospital?.city }
       }))
     }));
+  }
   }
 
   // ─── VIEW DOCTOR PROFILE ──────────────────────────────────────────────────────
@@ -104,7 +107,7 @@ export class PatientService {
         specializations: { include: { specialization: true } },
         qualifications: true,
         doctorHospitals: {
-          include: { hospital: { include: { office: true } } }
+          include: { hospital: { include: { office: true } }, insurances: true }
         }
       }
     });
@@ -128,6 +131,7 @@ export class PatientService {
         firstConsultationFee: dh.firstConsultationFee,
         followupConsultationFee: dh.followupConsultationFee,
         timeSlotPerClientInMin: dh.timeSlotPerClientInMin,
+        insurances: dh.insurances.map(i => i.insuranceName),
         ...(dh.isPrivate
           ? { streetAddress: dh.streetAddress, city: dh.city, state: dh.state, country: dh.country, zip: dh.zip }
           : { hospital: { name: dh.hospital?.name, city: dh.hospital?.city, state: dh.hospital?.state } }

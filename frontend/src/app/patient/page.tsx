@@ -152,7 +152,7 @@ export default function PatientDashboard() {
                   <div key={apt.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
                     <div>
                       <p className="text-sm font-medium text-gray-800">Appointment #{apt.id}</p>
-                      <p className="text-xs text-gray-400">{new Date(apt.probableStartTime).toLocaleString()}</p>
+                      <p className="text-xs text-gray-400">{new Date(apt.probableStartTime).toLocaleString('en-GB', { timeZone: 'UTC' })}</p>
                     </div>
                     <span className={`text-xs px-3 py-1 rounded-full font-medium
                       ${apt.status?.status === 'Completed' ? 'bg-green-50 text-green-600' : 'bg-blue-50 text-blue-600'}`}>

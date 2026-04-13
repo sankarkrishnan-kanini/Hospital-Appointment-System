@@ -154,7 +154,7 @@ export default function AdminUsersPage() {
                         </span>
                       </td>
                       <td className="px-6 py-4 text-gray-400">
-                        {new Date(u.createdAt).toLocaleDateString()}
+                        {new Date(u.createdAt).toLocaleDateString('en-GB', { timeZone: 'UTC' })}
                       </td>
                       <td className="px-6 py-4">
                         {u.role !== 'admin' && (

@@ -125,7 +125,7 @@ export default function DoctorAppointmentsPage() {
                         <p className="text-xs text-gray-400">{apt.client?.email}</p>
                       </td>
                       <td className="px-6 py-4 text-gray-500">
-                        {new Date(apt.probableStartTime).toLocaleString()}
+                        {new Date(apt.probableStartTime).toLocaleString('en-GB', { timeZone: 'UTC' })}
                       </td>
                       <td className="px-6 py-4 text-gray-500">{apt.durationInMinutes} min</td>
                       <td className="px-6 py-4">
