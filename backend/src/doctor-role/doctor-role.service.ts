@@ -1,4 +1,6 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, Inject } from '@nestjs/common';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { Cache } from 'cache-manager';
 import { PrismaService } from '../prisma/prisma.service';
 import { UpdateDoctorSetupProfileDTO } from './DTOS/UpdateDoctorSetupProfileDTO';
 import { SetupProfileDto } from './DTOS/setupProfileDto';
@@ -16,6 +18,7 @@ export class DoctorRoleService {
 
   constructor(
     private readonly prisma: PrismaService,
+    @Inject(CACHE_MANAGER) private readonly cache: Cache,
     private readonly notificationService: NotificationService
   ) {}
 
@@ -95,6 +98,10 @@ export class DoctorRoleService {
   // ─── GET PROFILE ─────────────────────────────────────────────────────────────
 
   async getProfile(userId: number) {
+    const cacheKey = `doctorOwnProfile:${userId}`;
+    const cached = await this.cache.get(cacheKey);
+    if (cached) return cached;
+
     const doctor = await this.prisma.doctor.findUnique({
       where: { userId },
       include: {
@@ -106,7 +113,7 @@ export class DoctorRoleService {
     });
     if (!doctor) throw new NotFoundException(`Doctor profile not found for user ${userId}`);
 
-    return {
+    const result = {
       id: doctor.id,
       firstName: doctor.firstName,
       lastName: doctor.lastName,
@@ -123,6 +130,8 @@ export class DoctorRoleService {
       })),
       documentCount: doctor.documents.length
     };
+    await this.cache.set(cacheKey, result);
+    return result;
   }
 
   // ─── UPDATE BASIC INFO (AFTER VERIFICATION) ──────────────────────────────────
@@ -132,10 +141,12 @@ export class DoctorRoleService {
     if (!doctor) throw new NotFoundException(`Doctor profile not found for user ${userId}`);
 
     const { firstName, lastName, professionalStatement, practicingFrom } = dto;
-    return this.prisma.doctor.update({
+    const updated = await this.prisma.doctor.update({
       where: { userId },
       data: { firstName, lastName, professionalStatement, practicingFrom }
     });
+    await this.cache.del(`doctorOwnProfile:${userId}`);
+    return updated;
   }
 
   async downloadDocument(userId: number, documentId: number) {

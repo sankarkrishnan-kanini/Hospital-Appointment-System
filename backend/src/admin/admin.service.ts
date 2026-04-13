@@ -1,4 +1,6 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, Inject } from '@nestjs/common';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { Cache } from 'cache-manager';
 import { PrismaService } from '../prisma/prisma.service';
 import { NotificationService } from '../notification-module/notification.service';
 
@@ -7,20 +9,25 @@ export class AdminService {
 
   constructor(
     private readonly prisma: PrismaService,
+    @Inject(CACHE_MANAGER) private readonly cache: Cache,
     private readonly notificationService: NotificationService
   ) {}
 
   // ─── USER MANAGEMENT ─────────────────────────────────────────────────────────
 
   async getAllUsers() {
+    const cached = await this.cache.get('admin:users');
+    if (cached) return cached;
     const users = await this.prisma.user.findMany();
-    return users.map(user => ({
+    const result = users.map(user => ({
       id: user.id,
       email: user.email,
       role: user.role,
       isActive: user.isActive,
       createdAt: user.createdAt
     }));
+    await this.cache.set('admin:users', result);
+    return result;
   }
 
   async deactivateUser(id: number) {
@@ -29,6 +36,7 @@ export class AdminService {
     if (!user.isActive) throw new BadRequestException(`User with id ${id} is already deactivated`);
 
     const updated = await this.prisma.user.update({ where: { id }, data: { isActive: false } });
+    await this.cache.del('admin:users');
     return { id: updated.id, email: updated.email, role: updated.role, isActive: updated.isActive };
   }
 
@@ -38,12 +46,15 @@ export class AdminService {
     if (user.isActive) throw new BadRequestException(`User with id ${id} is already active`);
 
     const updated = await this.prisma.user.update({ where: { id }, data: { isActive: true } });
+    await this.cache.del('admin:users');
     return { id: updated.id, email: updated.email, role: updated.role, isActive: updated.isActive };
   }
 
   // ─── DOCTOR MANAGEMENT ───────────────────────────────────────────────────────
 
   async getAllDoctors() {
+    const cached = await this.cache.get('admin:doctors');
+    if (cached) return cached;
     const doctors = await this.prisma.doctor.findMany({
       include: {
         specializations: { include: { specialization: true } },
@@ -52,7 +63,7 @@ export class AdminService {
       }
     });
 
-    return doctors.map(doctor => ({
+    const result = doctors.map(doctor => ({
       id: doctor.id,
       firstName: doctor.firstName,
       lastName: doctor.lastName,
@@ -62,9 +73,13 @@ export class AdminService {
       specializations: doctor.specializations.map(ds => ds.specialization.specializationName),
       doctorHospitals: doctor.doctorHospitals
     }));
+    await this.cache.set('admin:doctors', result);
+    return result;
   }
 
   async getPendingDoctors() {
+    const cached = await this.cache.get('admin:doctors:pending');
+    if (cached) return cached;
     const doctors = await this.prisma.doctor.findMany({
       where: { verificationRequested: true, isVerified: false },
       include: {
@@ -74,7 +89,7 @@ export class AdminService {
       }
     });
 
-    return doctors.map(doctor => ({
+    const result = doctors.map(doctor => ({
       id: doctor.id,
       firstName: doctor.firstName,
       lastName: doctor.lastName,
@@ -84,9 +99,14 @@ export class AdminService {
       specializations: doctor.specializations.map(ds => ds.specialization.specializationName),
       doctorHospitals: doctor.doctorHospitals
     }));
+    await this.cache.set('admin:doctors:pending', result);
+    return result;
   }
 
   async getDoctorById(id: number) {
+    const cacheKey = `admin:doctor:${id}`;
+    const cached = await this.cache.get(cacheKey);
+    if (cached) return cached;
     const doctor = await this.prisma.doctor.findUnique({
       where: { id },
       include: {
@@ -98,7 +118,7 @@ export class AdminService {
     });
     if (!doctor) throw new NotFoundException(`Doctor with id ${id} not found`);
 
-    return {
+    const result = {
       id: doctor.id,
       firstName: doctor.firstName,
       lastName: doctor.lastName,
@@ -113,6 +133,8 @@ export class AdminService {
         year: q.procurementYear
       }))
     };
+    await this.cache.set(cacheKey, result);
+    return result;
   }
 
   async verifyDoctor(id: number) {
@@ -131,7 +153,9 @@ export class AdminService {
     // Notify doctor
     const doctorUser = await this.prisma.user.findUnique({ where: { id: doctor.userId } });
     if (doctorUser) await this.notificationService.notifyDoctorVerified(doctorUser.id);
-
+    await this.cache.del(`admin:doctor:${id}`);
+    await this.cache.del('admin:doctors');
+    await this.cache.del('admin:doctors:pending');
     return { id: doctor.id, firstName: doctor.firstName, lastName: doctor.lastName, isVerified: true, verifiedAt: new Date() };
   }
 
@@ -166,8 +190,10 @@ export class AdminService {
   // ─── PATIENT MANAGEMENT ──────────────────────────────────────────────────────
 
   async getAllPatients() {
+    const cached = await this.cache.get('admin:patients');
+    if (cached) return cached;
     const patients = await this.prisma.clientAccount.findMany({ include: { user: true } });
-    return patients.map(patient => ({
+    const result = patients.map(patient => ({
       id: patient.id,
       firstName: patient.firstName,
       lastName: patient.lastName,
@@ -175,9 +201,14 @@ export class AdminService {
       contactNumber: patient.contactNumber,
       isActive: patient.user.isActive
     }));
+    await this.cache.set('admin:patients', result);
+    return result;
   }
 
   async getPatientById(id: number) {
+    const cacheKey = `admin:patient:${id}`;
+    const cached = await this.cache.get(cacheKey);
+    if (cached) return cached;
     const patient = await this.prisma.clientAccount.findUnique({
       where: { id },
       include: {
@@ -193,7 +224,7 @@ export class AdminService {
     });
     if (!patient) throw new NotFoundException(`Patient with id ${id} not found`);
 
-    return {
+    const result = {
       id: patient.id,
       firstName: patient.firstName,
       lastName: patient.lastName,
@@ -202,23 +233,29 @@ export class AdminService {
       isActive: patient.user.isActive,
       appointments: patient.appointments
     };
+    await this.cache.set(cacheKey, result);
+    return result;
   }
 
   // ─── SPECIALIZATION REQUESTS ─────────────────────────────────────────────────
 
   async getSpecializationRequests() {
+    const cached = await this.cache.get('admin:specialization-requests');
+    if (cached) return cached;
     const documents = await this.prisma.doctorDocument.findMany({
       where: { documentType: { startsWith: 'SPECIALIZATION_REQUEST_' } },
       include: { doctor: true }
     });
 
-    return documents.map(doc => ({
+    const result = documents.map(doc => ({
       documentId: doc.id,
       doctorId: doc.doctorId,
       doctorName: `${doc.doctor.firstName} ${doc.doctor.lastName}`,
       specializationId: parseInt(doc.documentType.replace('SPECIALIZATION_REQUEST_', '')),
       uploadedAt: doc.uploadedAt
     }));
+    await this.cache.set('admin:specialization-requests', result);
+    return result;
   }
 
   async approveSpecialization(doctorId: number, specializationId: number) {
@@ -236,6 +273,9 @@ export class AdminService {
     const existing = await this.prisma.doctorSpecialization.findFirst({ where: { doctorId, specializationId } });
     if (existing) throw new BadRequestException(`Doctor already has this specialization`);
 
+    await this.cache.del('admin:specialization-requests');
+    await this.cache.del(`admin:doctor:${doctorId}`);
+    await this.cache.del('admin:doctors');
     return this.prisma.doctorSpecialization.create({ data: { doctorId, specializationId } });
   }
 
@@ -253,6 +293,8 @@ export class AdminService {
 
     await this.prisma.doctorDocument.delete({ where: { id: requestDoc.id } });
 
+    await this.cache.del('admin:specialization-requests');
+    await this.cache.del(`admin:doctor:${doctorId}`);
     return { message: `Specialization request rejected and document removed for doctor ${doctorId}` };
   }
 }
