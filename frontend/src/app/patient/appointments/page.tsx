@@ -163,7 +163,7 @@ export default function PatientAppointmentsPage() {
                         </p>
                       </td>
                       <td className="px-6 py-4 text-gray-500">
-                        {new Date(apt.probableStartTime).toLocaleString()}
+                        {new Date(apt.probableStartTime).toLocaleString('en-GB', { timeZone: 'UTC' })}
                       </td>
                       <td className="px-6 py-4">
                         <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${statusColor(apt.status?.status)}`}>
@@ -246,9 +246,9 @@ export default function PatientAppointmentsPage() {
                         ${newSlotId === slot.id
                           ? 'border-[#2d6be4] bg-blue-50 text-[#2d6be4]'
                           : 'border-gray-200 text-gray-600 hover:border-gray-300'}`}>
-                      <p>{new Date(slot.startTime).toLocaleDateString()}</p>
+                      <p>{new Date(slot.startTime).toLocaleDateString('en-GB', { timeZone: 'UTC' })}</p>
                       <p className="mt-0.5">
-                        {new Date(slot.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        {new Date(slot.startTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', timeZone: 'UTC' })}
                       </p>
                     </button>
                   ))}

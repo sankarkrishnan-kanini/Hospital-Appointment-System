@@ -133,9 +133,9 @@ export default function DoctorTimeSlotsPage() {
                             ? 'bg-blue-50 border-blue-100 text-blue-600'
                             : 'bg-green-50 border-green-100 text-green-600'
                           }`}>
-                        <p>{new Date(slot.startTime).toLocaleDateString()}</p>
+                        <p>{new Date(slot.startTime).toLocaleDateString('en-GB', { timeZone: 'UTC' })}</p>
                         <p className="mt-0.5">
-                          {new Date(slot.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          {new Date(slot.startTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', timeZone: 'UTC' })}
                         </p>
                         <p className="mt-1 text-xs opacity-70">{slot.isBooked ? 'Booked' : 'Available'}</p>
                       </div>

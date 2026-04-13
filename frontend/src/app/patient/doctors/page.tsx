@@ -206,6 +206,11 @@ export default function FindDoctorsPage() {
                             {p.city && (
                               <span className="text-xs text-gray-400">{p.city}</span>
                             )}
+                            {p.insurances?.length > 0 && (
+                              <span className="text-xs text-green-600 bg-green-50 px-1.5 py-0.5 rounded-full">
+                                🛡 {p.insurances.slice(0, 2).join(', ')}{p.insurances.length > 2 ? ` +${p.insurances.length - 2}` : ''}
+                              </span>
+                            )}
                           </div>
                         </div>
                         <button onClick={() => handleBookNow(doc, p)}
@@ -250,6 +255,14 @@ export default function FindDoctorsPage() {
                       <Clock size={11} /> {selectedPractice.timeSlotPerClientInMin ?? '—'} min/slot
                     </span>
                   </div>
+                  {selectedPractice.insurances?.length > 0 && (
+                    <div className="mt-2 flex flex-wrap gap-1">
+                      <span className="text-xs text-gray-400">Insurances:</span>
+                      {selectedPractice.insurances.map((ins: string) => (
+                        <span key={ins} className="text-xs bg-green-50 text-green-700 px-2 py-0.5 rounded-full">{ins}</span>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 {/* Specialization */}
@@ -283,9 +296,9 @@ export default function FindDoctorsPage() {
                             ${selectedSlot === slot.id
                               ? 'border-[#2d6be4] bg-blue-50 text-[#2d6be4]'
                               : 'border-gray-200 text-gray-600 hover:border-gray-300'}`}>
-                          <p>{new Date(slot.startTime).toLocaleDateString()}</p>
+                          <p>{new Date(slot.startTime).toLocaleDateString('en-GB', { timeZone: 'UTC' })}</p>
                           <p className="mt-0.5">
-                            {new Date(slot.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            {new Date(slot.startTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', timeZone: 'UTC' })}
                           </p>
                         </button>
                       ))}

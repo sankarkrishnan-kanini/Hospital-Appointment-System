@@ -55,17 +55,14 @@ export class AdminController {
     return this.adminService.getDoctorById(id);
   }
 
-  @Get('doctors/:doctorId/documents/:docId/download')
-  async downloadDoctorDocument(
+  @Get('doctors/:doctorId/documents/:docId/view')
+  async viewDoctorDocument(
     @Param('doctorId', new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE })) doctorId: number,
     @Param('docId', new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE })) docId: number,
     @Res() res: Response
   ) {
     const { buffer, documentType } = await this.adminService.getDoctorDocument(doctorId, docId);
-    res.set({
-      'Content-Type': 'application/octet-stream',
-      'Content-Disposition': `attachment; filename="${documentType}-${docId}"`
-    });
+    res.set({ 'Content-Type': 'application/pdf', 'Content-Disposition': `inline; filename="${documentType}-${docId}.pdf"` });
     res.send(buffer);
   }
 

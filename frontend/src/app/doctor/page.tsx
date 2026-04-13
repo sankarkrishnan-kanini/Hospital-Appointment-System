@@ -140,15 +140,22 @@ export default function DoctorDashboard() {
                 <h3 className="text-sm font-semibold text-gray-800">Upcoming Appointments</h3>
                 <Link href="/doctor/appointments" className="text-xs text-[#2d6be4] hover:underline">View all</Link>
               </div>
-              {!appointments.length ? (
-                <p className="text-sm text-gray-400">No appointments yet</p>
+              {!appointments.filter((a: any) => a.status?.status !== 'Completed' && a.status?.status !== 'CANCELLED').length ? (
+                <p className="text-sm text-gray-400">No upcoming appointments</p>
               ) : (
                 <div className="space-y-2">
-                  {appointments.slice(0, 4).map((apt: any) => (
+                  {appointments
+                    .filter((a: any) => a.status?.status !== 'Completed' && a.status?.status !== 'CANCELLED')
+                    .slice(0, 4)
+                    .map((apt: any) => (
                     <div key={apt.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
                       <div>
-                        <p className="text-sm font-medium text-gray-800">Appointment #{apt.id}</p>
-                        <p className="text-xs text-gray-400">{new Date(apt.probableStartTime).toLocaleString()}</p>
+                        <p className="text-sm font-medium text-gray-800">
+                          {apt.client ? `${apt.client.firstName} ${apt.client.lastName}` : `Appointment #${apt.id}`}
+                        </p>
+                        <p className="text-xs text-gray-400">
+                          {new Date(apt.probableStartTime).toLocaleString('en-GB', { timeZone: 'UTC' })}
+                        </p>
                       </div>
                       <span className="text-xs bg-blue-50 text-blue-600 px-2 py-1 rounded-full">
                         {apt.status?.status ?? 'Scheduled'}

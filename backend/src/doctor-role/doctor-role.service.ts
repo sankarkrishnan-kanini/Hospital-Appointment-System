@@ -72,10 +72,7 @@ export class DoctorRoleService {
           instituteName: q.instituteName,
           procurementYear: q.procurementYear ? new Date(q.procurementYear) : undefined
         }))
-      });
-
-      // 4. Skip hospital affiliations — now managed via DoctorHospital junction table
-      // 5. Delete existing documents and re-upload
+      })
       await tx.doctorDocument.deleteMany({ where: { doctorId: doctor.id } });
       await tx.doctorDocument.createMany({
         data: files.map((file, index) => ({
@@ -92,7 +89,6 @@ export class DoctorRoleService {
     });
   }
 
-  // ─── GET PROFILE ─────────────────────────────────────────────────────────────
 
   async getProfile(userId: number) {
     const doctor = await this.prisma.doctor.findUnique({
@@ -145,7 +141,7 @@ export class DoctorRoleService {
     return this.prisma.doctor.update({ where: { userId }, data });
   }
 
-  async downloadDocument(userId: number, documentId: number) {
+  async getDocument(userId: number, documentId: number) {
     const doctor = await this.prisma.doctor.findUnique({ where: { userId } });
     if (!doctor) throw new NotFoundException(`Doctor profile not found for user ${userId}`);
 
@@ -155,7 +151,7 @@ export class DoctorRoleService {
     if (document.doctorId !== doctor.id)
       throw new BadRequestException(`Document does not belong to this doctor`);
 
-    return document;
+    return { buffer: Buffer.isBuffer(document.fileUrl) ? document.fileUrl : Buffer.from(document.fileUrl) };
   }
 
   // ─── REQUEST VERIFICATION ────────────────────────────────────────────────────
@@ -192,6 +188,13 @@ export class DoctorRoleService {
         isVerified: true,
         verificationRequested: true
       }
+    }).then(async (updated) => {
+      const admins = await this.prisma.user.findMany({ where: { role: 'admin' }, select: { id: true } });
+      await this.notificationService.notifyVerificationRequested(
+        admins.map(a => a.id),
+        `${doctor.firstName} ${doctor.lastName}`
+      );
+      return updated;
     });
   }
 
@@ -221,6 +224,13 @@ export class DoctorRoleService {
         fileUrl: Buffer.from(file.buffer) as unknown as Uint8Array<ArrayBuffer>
       }
     });
+
+    const admins = await this.prisma.user.findMany({ where: { role: 'admin' }, select: { id: true } });
+    await this.notificationService.notifySpecializationRequested(
+      admins.map(a => a.id),
+      `${doctor.firstName} ${doctor.lastName}`,
+      specialization.specializationName
+    );
 
     return {
       id: doc.id,
@@ -310,9 +320,10 @@ export class DoctorRoleService {
     const doctorHospital = await this.prisma.doctorHospital.findUnique({ where: { id: dto.doctorHospitalId } });
     if (!doctorHospital) throw new NotFoundException(`DoctorHospital with id ${dto.doctorHospitalId} not found`);
     if (doctorHospital.doctorId !== doctor.id) throw new BadRequestException(`This practice does not belong to you`);
-
-    const date = new Date(dto.date);
-    const dayOfWeek = date.toLocaleDateString('en-US', { weekday: 'long' }).toUpperCase();
+    const [year, month, day] = dto.date.split('-').map(Number);
+    const dateUTC = new Date(Date.UTC(year, month - 1, day));
+    const days = ['SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY'];
+    const dayOfWeek = days[dateUTC.getUTCDay()];
 
     const availability = await this.prisma.officeDoctorAvailability.findFirst({
       where: { doctorHospitalId: dto.doctorHospitalId, dayOfWeek, isAvailable: true }
@@ -320,17 +331,15 @@ export class DoctorRoleService {
     if (!availability) throw new BadRequestException(`No availability set for ${dayOfWeek} at this practice`);
 
     // Check doctor unavailability for this date
-    const dayStart = new Date(dto.date);
-    dayStart.setUTCHours(0, 0, 0, 0);
-    const dayEnd = new Date(dto.date);
-    dayEnd.setUTCHours(23, 59, 59, 999);
+    const dayStart = new Date(Date.UTC(year, month - 1, day, 0, 0, 0, 0));
+    const dayEnd = new Date(Date.UTC(year, month - 1, day, 23, 59, 59, 999));
 
     const unavailability = await this.prisma.doctorUnavailability.findFirst({
       where: { doctorId: doctor.id, date: { gte: dayStart, lte: dayEnd } }
     });
     if (unavailability) throw new BadRequestException(`Doctor is marked unavailable on ${dto.date}`);
 
-    // Generate slots
+    // Generate slots using UTC hours from availability
     const slotDuration = doctorHospital.timeSlotPerClientInMin;
     const startH = availability.startTime.getUTCHours();
     const startM = availability.startTime.getUTCMinutes();
@@ -342,12 +351,8 @@ export class DoctorRoleService {
     const end = endH * 60 + endM;
 
     while (current + slotDuration <= end) {
-      const slotStart = new Date(dto.date);
-      slotStart.setUTCHours(Math.floor(current / 60), current % 60, 0, 0);
-
-      const slotEnd = new Date(dto.date);
-      slotEnd.setUTCHours(Math.floor((current + slotDuration) / 60), (current + slotDuration) % 60, 0, 0);
-
+      const slotStart = new Date(Date.UTC(year, month - 1, day, Math.floor(current / 60), current % 60, 0, 0));
+      const slotEnd = new Date(Date.UTC(year, month - 1, day, Math.floor((current + slotDuration) / 60), (current + slotDuration) % 60, 0, 0));
       slots.push({ startTime: slotStart, endTime: slotEnd });
       current += slotDuration;
     }
