@@ -209,7 +209,7 @@ function DoctorDetailModal({ doctorId, onClose, onVerify, verifying }: {
 }
 
 export default function AdminDoctorsPage() {
-  const { user } = useAuthStore();
+  const { user, _hasHydrated } = useAuthStore();
   const router = useRouter();
   const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
@@ -217,8 +217,9 @@ export default function AdminDoctorsPage() {
   const [selectedDoctorId, setSelectedDoctorId] = useState<number | null>(null);
 
   useEffect(() => {
+    if (!_hasHydrated) return;
     if (!user || user.role !== 'admin') router.replace('/auth/login');
-  }, [user, router]);
+  }, [user, router, _hasHydrated]);
 
   const { data: allRes, isLoading } = useQuery({
     queryKey: ['admin-doctors'],
@@ -243,7 +244,7 @@ export default function AdminDoctorsPage() {
     onError: () => toast.error('Failed to verify doctor'),
   });
 
-  if (!user) return null;
+  if (!_hasHydrated || !user) return null;
 
   const allDoctors = Array.isArray(allRes?.data) ? allRes.data : [];
   const pendingDoctors = Array.isArray(pendingRes?.data) ? pendingRes.data : [];
