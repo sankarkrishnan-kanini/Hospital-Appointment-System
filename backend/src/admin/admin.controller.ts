@@ -113,4 +113,11 @@ export class AdminController {
   ) {
     return this.adminService.rejectSpecialization(doctorId, specializationId);
   }
+
+  // ─── ANALYTICS ───────────────────────────────────────────────────────────────
+
+  @Get('analytics')
+  getAnalytics() {
+    return this.adminService.getAnalytics();
+  }
 }

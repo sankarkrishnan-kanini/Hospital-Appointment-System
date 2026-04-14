@@ -88,7 +88,7 @@ export default function PatientDashboard() {
 
             <Link href="/patient/doctors"
               className="bg-white hover:bg-gray-50 border border-gray-100 rounded-2xl p-5 flex items-center gap-4 transition shadow-sm">
-              <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center">
+              <div className="w-10 h-10 bg-[#eef3ff] rounded-xl flex items-center justify-center">
                 <Search size={18} className="text-[#2d6be4]" />
               </div>
               <div>
@@ -99,8 +99,8 @@ export default function PatientDashboard() {
 
             <Link href="/patient/appointments"
               className="bg-white hover:bg-gray-50 border border-gray-100 rounded-2xl p-5 flex items-center gap-4 transition shadow-sm">
-              <div className="w-10 h-10 bg-orange-50 rounded-xl flex items-center justify-center">
-                <CalendarDays size={18} className="text-orange-500" />
+              <div className="w-10 h-10 bg-[#eef3ff] rounded-xl flex items-center justify-center">
+                <CalendarDays size={18} className="text-[#2d6be4]" />
               </div>
               <div>
                 <p className="font-semibold text-sm text-gray-800">My Appointments</p>
@@ -110,8 +110,8 @@ export default function PatientDashboard() {
 
             <Link href="/patient/profile"
               className="bg-white hover:bg-gray-50 border border-gray-100 rounded-2xl p-5 flex items-center gap-4 transition shadow-sm">
-              <div className="w-10 h-10 bg-purple-50 rounded-xl flex items-center justify-center">
-                <UserRound size={18} className="text-purple-500" />
+              <div className="w-10 h-10 bg-[#eef3ff] rounded-xl flex items-center justify-center">
+                <UserRound size={18} className="text-[#2d6be4]" />
               </div>
               <div>
                 <p className="font-semibold text-sm text-gray-800">My Profile</p>
@@ -123,11 +123,11 @@ export default function PatientDashboard() {
           
           <div className="grid grid-cols-3 gap-4">
             {[
-              { label: 'Upcoming', value: upcoming.length, border: 'border-l-blue-500' },
-              { label: 'Completed', value: completed.length, border: 'border-l-green-500' },
-              { label: 'Total', value: allApts.length, border: 'border-l-gray-300' },
+              { label: 'Upcoming', value: upcoming.length },
+              { label: 'Completed', value: completed.length },
+              { label: 'Total', value: allApts.length },
             ].map((s) => (
-              <div key={s.label} className={`bg-white rounded-xl border border-gray-100 border-l-4 ${s.border} shadow-sm p-5`}>
+              <div key={s.label} className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
                 <p className="text-2xl font-bold text-gray-900">{s.value}</p>
                 <p className="text-xs text-gray-400 mt-1">{s.label}</p>
               </div>
@@ -155,8 +155,7 @@ export default function PatientDashboard() {
                       <p className="text-sm font-medium text-gray-800">Appointment #{apt.id}</p>
                       <p className="text-xs text-gray-400">{new Date(apt.probableStartTime).toLocaleString('en-GB', { timeZone: 'UTC' })}</p>
                     </div>
-                    <span className={`text-xs px-3 py-1 rounded-full font-medium
-                      ${apt.status?.status === 'Completed' ? 'bg-green-50 text-green-600' : 'bg-blue-50 text-blue-600'}`}>
+                    <span className="text-xs px-3 py-1 rounded-full font-medium bg-[#eef3ff] text-[#2d6be4]">
                       {apt.status?.status ?? 'Scheduled'}
                     </span>
                   </div>

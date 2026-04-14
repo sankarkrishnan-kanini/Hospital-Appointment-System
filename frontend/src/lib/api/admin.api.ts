@@ -1,5 +1,4 @@
 import api from '../axios';
-import { CreateOfficeDto, UpdateOfficeDto, CreateHospitalDto, UpdateHospitalDto } from '../../types/dto.types';
 
 
 export const getAllUsersApi = () => api.get('/admin/users');
@@ -12,7 +11,7 @@ export const getPendingDoctorsApi = () => api.get('/admin/doctors/pending');
 export const getDoctorByIdApi = (id: number) => api.get(`/admin/doctors/${id}`);
 export const verifyDoctorApi = (id: number) => api.patch(`/admin/doctors/${id}/verify`);
 export const viewDoctorDocumentApi = (doctorId: number, docId: number) =>
-  api.get(`/admin/doctors/${doctorId}/documents/${docId}/view`, { responseType: 'arraybuffer' });
+  api.get(`/admin/doctors/${doctorId}/documents/${docId}/view`, { responseType: 'blob' });
 
 
 export const getAllAppointmentsApi = () => api.get('/admin/appointments');
@@ -30,20 +29,23 @@ export const rejectSpecializationApi = (doctorId: number, specializationId: numb
   api.post(`/admin/specialization-requests/${doctorId}/${specializationId}/reject`);
 
 export const getAllOfficesApi = () => api.get('/admin/offices');
-export const createOfficeApi = (dto: CreateOfficeDto) => api.post('/admin/offices', dto);
+export const createOfficeApi = (dto: any) => api.post('/admin/offices', dto);
 export const getOfficeByIdApi = (id: number) => api.get(`/admin/offices/${id}`);
-export const updateOfficeApi = (id: number, dto: UpdateOfficeDto) => api.patch(`/admin/offices/${id}`, dto);
+export const updateOfficeApi = (id: number, dto: any) => api.patch(`/admin/offices/${id}`, dto);
 export const deleteOfficeApi = (id: number) => api.delete(`/admin/offices/${id}`);
 
 
 export const getHospitalsByOfficeApi = (officeId: number) =>
   api.get(`/admin/offices/${officeId}/hospitals`);
-export const createHospitalApi = (officeId: number, dto: CreateHospitalDto) =>
+export const createHospitalApi = (officeId: number, dto: any) =>
   api.post(`/admin/offices/${officeId}/hospitals`, dto);
 export const getHospitalByIdApi = (id: number) => api.get(`/admin/hospitals/${id}`);
-export const updateHospitalApi = (id: number, dto: UpdateHospitalDto) =>
+export const updateHospitalApi = (id: number, dto: any) =>
   api.patch(`/admin/hospitals/${id}`, dto);
 export const deleteHospitalApi = (id: number) => api.delete(`/admin/hospitals/${id}`);
 
 
-export const getAllSpecializationsApi = () => api.get('/admin/specialization-requests').then(() => ({ data: [] }));
+export const getAllSpecializationsApi = () => api.get('/patient/doctors?limit=0').then(() => ({ data: [] }));
+
+
+export const getAnalyticsApi = () => api.get('/admin/analytics');
