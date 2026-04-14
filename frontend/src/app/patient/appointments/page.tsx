@@ -305,7 +305,7 @@ export default function PatientAppointmentsPage() {
                   { icon: <User size={14} className="text-gray-400" />, label: 'Doctor', value: `Dr. ${summaryModal.doctorHospital?.doctor?.firstName} ${summaryModal.doctorHospital?.doctor?.lastName}` },
                   { icon: <Building2 size={14} className="text-gray-400" />, label: 'Hospital', value: summaryModal.doctorHospital?.isPrivate ? 'Private Practice' : summaryModal.doctorHospital?.hospital?.name },
                   { icon: <CalendarDays size={14} className="text-gray-400" />, label: 'Date & Time', value: new Date(summaryModal.probableStartTime).toLocaleString('en-GB', { timeZone: 'UTC' }) },
-                  { icon: <DollarSign size={14} className="text-gray-400" />, label: 'Consultation Fee', value: `₹${summaryModal.doctorHospital?.firstConsultationFee ?? '—'}` },
+                  { icon: <DollarSign size={14} className="text-gray-400" />, label: 'Consultation Fee', value: `₹${summaryModal.consultationFee ?? summaryModal.doctorHospital?.firstConsultationFee ?? '—'}` },
                   ...(summaryModal.cancellationReason ? [{ icon: <X size={14} className="text-red-400" />, label: 'Cancellation Reason', value: summaryModal.cancellationReason }] : []),
                 ].map(({ icon, label, value }) => (
                   <div key={label} className="flex items-center justify-between px-4 py-3">

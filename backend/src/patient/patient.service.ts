@@ -222,6 +222,18 @@ export class PatientService {
     const activeStatus = await this.prisma.appointmentStatus.findFirst({ where: { status: 'ACTIVE' } });
     if (!activeStatus) throw new NotFoundException(`AppointmentStatus 'ACTIVE' not found in DB`);
 
+    const completedStatus = await this.prisma.appointmentStatus.findFirst({ where: { status: 'Completed' } });
+    const hasPriorVisit = completedStatus ? await this.prisma.appointment.findFirst({
+      where: {
+        userAccountId: client.id,
+        doctorHospital: { doctorId: dto.doctorId },
+        appointmentStatusId: completedStatus.id,
+      }
+    }) : null;
+    const consultationFee = hasPriorVisit
+      ? doctorHospital.followupConsultationFee
+      : doctorHospital.firstConsultationFee;
+
     const appointment = await this.prisma.$transaction(async (tx) => {
       const freshSlot = await tx.timeSlot.findUnique({ where: { id: dto.timeSlotId } });
       if (!freshSlot || freshSlot.isBooked) throw new BadRequestException(`TimeSlot is already booked`);
@@ -234,7 +246,8 @@ export class PatientService {
           probableStartTime: timeSlot.startTime,
           durationInMinutes: doctorHospital.timeSlotPerClientInMin,
           appointmentStatusId: activeStatus.id,
-          appointmentTakenDate: new Date()
+          appointmentTakenDate: new Date(),
+          consultationFee,
         },
         include: { status: true, timeSlot: true, doctorHospital: { include: { doctor: true, hospital: true } } }
       });
@@ -262,7 +275,7 @@ export class PatientService {
       hospitalName,
       appointment.probableStartTime,
       appointment.id,
-      doctorHospital.firstConsultationFee,
+      consultationFee,
     ).catch(() => {});
 
     const doctorUser = await this.prisma.user.findUnique({ where: { id: doctor.userId }, select: { email: true } });
@@ -279,6 +292,8 @@ export class PatientService {
     return {
       id: appointment.id,
       reason: dto.reason,
+      consultationFee: appointment.consultationFee,
+      isFollowup: !!hasPriorVisit,
       probableStartTime: appointment.probableStartTime,
       durationInMinutes: appointment.durationInMinutes,
       appointmentTakenDate: appointment.appointmentTakenDate,
