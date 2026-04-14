@@ -86,8 +86,6 @@ function DoctorDetailModal({ doctorId, onClose, onVerify, verifying }: {
                   )}
                 </div>
               </div>
-
-              {/* Specializations */}
               {doctor.specializations?.length > 0 && (
                 <div>
                   <div className="flex items-center gap-2 mb-2">
@@ -101,8 +99,6 @@ function DoctorDetailModal({ doctorId, onClose, onVerify, verifying }: {
                   </div>
                 </div>
               )}
-
-              {/* Qualifications */}
               {doctor.qualifications?.length > 0 && (
                 <div>
                   <div className="flex items-center gap-2 mb-2">
@@ -120,7 +116,6 @@ function DoctorDetailModal({ doctorId, onClose, onVerify, verifying }: {
                 </div>
               )}
 
-              {/* Hospitals */}
               {doctor.doctorHospitals?.length > 0 && (
                 <div>
                   <div className="flex items-center gap-2 mb-2">
@@ -137,7 +132,6 @@ function DoctorDetailModal({ doctorId, onClose, onVerify, verifying }: {
                 </div>
               )}
 
-              {/* Documents */}
               {doctor.documents?.length > 0 && (
                 <div>
                   <div className="flex items-center gap-2 mb-2">
@@ -164,7 +158,6 @@ function DoctorDetailModal({ doctorId, onClose, onVerify, verifying }: {
                 </div>
               )}
 
-              {/* Verification status */}
               <div className="flex items-center gap-2">
                 {doctor.isVerified ? (
                   <span className="text-xs bg-green-100 text-green-700 font-semibold px-3 py-1 rounded-full">✅ Verified</span>
@@ -173,7 +166,7 @@ function DoctorDetailModal({ doctorId, onClose, onVerify, verifying }: {
                 )}
               </div>
 
-              {/* Action */}
+              
               {!doctor.isVerified && doctor.verificationRequested && (
                 <button
                   onClick={() => onVerify(doctor.id)}
@@ -186,7 +179,6 @@ function DoctorDetailModal({ doctorId, onClose, onVerify, verifying }: {
               )}
             </div>
 
-            {/* Right panel - PDF viewer */}
             <div className="flex-1 min-h-[500px] bg-gray-100 rounded-br-2xl flex items-center justify-center">
               {pdfLoading ? (
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#2d6be4]" />
@@ -275,7 +267,6 @@ export default function AdminDoctorsPage() {
         </header>
 
         <div className="flex-1 p-6 space-y-5">
-          {/* Tabs + Search */}
           <div className="flex items-center justify-between gap-4">
             <div className="flex gap-2">
               <button
@@ -307,8 +298,6 @@ export default function AdminDoctorsPage() {
               />
             </div>
           </div>
-
-          {/* Table */}
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
             {isLoading ? (
               <div className="flex items-center justify-center py-16">
