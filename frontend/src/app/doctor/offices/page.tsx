@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import Sidebar from '@/components/Sidebar';
 import { Building2, Plus, Trash2, MapPin, DollarSign, Clock } from 'lucide-react';
-import { getDoctorOfficesApi, createOfficeApi, deletePracticeApi, affiliateHospitalApi } from '@/lib/api/doctor.api';
+import { getDoctorOfficesApi, createOfficeApi, deletePracticeApi, affiliateHospitalApi, getInsurancesApi, addInsuranceApi, deleteInsuranceApi } from '@/lib/api/doctor.api';
 import { getAllOfficesApi, getHospitalsByOfficeApi } from '@/lib/api/admin.api';
 import toast from 'react-hot-toast';
 
@@ -20,12 +20,14 @@ const navItems = [
 ];
 
 export default function DoctorOfficesPage() {
-  const { user } = useAuthStore();
+  const { user, _hasHydrated } = useAuthStore();
   const router = useRouter();
   const queryClient = useQueryClient();
   const [showPrivateForm, setShowPrivateForm] = useState(false);
   const [showAffiliateForm, setShowAffiliateForm] = useState(false);
   const [selectedOfficeId, setSelectedOfficeId] = useState<number | null>(null);
+  const [insuranceOfficeId, setInsuranceOfficeId] = useState<number | null>(null);
+  const [newInsurance, setNewInsurance] = useState('');
   const [form, setForm] = useState({
     streetAddress: '', city: '', state: '', country: '', zip: '',
     firstConsultationFee: '', followupConsultationFee: '', timeSlotPerClientInMin: ''
@@ -35,8 +37,9 @@ export default function DoctorOfficesPage() {
   });
 
   useEffect(() => {
+    if (!_hasHydrated) return;
     if (!user || user.role !== 'doctor') router.replace('/auth/login');
-  }, [user, router]);
+  }, [user, router, _hasHydrated]);
 
   const { data: officesRes, isLoading } = useQuery({
     queryKey: ['doctor-offices'],
@@ -56,6 +59,32 @@ export default function DoctorOfficesPage() {
     queryFn: () => getHospitalsByOfficeApi(selectedOfficeId!),
     enabled: !!selectedOfficeId,
     retry: false,
+  });
+
+  const { data: insurancesRes } = useQuery({
+    queryKey: ['insurances', insuranceOfficeId],
+    queryFn: () => getInsurancesApi(insuranceOfficeId!),
+    enabled: !!insuranceOfficeId,
+    retry: false,
+  });
+
+  const { mutate: addInsurance, isPending: addingInsurance } = useMutation({
+    mutationFn: addInsuranceApi,
+    onSuccess: () => {
+      toast.success('Insurance added');
+      setNewInsurance('');
+      queryClient.invalidateQueries({ queryKey: ['insurances', insuranceOfficeId] });
+    },
+    onError: (err: any) => toast.error(err?.response?.data?.message || 'Failed to add insurance'),
+  });
+
+  const { mutate: removeInsurance } = useMutation({
+    mutationFn: deleteInsuranceApi,
+    onSuccess: () => {
+      toast.success('Insurance removed');
+      queryClient.invalidateQueries({ queryKey: ['insurances', insuranceOfficeId] });
+    },
+    onError: () => toast.error('Failed to remove insurance'),
   });
 
   // auto-fill fees when hospital is selected
@@ -102,11 +131,12 @@ export default function DoctorOfficesPage() {
     onError: (err: any) => toast.error(err?.response?.data?.message || 'Failed to delete'),
   });
 
-  if (!user) return null;
+  if (!_hasHydrated || !user) return null;
 
   const offices = Array.isArray(officesRes?.data) ? officesRes.data : [];
   const adminOffices = Array.isArray(adminOfficesRes?.data) ? adminOfficesRes.data : [];
   const hospitals = Array.isArray(hospitalsRes?.data) ? hospitalsRes.data : [];
+  const insurances = Array.isArray(insurancesRes?.data) ? insurancesRes.data : [];
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
@@ -145,7 +175,7 @@ export default function DoctorOfficesPage() {
           ) : (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               {offices.map((office: any) => (
-                <div key={office.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+                <div key={office.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 flex flex-col">
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex items-center gap-3">
                       <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${office.isPrivate ? 'bg-purple-50' : 'bg-blue-50'}`}>
@@ -175,7 +205,7 @@ export default function DoctorOfficesPage() {
                     </div>
                   )}
 
-                  <div className="grid grid-cols-3 gap-3 mt-3">
+                  <div className="grid grid-cols-3 gap-3 mt-3 flex-1">
                     <div className="bg-gray-50 rounded-xl p-3 text-center">
                       <DollarSign size={14} className="text-gray-400 mx-auto mb-1" />
                       <p className="text-sm font-semibold text-gray-800">₹{office.firstConsultationFee}</p>
@@ -191,6 +221,67 @@ export default function DoctorOfficesPage() {
                       <p className="text-sm font-semibold text-gray-800">{office.timeSlotPerClientInMin} min</p>
                       <p className="text-xs text-gray-400">Per slot</p>
                     </div>
+                  </div>
+
+                  {/* In-Network Insurance */}
+                  <div className="mt-auto border-t border-gray-100 pt-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">In-Network Insurance</p>
+                      <button
+                        onClick={() => setInsuranceOfficeId(insuranceOfficeId === office.id ? null : office.id)}
+                        className="text-xs text-[#2d6be4] hover:underline font-medium"
+                      >
+                        {insuranceOfficeId === office.id ? 'Hide' : 'Manage'}
+                      </button>
+                    </div>
+
+                    {/* existing insurances from offices data */}
+                    {office.insurances?.length > 0 && insuranceOfficeId !== office.id && (
+                      <div className="flex flex-wrap gap-1">
+                        {office.insurances.map((ins: any) => (
+                          <span key={ins.id} className="text-xs bg-green-50 text-green-700 px-2 py-0.5 rounded-full">{ins.insuranceName}</span>
+                        ))}
+                      </div>
+                    )}
+
+                    {insuranceOfficeId === office.id && (
+                      <div className="space-y-2">
+                        {/* loaded insurances */}
+                        {insurances.length > 0 ? (
+                          <div className="flex flex-wrap gap-1">
+                            {insurances.map((ins: any) => (
+                              <span key={ins.id} className="flex items-center gap-1 text-xs bg-green-50 text-green-700 px-2 py-0.5 rounded-full">
+                                {ins.insuranceName}
+                                <button onClick={() => removeInsurance(ins.id)} className="text-green-400 hover:text-red-500 ml-0.5">×</button>
+                              </span>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="text-xs text-gray-400">No insurances added yet</p>
+                        )}
+                        {/* add new */}
+                        <div className="flex gap-2 mt-2">
+                          <input
+                            value={newInsurance}
+                            onChange={(e) => setNewInsurance(e.target.value)}
+                            placeholder="e.g. BlueCross"
+                            className="flex-1 border border-gray-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-[#2d6be4]"
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter' && newInsurance.trim()) {
+                                addInsurance({ doctorHospitalId: office.id, insuranceName: newInsurance.trim() });
+                              }
+                            }}
+                          />
+                          <button
+                            onClick={() => newInsurance.trim() && addInsurance({ doctorHospitalId: office.id, insuranceName: newInsurance.trim() })}
+                            disabled={addingInsurance || !newInsurance.trim()}
+                            className="text-xs font-medium bg-[#2d6be4] text-white px-3 py-2 rounded-xl hover:bg-blue-700 transition disabled:opacity-50"
+                          >
+                            Add
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}

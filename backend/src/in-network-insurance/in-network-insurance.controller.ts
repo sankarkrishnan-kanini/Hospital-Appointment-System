@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Patch, Delete, Body, Param, ParseIntPipe, HttpStatus, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Body, Param, Query, ParseIntPipe, HttpStatus, UseGuards } from '@nestjs/common';
 import { InNetworkInsuranceService } from './in-network-insurance.service';
 import { CreateInNetworkInsuranceDto } from './DTOS/createInNetworkInsuranceDTO';
 import { UpdateInNetworkInsuranceDto } from './DTOS/updateInNetworkInsuranceDTO';
@@ -17,8 +17,8 @@ export class InNetworkInsuranceController {
   constructor(private readonly inNetworkInsuranceService: InNetworkInsuranceService) {}
 
   @Get()
-  findAll() {
-    return this.inNetworkInsuranceService.findAll();
+  findAll(@Query('doctorHospitalId') doctorHospitalId?: string) {
+    return this.inNetworkInsuranceService.findAll(doctorHospitalId ? parseInt(doctorHospitalId) : undefined);
   }
 
   @Get(':id')

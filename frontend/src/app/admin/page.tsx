@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import Link from 'next/link';
 import Sidebar from '@/components/Sidebar';
+import NotificationBell from '@/components/NotificationBell';
 import { Users, Stethoscope, UserRound, CalendarDays, Building2, GraduationCap, ChevronRight } from 'lucide-react';
 import { getAllUsersApi, getAllDoctorsApi, getAllAppointmentsApi, getAllPatientsApi, getPendingDoctorsApi } from '@/lib/api/admin.api';
 
@@ -20,12 +21,13 @@ const navItems = [
 ];
 
 export default function AdminDashboard() {
-  const { user } = useAuthStore();
+  const { user, _hasHydrated } = useAuthStore();
   const router = useRouter();
 
   useEffect(() => {
+    if (!_hasHydrated) return;
     if (!user || user.role !== 'admin') router.replace('/auth/login');
-  }, [user, router]);
+  }, [user, router, _hasHydrated]);
 
   const { data: usersRes } = useQuery({ queryKey: ['admin-users'], queryFn: getAllUsersApi, retry: false });
   const { data: doctorsRes } = useQuery({ queryKey: ['admin-doctors'], queryFn: getAllDoctorsApi, retry: false });
@@ -33,7 +35,7 @@ export default function AdminDashboard() {
   const { data: appointmentsRes } = useQuery({ queryKey: ['admin-appointments'], queryFn: getAllAppointmentsApi, retry: false });
   const { data: pendingRes } = useQuery({ queryKey: ['admin-pending'], queryFn: getPendingDoctorsApi, retry: false });
 
-  if (!user) return null;
+  if (!_hasHydrated || !user) return null;
 
   const users = Array.isArray(usersRes?.data) ? usersRes.data : [];
   const doctors = Array.isArray(doctorsRes?.data) ? doctorsRes.data : [];
@@ -54,7 +56,7 @@ export default function AdminDashboard() {
       <main className="flex-1 flex flex-col ml-60">
         <header className="h-16 bg-white border-b border-gray-100 flex items-center justify-between px-6 sticky top-0 z-30">
           <h1 className="text-base font-semibold text-gray-900">Dashboard</h1>
-          <span className="text-xs bg-blue-50 text-blue-600 font-medium px-3 py-1 rounded-full">Admin</span>
+          <NotificationBell />
         </header>
 
         <div className="flex-1 p-6 space-y-5">
@@ -142,7 +144,7 @@ export default function AdminDashboard() {
                   {appointments.slice(0, 5).map((apt: any) => (
                     <tr key={apt.id}>
                       <td className="py-3 text-gray-500">#{apt.id}</td>
-                      <td className="py-3 text-gray-500">{new Date(apt.appointmentTakenDate).toLocaleDateString()}</td>
+                      <td className="py-3 text-gray-500">{new Date(apt.appointmentTakenDate).toLocaleDateString('en-GB', { timeZone: 'UTC' })}</td>
                       <td className="py-3">
                         <span className="bg-blue-50 text-blue-600 text-xs px-2 py-1 rounded-full">
                           {apt.status?.status ?? 'Scheduled'}

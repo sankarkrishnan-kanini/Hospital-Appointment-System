@@ -52,12 +52,7 @@ export class OfficeHospitalService {
     const office = await this.prisma.office.findUnique({ where: { id: officeId } });
     if (!office) throw new NotFoundException(`Office with id ${officeId} not found`);
     return this.prisma.hospital.create({
-      data: {
-        ...dto,
-        officeId,
-        defaultFirstConsultationFee: dto.defaultFirstConsultationFee ?? 0,
-        defaultFollowupFee: dto.defaultFollowupFee ?? 0,
-      }
+      data: { ...dto, officeId }
     });
   }
 

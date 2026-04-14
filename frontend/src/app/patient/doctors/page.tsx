@@ -5,6 +5,7 @@ import { useAuthStore } from '@/store/auth.store';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import Sidebar from '@/components/Sidebar';
+import NotificationBell from '@/components/NotificationBell';
 import { Search, X, ChevronRight, Clock, DollarSign } from 'lucide-react';
 import { searchDoctorsApi, getDoctorProfileApi, getAvailableTimeSlotsApi, bookAppointmentApi } from '@/lib/api/patient.api';
 import toast from 'react-hot-toast';
@@ -25,7 +26,7 @@ const SPECIALIZATIONS = [
 ];
 
 export default function FindDoctorsPage() {
-  const { user } = useAuthStore();
+  const { user, _hasHydrated } = useAuthStore();
   const router = useRouter();
   const queryClient = useQueryClient();
 
@@ -43,8 +44,9 @@ export default function FindDoctorsPage() {
   const [showBooking, setShowBooking] = useState(false);
 
   useEffect(() => {
+    if (!_hasHydrated) return;
     if (!user || user.role !== 'patient') router.replace('/auth/login');
-  }, [user, router]);
+  }, [user, router, _hasHydrated]);
 
   const { data: doctorsRes, isLoading, refetch } = useQuery({
     queryKey: ['search-doctors', city, specializationId, maxFee],
@@ -81,7 +83,7 @@ export default function FindDoctorsPage() {
     },
   });
 
-  if (!user) return null;
+  if (!_hasHydrated || !user) return null;
 
   const doctors = Array.isArray(doctorsRes?.data) ? doctorsRes.data : [];
   const slots = Array.isArray(slotsRes?.data) ? slotsRes.data : [];
@@ -126,6 +128,7 @@ export default function FindDoctorsPage() {
       <main className="flex-1 flex flex-col ml-60">
         <header className="h-16 bg-white border-b border-gray-100 flex items-center justify-between px-6 sticky top-0 z-30">
           <h1 className="text-base font-semibold text-gray-900">Find Doctors</h1>
+          <NotificationBell />
         </header>
 
         <div className="flex-1 p-6 space-y-5">
@@ -206,6 +209,11 @@ export default function FindDoctorsPage() {
                             {p.city && (
                               <span className="text-xs text-gray-400">{p.city}</span>
                             )}
+                            {p.insurances?.length > 0 && (
+                              <span className="text-xs text-green-600 bg-green-50 px-1.5 py-0.5 rounded-full">
+                                🛡 {p.insurances.slice(0, 2).join(', ')}{p.insurances.length > 2 ? ` +${p.insurances.length - 2}` : ''}
+                              </span>
+                            )}
                           </div>
                         </div>
                         <button onClick={() => handleBookNow(doc, p)}
@@ -250,6 +258,14 @@ export default function FindDoctorsPage() {
                       <Clock size={11} /> {selectedPractice.timeSlotPerClientInMin ?? '—'} min/slot
                     </span>
                   </div>
+                  {selectedPractice.insurances?.length > 0 && (
+                    <div className="mt-2 flex flex-wrap gap-1">
+                      <span className="text-xs text-gray-400">Insurances:</span>
+                      {selectedPractice.insurances.map((ins: string) => (
+                        <span key={ins} className="text-xs bg-green-50 text-green-700 px-2 py-0.5 rounded-full">{ins}</span>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 {/* Specialization */}
@@ -283,9 +299,9 @@ export default function FindDoctorsPage() {
                             ${selectedSlot === slot.id
                               ? 'border-[#2d6be4] bg-blue-50 text-[#2d6be4]'
                               : 'border-gray-200 text-gray-600 hover:border-gray-300'}`}>
-                          <p>{new Date(slot.startTime).toLocaleDateString()}</p>
+                          <p>{new Date(slot.startTime).toLocaleDateString('en-GB', { timeZone: 'UTC' })}</p>
                           <p className="mt-0.5">
-                            {new Date(slot.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            {new Date(slot.startTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', timeZone: 'UTC' })}
                           </p>
                         </button>
                       ))}

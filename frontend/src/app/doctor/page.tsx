@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import Link from 'next/link';
 import Sidebar from '@/components/Sidebar';
+import NotificationBell from '@/components/NotificationBell';
 import { CalendarDays, Building2, GraduationCap, FileText, UserRound, Clock, ChevronRight } from 'lucide-react';
 import { getDoctorProfileApi, getDoctorAppointmentsApi, getDoctorOfficesApi } from '@/lib/api/doctor.api';
 
@@ -19,18 +20,19 @@ const navItems = [
 ];
 
 export default function DoctorDashboard() {
-  const { user } = useAuthStore();
+  const { user, _hasHydrated } = useAuthStore();
   const router = useRouter();
 
   useEffect(() => {
+    if (!_hasHydrated) return;
     if (!user || user.role !== 'doctor') router.replace('/auth/login');
-  }, [user, router]);
+  }, [user, router, _hasHydrated]);
 
   const { data: profileRes, isLoading } = useQuery({ queryKey: ['doctor-profile'], queryFn: getDoctorProfileApi, retry: false });
   const { data: appointmentsRes } = useQuery({ queryKey: ['doctor-appointments'], queryFn: getDoctorAppointmentsApi, retry: false });
   const { data: officesRes } = useQuery({ queryKey: ['doctor-offices'], queryFn: getDoctorOfficesApi, retry: false });
 
-  if (!user) return null;
+  if (!_hasHydrated || !user) return null;
 
   const doctor = profileRes?.data && !profileRes.data.statusCode ? profileRes.data : null;
   const appointments = Array.isArray(appointmentsRes?.data) ? appointmentsRes.data : [];
@@ -46,7 +48,7 @@ export default function DoctorDashboard() {
         <main className="flex-1 flex flex-col ml-60">
           <header className="h-16 bg-white border-b border-gray-100 flex items-center justify-between px-6 sticky top-0 z-30">
             <h1 className="text-base font-semibold text-gray-900">Dashboard</h1>
-            <span className="text-xs bg-amber-50 text-amber-600 font-medium px-3 py-1 rounded-full">Pending Verification</span>
+            <NotificationBell />
           </header>
           <div className="flex-1 flex items-center justify-center p-6">
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-12 text-center max-w-md w-full">
@@ -97,7 +99,7 @@ export default function DoctorDashboard() {
       <main className="flex-1 flex flex-col ml-60">
         <header className="h-16 bg-white border-b border-gray-100 flex items-center justify-between px-6 sticky top-0 z-30">
           <h1 className="text-base font-semibold text-gray-900">Dashboard</h1>
-          <span className="text-xs bg-green-50 text-green-600 font-medium px-3 py-1 rounded-full">Verified</span>
+          <NotificationBell />
         </header>
 
         <div className="flex-1 p-6 space-y-5">
@@ -141,15 +143,22 @@ export default function DoctorDashboard() {
                 <h3 className="text-sm font-semibold text-gray-800">Upcoming Appointments</h3>
                 <Link href="/doctor/appointments" className="text-xs text-[#2d6be4] hover:underline">View all</Link>
               </div>
-              {!appointments.length ? (
-                <p className="text-sm text-gray-400">No appointments yet</p>
+              {!appointments.filter((a: any) => a.status?.status !== 'Completed' && a.status?.status !== 'CANCELLED').length ? (
+                <p className="text-sm text-gray-400">No upcoming appointments</p>
               ) : (
                 <div className="space-y-2">
-                  {appointments.slice(0, 4).map((apt: any) => (
+                  {appointments
+                    .filter((a: any) => a.status?.status !== 'Completed' && a.status?.status !== 'CANCELLED')
+                    .slice(0, 4)
+                    .map((apt: any) => (
                     <div key={apt.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
                       <div>
-                        <p className="text-sm font-medium text-gray-800">Appointment #{apt.id}</p>
-                        <p className="text-xs text-gray-400">{new Date(apt.probableStartTime).toLocaleString()}</p>
+                        <p className="text-sm font-medium text-gray-800">
+                          {apt.client ? `${apt.client.firstName} ${apt.client.lastName}` : `Appointment #${apt.id}`}
+                        </p>
+                        <p className="text-xs text-gray-400">
+                          {new Date(apt.probableStartTime).toLocaleString('en-GB', { timeZone: 'UTC' })}
+                        </p>
                       </div>
                       <span className="text-xs bg-blue-50 text-blue-600 px-2 py-1 rounded-full">
                         {apt.status?.status ?? 'Scheduled'}
