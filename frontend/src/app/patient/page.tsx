@@ -59,7 +59,7 @@ export default function PatientDashboard() {
             <p className="text-blue-100 text-sm mt-1">{user.email}</p>
           </div>
 
-          {/* Profile incomplete warning */}
+      
           {profileRes && !profile && (
             <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 flex items-center justify-between">
               <div>
@@ -73,7 +73,7 @@ export default function PatientDashboard() {
             </div>
           )}
 
-          {/* Quick Actions */}
+        
           <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
             <Link href="/patient/doctors"
               className="bg-[#2d6be4] hover:bg-blue-700 text-white rounded-2xl p-5 flex items-center gap-4 transition">
@@ -120,7 +120,7 @@ export default function PatientDashboard() {
             </Link>
           </div>
 
-          {/* Stats */}
+          
           <div className="grid grid-cols-3 gap-4">
             {[
               { label: 'Upcoming', value: upcoming.length },
@@ -134,8 +134,7 @@ export default function PatientDashboard() {
             ))}
           </div>
 
-          {/* Recent Appointments */}
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-sm font-semibold text-gray-800">Recent Appointments</h3>
               <Link href="/patient/appointments" className="text-xs text-[#2d6be4] hover:underline">View all</Link>

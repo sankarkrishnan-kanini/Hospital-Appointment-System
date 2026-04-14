@@ -76,7 +76,6 @@ export default function AdminAppointmentsPage() {
             ))}
           </div>
 
-          {/* Search */}
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex items-center gap-3">
             <span className="text-gray-400">🔍</span>
             <input
@@ -88,7 +87,6 @@ export default function AdminAppointmentsPage() {
             />
           </div>
 
-          {/* Table */}
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
             {isLoading ? (
               <div className="flex items-center justify-center py-16">

@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import Sidebar from '@/components/Sidebar';
 import NotificationBell from '@/components/NotificationBell';
-import { CalendarDays, X, RefreshCw } from 'lucide-react';
+import { CalendarDays, X, RefreshCw, CheckCircle2, User, Building2, DollarSign, Hash } from 'lucide-react';
 import { getPatientAppointmentsApi, cancelAppointmentApi, rescheduleAppointmentApi, getAvailableTimeSlotsApi } from '@/lib/api/patient.api';
 import toast from 'react-hot-toast';
 
@@ -25,6 +25,7 @@ export default function PatientAppointmentsPage() {
   const [rescheduleModal, setRescheduleModal] = useState<any>(null);
   const [cancelReason, setCancelReason] = useState('');
   const [newSlotId, setNewSlotId] = useState<number | null>(null);
+  const [summaryModal, setSummaryModal] = useState<any>(null);
 
   useEffect(() => {
     if (!_hasHydrated) return;
@@ -84,7 +85,7 @@ export default function PatientAppointmentsPage() {
     : filter === 'cancelled' ? all.filter((a: any) => a.status?.status === 'CANCELLED')
     : all;
 
-  const slots = Array.isArray(slotsRes?.data) ? slotsRes.data : [];
+  const slots: { date: string; slots: any[] }[] = Array.isArray(slotsRes?.data) ? slotsRes.data : [];
 
   const statusColor = (status: string) => {
     if (status === 'Completed') return 'bg-green-50 text-green-600';
@@ -102,7 +103,7 @@ export default function PatientAppointmentsPage() {
         </header>
 
         <div className="flex-1 p-6 space-y-5">
-          {/* Stats */}
+         
           <div className="grid grid-cols-4 gap-4">
             {[
               { label: 'Total', value: all.length, border: 'border-l-gray-400' },
@@ -117,7 +118,7 @@ export default function PatientAppointmentsPage() {
             ))}
           </div>
 
-          {/* Filter Tabs */}
+         
           <div className="flex gap-2">
             {(['all', 'upcoming', 'completed', 'cancelled'] as const).map((f) => (
               <button key={f} onClick={() => setFilter(f)}
@@ -128,7 +129,7 @@ export default function PatientAppointmentsPage() {
             ))}
           </div>
 
-          {/* List */}
+         
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
             {isLoading ? (
               <div className="flex justify-center py-16">
@@ -183,7 +184,17 @@ export default function PatientAppointmentsPage() {
                               className="flex items-center gap-1 text-xs font-medium text-red-500 bg-red-50 hover:bg-red-100 px-2.5 py-1.5 rounded-lg transition">
                               <X size={11} /> Cancel
                             </button>
+                            <button onClick={() => setSummaryModal(apt)}
+                              className="flex items-center gap-1 text-xs font-medium text-gray-500 bg-gray-100 hover:bg-gray-200 px-2.5 py-1.5 rounded-lg transition">
+                              View
+                            </button>
                           </div>
+                        )}
+                        {(apt.status?.status === 'Completed' || apt.status?.status === 'CANCELLED') && (
+                          <button onClick={() => setSummaryModal(apt)}
+                            className="flex items-center gap-1 text-xs font-medium text-gray-500 bg-gray-100 hover:bg-gray-200 px-2.5 py-1.5 rounded-lg transition">
+                            View
+                          </button>
                         )}
                       </td>
                     </tr>
@@ -194,7 +205,7 @@ export default function PatientAppointmentsPage() {
           </div>
         </div>
 
-        {/* Cancel Modal */}
+       
         {cancelModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
             <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8">
@@ -223,7 +234,7 @@ export default function PatientAppointmentsPage() {
           </div>
         )}
 
-        {/* Reschedule Modal */}
+     
         {rescheduleModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
             <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg p-8">
@@ -241,18 +252,24 @@ export default function PatientAppointmentsPage() {
                   No available slots for rescheduling.
                 </p>
               ) : (
-                <div className="grid grid-cols-3 gap-2 max-h-56 overflow-y-auto mb-5">
-                  {slots.map((slot: any) => (
-                    <button key={slot.id} onClick={() => setNewSlotId(slot.id)}
-                      className={`p-2.5 rounded-xl border text-xs font-medium transition text-center
-                        ${newSlotId === slot.id
-                          ? 'border-[#2d6be4] bg-blue-50 text-[#2d6be4]'
-                          : 'border-gray-200 text-gray-600 hover:border-gray-300'}`}>
-                      <p>{new Date(slot.startTime).toLocaleDateString('en-GB', { timeZone: 'UTC' })}</p>
-                      <p className="mt-0.5">
-                        {new Date(slot.startTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', timeZone: 'UTC' })}
+                <div className="space-y-3 max-h-56 overflow-y-auto mb-5">
+                  {slots.map((group) => (
+                    <div key={group.date}>
+                      <p className="text-xs font-semibold text-gray-500 mb-1.5">
+                        {new Date(group.date).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' })}
                       </p>
-                    </button>
+                      <div className="grid grid-cols-3 gap-2">
+                        {group.slots.map((slot: any) => (
+                          <button key={slot.id} onClick={() => setNewSlotId(slot.id)}
+                            className={`p-2.5 rounded-xl border text-xs font-medium transition text-center
+                              ${newSlotId === slot.id
+                                ? 'border-[#2d6be4] bg-blue-50 text-[#2d6be4]'
+                                : 'border-gray-200 text-gray-600 hover:border-gray-300'}`}>
+                            {new Date(slot.startTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', timeZone: 'UTC' })}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
                   ))}
                 </div>
               )}
@@ -269,6 +286,38 @@ export default function PatientAppointmentsPage() {
                   {rescheduling ? 'Rescheduling...' : 'Confirm Reschedule'}
                 </button>
               </div>
+            </div>
+          </div>
+        )}
+       
+        {summaryModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8">
+              <div className="flex flex-col items-center mb-6">
+                <div className="w-14 h-14 bg-blue-50 rounded-full flex items-center justify-center mb-3">
+                  <CheckCircle2 size={28} className="text-[#2d6be4]" />
+                </div>
+                <h2 className="text-lg font-semibold text-gray-900">Appointment Summary</h2>
+              </div>
+              <div className="bg-gray-50 rounded-2xl divide-y divide-gray-100">
+                {[
+                  { icon: <Hash size={14} className="text-gray-400" />, label: 'Appointment ID', value: `#${summaryModal.id}` },
+                  { icon: <User size={14} className="text-gray-400" />, label: 'Doctor', value: `Dr. ${summaryModal.doctorHospital?.doctor?.firstName} ${summaryModal.doctorHospital?.doctor?.lastName}` },
+                  { icon: <Building2 size={14} className="text-gray-400" />, label: 'Hospital', value: summaryModal.doctorHospital?.isPrivate ? 'Private Practice' : summaryModal.doctorHospital?.hospital?.name },
+                  { icon: <CalendarDays size={14} className="text-gray-400" />, label: 'Date & Time', value: new Date(summaryModal.probableStartTime).toLocaleString('en-GB', { timeZone: 'UTC' }) },
+                  { icon: <DollarSign size={14} className="text-gray-400" />, label: 'Consultation Fee', value: `₹${summaryModal.doctorHospital?.firstConsultationFee ?? '—'}` },
+                  ...(summaryModal.cancellationReason ? [{ icon: <X size={14} className="text-red-400" />, label: 'Cancellation Reason', value: summaryModal.cancellationReason }] : []),
+                ].map(({ icon, label, value }) => (
+                  <div key={label} className="flex items-center justify-between px-4 py-3">
+                    <span className="flex items-center gap-2 text-xs text-gray-500">{icon}{label}</span>
+                    <span className="text-xs font-semibold text-gray-800">{value}</span>
+                  </div>
+                ))}
+              </div>
+              <button onClick={() => setSummaryModal(null)}
+                className="w-full mt-6 border border-gray-200 text-gray-600 py-2.5 rounded-xl text-sm font-medium hover:bg-gray-50 transition">
+                Close
+              </button>
             </div>
           </div>
         )}
