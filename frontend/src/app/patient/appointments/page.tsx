@@ -4,6 +4,7 @@ import { useAuthStore } from '@/store/auth.store';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import Sidebar from '@/components/Sidebar';
+import NotificationBell from '@/components/NotificationBell';
 import { CalendarDays, X, RefreshCw } from 'lucide-react';
 import { getPatientAppointmentsApi, cancelAppointmentApi, rescheduleAppointmentApi, getAvailableTimeSlotsApi } from '@/lib/api/patient.api';
 import toast from 'react-hot-toast';
@@ -16,7 +17,7 @@ const navItems = [
 ];
 
 export default function PatientAppointmentsPage() {
-  const { user } = useAuthStore();
+  const { user, _hasHydrated } = useAuthStore();
   const router = useRouter();
   const queryClient = useQueryClient();
   const [filter, setFilter] = useState<'all' | 'upcoming' | 'completed' | 'cancelled'>('all');
@@ -26,8 +27,9 @@ export default function PatientAppointmentsPage() {
   const [newSlotId, setNewSlotId] = useState<number | null>(null);
 
   useEffect(() => {
+    if (!_hasHydrated) return;
     if (!user || user.role !== 'patient') router.replace('/auth/login');
-  }, [user, router]);
+  }, [user, router, _hasHydrated]);
 
   const { data: res, isLoading } = useQuery({
     queryKey: ['patient-appointments'],
@@ -73,7 +75,7 @@ export default function PatientAppointmentsPage() {
     },
   });
 
-  if (!user) return null;
+  if (!_hasHydrated || !user) return null;
 
   const all = Array.isArray(res?.data) ? res.data : [];
   const filtered = filter === 'upcoming'
@@ -96,7 +98,7 @@ export default function PatientAppointmentsPage() {
       <main className="flex-1 flex flex-col ml-60">
         <header className="h-16 bg-white border-b border-gray-100 flex items-center justify-between px-6 sticky top-0 z-30">
           <h1 className="text-base font-semibold text-gray-900">My Appointments</h1>
-          <span className="text-xs bg-blue-50 text-blue-600 font-medium px-3 py-1 rounded-full">{all.length} Total</span>
+          <NotificationBell />
         </header>
 
         <div className="flex-1 p-6 space-y-5">

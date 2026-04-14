@@ -23,13 +23,14 @@ const statusColor: Record<string, string> = {
 };
 
 export default function AdminAppointmentsPage() {
-  const { user } = useAuthStore();
+  const { user, _hasHydrated } = useAuthStore();
   const router = useRouter();
   const [search, setSearch] = useState('');
 
   useEffect(() => {
+    if (!_hasHydrated) return;
     if (!user || user.role !== 'admin') router.replace('/auth/login');
-  }, [user, router]);
+  }, [user, router, _hasHydrated]);
 
   const { data: res, isLoading } = useQuery({
     queryKey: ['admin-appointments'],
@@ -37,7 +38,7 @@ export default function AdminAppointmentsPage() {
     retry: false,
   });
 
-  if (!user) return null;
+  if (!_hasHydrated || !user) return null;
 
   const appointments = Array.isArray(res?.data) ? res.data : [];
   const filtered = appointments.filter((a: any) =>

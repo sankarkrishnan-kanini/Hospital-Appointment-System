@@ -16,14 +16,15 @@ const navItems = [
 ];
 
 export default function PatientProfilePage() {
-  const { user } = useAuthStore();
+  const { user, _hasHydrated } = useAuthStore();
   const router = useRouter();
   const queryClient = useQueryClient();
   const [form, setForm] = useState({ firstName: '', lastName: '', contactNumber: '', email: '' });
 
   useEffect(() => {
+    if (!_hasHydrated) return;
     if (!user || user.role !== 'patient') router.replace('/auth/login');
-  }, [user, router]);
+  }, [user, router, _hasHydrated]);
 
   const { data: profileRes, isLoading } = useQuery({
     queryKey: ['patient-profile'],
@@ -43,7 +44,7 @@ export default function PatientProfilePage() {
     },
   });
 
-  if (!user) return null;
+  if (!_hasHydrated || !user) return null;
 
   const profile = profileRes?.data && !profileRes.data.statusCode ? profileRes.data : null;
 

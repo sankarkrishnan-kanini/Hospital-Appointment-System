@@ -96,7 +96,6 @@ export class PatientService {
       }))
     }));
   }
-  }
 
   // ─── VIEW DOCTOR PROFILE ──────────────────────────────────────────────────────
 
