@@ -10,6 +10,7 @@ import toast from 'react-hot-toast';
 
 const navItems = [
   { label: 'Dashboard', href: '/doctor', icon: '' },
+  { label: 'Analytics', href: '/doctor/analytics', icon: '' },
   { label: 'My Profile', href: '/doctor/profile', icon: '' },
   { label: 'Offices', href: '/doctor/offices', icon: '' },
   { label: 'Availability', href: '/doctor/availability', icon: '' },

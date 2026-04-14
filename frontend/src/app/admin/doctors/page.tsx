@@ -10,6 +10,7 @@ import { X, CheckCircle, FileText, Stethoscope, GraduationCap, Building2, Eye } 
 
 const navItems = [
   { label: 'Dashboard', href: '/admin', icon: '🏠' },
+  { label: 'Analytics', href: '/admin/analytics', icon: '' },
   { label: 'Users', href: '/admin/users', icon: '👥' },
   { label: 'Doctors', href: '/admin/doctors', icon: '🩺' },
   { label: 'Patients', href: '/admin/patients', icon: '🧑⚕️' },

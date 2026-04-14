@@ -1,7 +1,20 @@
 'use client';
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { getNotifications, markAsRead, markAllAsRead, Notification } from '@/lib/api/notification.api';
 import { useAuthStore } from '@/store/auth.store';
+
+export interface Notification {
+  id: number;
+  userId: number;
+  message: string;
+  isRead: boolean;
+  createdAt: string;
+}
+
+import api from '@/lib/axios';
+
+const getNotifications = () => api.get<Notification[]>('/notifications').then((r) => r.data);
+const markAsReadApi = (id: number) => api.patch(`/notifications/${id}/read`).then((r) => r.data);
+const markAllAsReadApi = () => api.patch('/notifications/read-all').then((r) => r.data);
 
 export function useNotifications() {
   const { token } = useAuthStore();
@@ -23,12 +36,12 @@ export function useNotifications() {
   }, [fetch]);
 
   const handleMarkAsRead = async (id: number) => {
-    await markAsRead(id);
+    await markAsReadApi(id);
     setNotifications((prev) => prev.map((n) => n.id === id ? { ...n, isRead: true } : n));
   };
 
   const handleMarkAllAsRead = async () => {
-    await markAllAsRead();
+    await markAllAsReadApi();
     setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
   };
 
