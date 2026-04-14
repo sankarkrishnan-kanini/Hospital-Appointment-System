@@ -6,7 +6,7 @@ import { useQuery } from '@tanstack/react-query';
 import { getDoctorProfileApi } from '@/lib/api/doctor.api';
 import {
   LayoutDashboard, Users, Stethoscope, UserRound, CalendarDays,
-  Building2, GraduationCap, Clock, MapPin, Search, LogOut, Lock
+  Building2, GraduationCap, Clock, MapPin, Search, LogOut, Lock, BarChart2
 } from 'lucide-react';
 
 interface NavItem {
@@ -21,6 +21,7 @@ interface Props {
 
 const iconMap: Record<string, React.ReactNode> = {
   '/admin': <LayoutDashboard size={16} />,
+  '/admin/analytics': <BarChart2 size={16} />,
   '/admin/users': <Users size={16} />,
   '/admin/doctors': <Stethoscope size={16} />,
   '/admin/patients': <UserRound size={16} />,
@@ -28,6 +29,7 @@ const iconMap: Record<string, React.ReactNode> = {
   '/admin/hospitals': <Building2 size={16} />,
   '/admin/specializations': <GraduationCap size={16} />,
   '/doctor': <LayoutDashboard size={16} />,
+  '/doctor/analytics': <BarChart2 size={16} />,
   '/doctor/profile': <UserRound size={16} />,
   '/doctor/offices': <Building2 size={16} />,
   '/doctor/availability': <CalendarDays size={16} />,

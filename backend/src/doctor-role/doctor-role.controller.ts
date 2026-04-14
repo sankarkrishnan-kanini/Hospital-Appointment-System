@@ -308,4 +308,14 @@ export class DoctorRoleController {
   ) {
     return this.doctorRoleService.getTimeSlots(userid, doctorHospitalId);
   }
+
+  // ─── ANALYTICS ───────────────────────────────────────────────────────────────
+
+  @Get('analytics')
+  @Roles(Role.Doctor)
+  @UseGuards(RoleGuard)
+  @UseFilters(new CustomExceptionFilter())
+  getAnalytics(@User('sub', new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE })) userid: number) {
+    return this.doctorRoleService.getAnalytics(userid);
+  }
 }

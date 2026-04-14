@@ -47,3 +47,6 @@ export const deleteHospitalApi = (id: number) => api.delete(`/admin/hospitals/${
 
 // Specializations - fetch from patient search endpoint
 export const getAllSpecializationsApi = () => api.get('/patient/doctors?limit=0').then(() => ({ data: [] }));
+
+// Analytics
+export const getAnalyticsApi = () => api.get('/admin/analytics');

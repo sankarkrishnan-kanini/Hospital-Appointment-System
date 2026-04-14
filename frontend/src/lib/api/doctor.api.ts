@@ -51,3 +51,13 @@ export const deletePracticeApi = (id: number) =>
 
 // Hospital affiliation
 export const affiliateHospitalApi = (dto: any) => api.post('/doctor-role/affiliate', dto);
+
+// In-network insurance
+export const getInsurancesApi = (doctorHospitalId: number) =>
+  api.get(`/in-network-insurance?doctorHospitalId=${doctorHospitalId}`);
+export const addInsuranceApi = (dto: { doctorHospitalId: number; insuranceName: string }) =>
+  api.post('/in-network-insurance', dto);
+export const deleteInsuranceApi = (id: number) => api.delete(`/in-network-insurance/${id}`);
+
+// Analytics
+export const getDoctorAnalyticsApi = () => api.get('/doctor-role/analytics');
