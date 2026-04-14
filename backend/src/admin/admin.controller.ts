@@ -1,4 +1,5 @@
-import { Controller, Get, Post, Patch, Param, ParseIntPipe, HttpStatus, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Param, ParseIntPipe, HttpStatus, UseGuards, Res } from '@nestjs/common';
+import { Response } from 'express';
 import { AdminService } from './admin.service';
 import { ApiBearerAuth } from '@nestjs/swagger';
 import { Roles } from '../auth/roles.decorator';
@@ -52,6 +53,20 @@ export class AdminController {
     @Param('id', new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE })) id: number
   ) {
     return this.adminService.getDoctorById(id);
+  }
+
+  @Get('doctors/:doctorId/documents/:docId/download')
+  async downloadDoctorDocument(
+    @Param('doctorId', new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE })) doctorId: number,
+    @Param('docId', new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE })) docId: number,
+    @Res() res: Response
+  ) {
+    const { buffer, documentType } = await this.adminService.getDoctorDocument(doctorId, docId);
+    res.set({
+      'Content-Type': 'application/octet-stream',
+      'Content-Disposition': `attachment; filename="${documentType}-${docId}"`
+    });
+    res.send(buffer);
   }
 
   @Patch('doctors/:id/verify')

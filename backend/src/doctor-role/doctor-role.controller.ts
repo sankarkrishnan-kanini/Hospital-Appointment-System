@@ -67,7 +67,7 @@ export class DoctorRoleController {
   // ─── GET PROFILE ─────────────────────────────────────────────────────────────
 
   @Get('profile')
-   @Roles(Role.Doctor)
+   @Roles(Role.Doctor,Role.Admin)
   @UseGuards(RoleGuard)
   @UseFilters(new CustomExceptionFilter())
   getProfile(@User('sub',new ParseIntPipe({ errorHttpStatusCode:HttpStatus.NOT_ACCEPTABLE
