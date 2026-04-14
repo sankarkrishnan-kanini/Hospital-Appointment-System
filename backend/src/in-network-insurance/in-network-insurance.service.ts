@@ -8,8 +8,9 @@ export class InNetworkInsuranceService {
 
   constructor(private readonly prisma: PrismaService) {}
 
-  findAll() {
+  findAll(doctorHospitalId?: number) {
     return this.prisma.inNetworkInsurance.findMany({
+      where: doctorHospitalId ? { doctorHospitalId } : undefined,
       include: { doctorHospital: true }
     });
   }

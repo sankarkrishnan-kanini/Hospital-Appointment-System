@@ -17,13 +17,14 @@ const navItems = [
 ];
 
 export default function AdminPatientsPage() {
-  const { user } = useAuthStore();
+  const { user, _hasHydrated } = useAuthStore();
   const router = useRouter();
   const [search, setSearch] = useState('');
 
   useEffect(() => {
+    if (!_hasHydrated) return;
     if (!user || user.role !== 'admin') router.replace('/auth/login');
-  }, [user, router]);
+  }, [user, router, _hasHydrated]);
 
   const { data: res, isLoading } = useQuery({
     queryKey: ['admin-patients'],
@@ -31,7 +32,7 @@ export default function AdminPatientsPage() {
     retry: false,
   });
 
-  if (!user) return null;
+  if (!_hasHydrated || !user) return null;
 
   const patients = Array.isArray(res?.data) ? res.data : [];
   const filtered = patients.filter((p: any) =>

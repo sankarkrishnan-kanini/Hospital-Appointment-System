@@ -18,13 +18,14 @@ const navItems = [
 ];
 
 export default function AdminSpecializationsPage() {
-  const { user } = useAuthStore();
+  const { user, _hasHydrated } = useAuthStore();
   const router = useRouter();
   const queryClient = useQueryClient();
 
   useEffect(() => {
+    if (!_hasHydrated) return;
     if (!user || user.role !== 'admin') router.replace('/auth/login');
-  }, [user, router]);
+  }, [user, router, _hasHydrated]);
 
   const { data: res, isLoading } = useQuery({
     queryKey: ['admin-specializations'],
@@ -50,7 +51,7 @@ export default function AdminSpecializationsPage() {
     onError: () => toast.error('Failed to reject'),
   });
 
-  if (!user) return null;
+  if (!_hasHydrated || !user) return null;
 
   const requests = Array.isArray(res?.data) ? res.data : [];
 

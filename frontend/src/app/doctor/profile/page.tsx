@@ -26,11 +26,9 @@ const SPECIALIZATIONS = [
 ];
 
 export default function DoctorProfilePage() {
-  const { user } = useAuthStore();
+  const { user, _hasHydrated } = useAuthStore();
   const router = useRouter();
   const queryClient = useQueryClient();
-
-  // Setup form state
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [professionalStatement, setProfessionalStatement] = useState('');
@@ -45,8 +43,9 @@ export default function DoctorProfilePage() {
   const [editForm, setEditForm] = useState({ firstName: '', lastName: '', professionalStatement: '', practicingFrom: '' });
 
   useEffect(() => {
+    if (!_hasHydrated) return;
     if (!user || user.role !== 'doctor') router.replace('/auth/login');
-  }, [user, router]);
+  }, [user, router, _hasHydrated]);
 
   const { data: profileRes, isLoading } = useQuery({
     queryKey: ['doctor-profile'],
@@ -91,7 +90,7 @@ export default function DoctorProfilePage() {
     },
   });
 
-  if (!user) return null;
+  if (!_hasHydrated || !user) return null;
 
   const doctor = profileRes?.data && !profileRes.data.statusCode ? profileRes.data : null;
   const isProfileSetup = !!doctor?.firstName;

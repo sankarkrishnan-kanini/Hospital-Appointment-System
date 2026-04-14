@@ -64,8 +64,6 @@ export class DoctorRoleController {
     return this.doctorRoleService.setupProfile(id, dto, files || []);
   }
 
-  // ─── GET PROFILE ─────────────────────────────────────────────────────────────
-
   @Get('profile')
    @Roles(Role.Doctor,Role.Admin)
   @UseGuards(RoleGuard)
@@ -74,8 +72,6 @@ export class DoctorRoleController {
 	}))id:number) {
     return this.doctorRoleService.getProfile(id);
   }
-
-  // ─── UPDATE BASIC INFO (AFTER VERIFICATION) ──────────────────────────────────
 
   @Patch('profile')
   @Roles(Role.Doctor)
@@ -86,27 +82,21 @@ export class DoctorRoleController {
     return this.doctorRoleService.updateProfile(id, dto);
   }
 
-  // ─── DOCUMENT DOWNLOAD ───────────────────────────────────────────────────────
+  // ─── DOCUMENT VIEW ────────────────────────────────────────────────────────────
 
-  @Get('documents/:id/download')
+  @Get('documents/:id/view')
   @Roles(Role.Doctor)
   @UseGuards(RoleGuard)
   @UseFilters(new CustomExceptionFilter())
-  async downloadDocument(
-    @User('sub',new ParseIntPipe({ errorHttpStatusCode:HttpStatus.NOT_ACCEPTABLE
-	}))userid:number,
+  async viewDocument(
+    @User('sub', new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE })) userid: number,
     @Param('id', new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE })) id: number,
     @Res() res: Response
   ) {
-    const document = await this.doctorRoleService.downloadDocument(userid, id);
-    res.set({
-      'Content-Type': 'application/octet-stream',
-      'Content-Disposition': `attachment; filename="document-${id}"`
-    });
-    res.send(Buffer.from(document.fileUrl));
+    const { buffer } = await this.doctorRoleService.getDocument(userid, id);
+    res.set({ 'Content-Type': 'application/pdf', 'Content-Disposition': `inline; filename="document-${id}.pdf"` });
+    res.send(buffer);
   }
-
-  // ─── REQUEST VERIFICATION ────────────────────────────────────────────────────
 
   @Patch('request-verification')
   @Roles(Role.Doctor)
@@ -116,9 +106,6 @@ export class DoctorRoleController {
 	}))userid:number) {
     return this.doctorRoleService.requestVerification(userid);
   }
-
-  // ─── REQUEST SPECIALIZATION ──────────────────────────────────────────────────
-
   @Post('request-specialization/:specializationId')
   @Roles(Role.Doctor)
   @UseGuards(RoleGuard)
@@ -150,8 +137,6 @@ export class DoctorRoleController {
     return this.doctorRoleService.requestSpecialization(userid, specializationId, file);
   }
 
-  // ─── AVAILABILITY ────────────────────────────────────────────────────
-
   @Post('availability')
   @Roles(Role.Doctor)
   @UseGuards(RoleGuard)
@@ -175,8 +160,6 @@ export class DoctorRoleController {
     return this.doctorRoleService.getAvailability(userid, doctorHospitalId);
   }
 
-  // ─── TIMESLOT GENERATION ────────────────────────────────────────────────────
-
   @Post('timeslots/generate')
   @Roles(Role.Doctor)
   @UseGuards(RoleGuard)
@@ -186,8 +169,6 @@ export class DoctorRoleController {
     return this.doctorRoleService.generateTimeSlots(userid, dto);
   }
 
-  // ─── UNAVAILABILITY ────────────────────────────────────────────────────
-
   @Post('unavailability')
   @Roles(Role.Doctor)
   @UseGuards(RoleGuard)
@@ -196,8 +177,6 @@ export class DoctorRoleController {
 	}))userid:number, @Body() dto: MarkUnavailabilityDto) {
     return this.doctorRoleService.markUnavailability(userid, dto);
   }
-
-  // ─── APPOINTMENTS ────────────────────────────────────────────────────
 
   @Get('appointments')
   @Roles(Role.Doctor)
@@ -220,8 +199,6 @@ export class DoctorRoleController {
     return this.doctorRoleService.completeAppointment(userid, id);
   }
 
-  // ─── HOSPITAL AFFILIATION ────────────────────────────────────────────────────
-
   @Post('affiliate')
   @Roles(Role.Doctor)
   @UseGuards(RoleGuard)
@@ -230,8 +207,6 @@ export class DoctorRoleController {
 	}))userid:number, @Body() dto: AffiliateHospitalDto) {
     return this.doctorRoleService.affiliateWithHospital(userid, dto);
   }
-
-  // ─── OFFICE MANAGEMENT ──────────────────────────────────────────────────────
 
   @Post('office')
   @Roles(Role.Doctor)
@@ -283,7 +258,7 @@ export class DoctorRoleController {
     return this.doctorRoleService.getOffices(userid);
   }
 
-  // ─── AVAILABILITY MANAGEMENT ─────────────────────────────────────────────────
+ 
 
   @Delete('availability/:id')
   @Roles(Role.Doctor)
@@ -295,8 +270,6 @@ export class DoctorRoleController {
   ) {
     return this.doctorRoleService.deleteAvailability(userid, id);
   }
-
-  // ─── TIMESLOTS ───────────────────────────────────────────────────────────────
 
   @Get('timeslots/:doctorHospitalId')
   @Roles(Role.Doctor)

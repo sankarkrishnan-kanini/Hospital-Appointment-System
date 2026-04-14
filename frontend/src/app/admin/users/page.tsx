@@ -18,14 +18,15 @@ const navItems = [
 ];
 
 export default function AdminUsersPage() {
-  const { user } = useAuthStore();
+  const { user, _hasHydrated } = useAuthStore();
   const router = useRouter();
   const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
 
   useEffect(() => {
+    if (!_hasHydrated) return;
     if (!user || user.role !== 'admin') router.replace('/auth/login');
-  }, [user, router]);
+  }, [user, router, _hasHydrated]);
 
   const { data: usersRes, isLoading } = useQuery({
     queryKey: ['admin-users'],
@@ -51,7 +52,7 @@ export default function AdminUsersPage() {
     onError: () => toast.error('Failed to deactivate user'),
   });
 
-  if (!user) return null;
+  if (!_hasHydrated || !user) return null;
 
   const users = Array.isArray(usersRes?.data) ? usersRes.data : [];
   const filtered = users.filter((u: any) =>
@@ -154,7 +155,7 @@ export default function AdminUsersPage() {
                         </span>
                       </td>
                       <td className="px-6 py-4 text-gray-400">
-                        {new Date(u.createdAt).toLocaleDateString()}
+                        {new Date(u.createdAt).toLocaleDateString('en-GB', { timeZone: 'UTC' })}
                       </td>
                       <td className="px-6 py-4">
                         {u.role !== 'admin' && (

@@ -26,7 +26,7 @@ const EMPTY_HOSPITAL = { name: '', streetAddress: '', city: '', state: '', count
 const EMPTY_OFFICE = { name: '', city: '', state: '', country: '' };
 
 export default function AdminHospitalsPage() {
-  const { user } = useAuthStore();
+  const { user, _hasHydrated } = useAuthStore();
   const router = useRouter();
   const queryClient = useQueryClient();
 
@@ -43,8 +43,9 @@ export default function AdminHospitalsPage() {
   const [hospitalForm, setHospitalForm] = useState(EMPTY_HOSPITAL);
 
   useEffect(() => {
+    if (!_hasHydrated) return;
     if (!user || user.role !== 'admin') router.replace('/auth/login');
-  }, [user, router]);
+  }, [user, router, _hasHydrated]);
 
   const { data: officesRes, isLoading } = useQuery({ queryKey: ['admin-offices'], queryFn: getAllOfficesApi, retry: false });
   const { data: hospitalsRes } = useQuery({
@@ -91,7 +92,7 @@ export default function AdminHospitalsPage() {
     onError: () => toast.error('Failed to delete hospital'),
   });
 
-  if (!user) return null;
+  if (!_hasHydrated || !user) return null;
 
   const offices = Array.isArray(officesRes?.data) ? officesRes.data : [];
   const hospitals = Array.isArray(hospitalsRes?.data) ? hospitalsRes.data : [];

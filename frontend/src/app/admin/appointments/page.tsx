@@ -23,13 +23,14 @@ const statusColor: Record<string, string> = {
 };
 
 export default function AdminAppointmentsPage() {
-  const { user } = useAuthStore();
+  const { user, _hasHydrated } = useAuthStore();
   const router = useRouter();
   const [search, setSearch] = useState('');
 
   useEffect(() => {
+    if (!_hasHydrated) return;
     if (!user || user.role !== 'admin') router.replace('/auth/login');
-  }, [user, router]);
+  }, [user, router, _hasHydrated]);
 
   const { data: res, isLoading } = useQuery({
     queryKey: ['admin-appointments'],
@@ -37,7 +38,7 @@ export default function AdminAppointmentsPage() {
     retry: false,
   });
 
-  if (!user) return null;
+  if (!_hasHydrated || !user) return null;
 
   const appointments = Array.isArray(res?.data) ? res.data : [];
   const filtered = appointments.filter((a: any) =>
@@ -117,10 +118,10 @@ export default function AdminAppointmentsPage() {
                         {a.client ? `${a.client.firstName} ${a.client.lastName}` : `Patient #${a.userAccountId}`}
                       </td>
                       <td className="px-6 py-4 text-gray-500">
-                        {new Date(a.appointmentTakenDate).toLocaleDateString()}
+                        {new Date(a.appointmentTakenDate).toLocaleDateString('en-GB', { timeZone: 'UTC' })}
                       </td>
                       <td className="px-6 py-4 text-gray-500">
-                        {new Date(a.probableStartTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        {new Date(a.probableStartTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', timeZone: 'UTC' })}
                       </td>
                       <td className="px-6 py-4 text-gray-500">{a.durationInMinutes} min</td>
                       <td className="px-6 py-4">

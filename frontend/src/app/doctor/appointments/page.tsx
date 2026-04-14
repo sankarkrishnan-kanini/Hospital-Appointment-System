@@ -4,6 +4,7 @@ import { useAuthStore } from '@/store/auth.store';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import Sidebar from '@/components/Sidebar';
+import NotificationBell from '@/components/NotificationBell';
 import { CheckCircle, CalendarDays } from 'lucide-react';
 import { getDoctorAppointmentsApi, completeAppointmentApi } from '@/lib/api/doctor.api';
 import toast from 'react-hot-toast';
@@ -18,14 +19,15 @@ const navItems = [
 ];
 
 export default function DoctorAppointmentsPage() {
-  const { user } = useAuthStore();
+  const { user, _hasHydrated } = useAuthStore();
   const router = useRouter();
   const queryClient = useQueryClient();
   const [filter, setFilter] = useState<'all' | 'upcoming' | 'completed'>('all');
 
   useEffect(() => {
+    if (!_hasHydrated) return;
     if (!user || user.role !== 'doctor') router.replace('/auth/login');
-  }, [user, router]);
+  }, [user, router, _hasHydrated]);
 
   const { data: res, isLoading } = useQuery({
     queryKey: ['doctor-appointments'],
@@ -42,7 +44,7 @@ export default function DoctorAppointmentsPage() {
     onError: (err: any) => toast.error(err?.response?.data?.message || 'Failed to complete'),
   });
 
-  if (!user) return null;
+  if (!_hasHydrated || !user) return null;
 
   const all = Array.isArray(res?.data) ? res.data : [];
   const filtered = filter === 'upcoming'
@@ -60,7 +62,7 @@ export default function DoctorAppointmentsPage() {
             <h1 className="text-base font-semibold text-gray-900">Appointments</h1>
             <p className="text-xs text-gray-400">Manage your patient appointments</p>
           </div>
-          <span className="text-xs bg-blue-50 text-blue-600 font-medium px-3 py-1 rounded-full">{all.length} Total</span>
+          <NotificationBell />
         </header>
 
         <div className="flex-1 p-6 space-y-5">
@@ -125,7 +127,7 @@ export default function DoctorAppointmentsPage() {
                         <p className="text-xs text-gray-400">{apt.client?.email}</p>
                       </td>
                       <td className="px-6 py-4 text-gray-500">
-                        {new Date(apt.probableStartTime).toLocaleString()}
+                        {new Date(apt.probableStartTime).toLocaleString('en-GB', { timeZone: 'UTC' })}
                       </td>
                       <td className="px-6 py-4 text-gray-500">{apt.durationInMinutes} min</td>
                       <td className="px-6 py-4">

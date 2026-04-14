@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import Link from 'next/link';
 import Sidebar from '@/components/Sidebar';
+import NotificationBell from '@/components/NotificationBell';
 import { Search, CalendarDays, UserRound, CalendarPlus } from 'lucide-react';
 import { getPatientAppointmentsApi, getClientAccountApi } from '@/lib/api/patient.api';
 
@@ -16,12 +17,13 @@ const navItems = [
 ];
 
 export default function PatientDashboard() {
-  const { user } = useAuthStore();
+  const { user, _hasHydrated } = useAuthStore();
   const router = useRouter();
 
   useEffect(() => {
+    if (!_hasHydrated) return;
     if (!user || user.role !== 'patient') router.replace('/auth/login');
-  }, [user, router]);
+  }, [user, router, _hasHydrated]);
 
   const { data: profileRes } = useQuery({
     queryKey: ['patient-profile'],
@@ -35,7 +37,7 @@ export default function PatientDashboard() {
     retry: false,
   });
 
-  if (!user) return null;
+  if (!_hasHydrated || !user) return null;
 
   const profile = profileRes?.data && !profileRes.data.statusCode ? profileRes.data : null;
   const allApts = Array.isArray(appointmentsRes?.data) ? appointmentsRes.data : [];
@@ -48,7 +50,7 @@ export default function PatientDashboard() {
       <main className="flex-1 flex flex-col ml-60">
         <header className="h-16 bg-white border-b border-gray-100 flex items-center justify-between px-6 sticky top-0 z-30">
           <h1 className="text-base font-semibold text-gray-900">Dashboard</h1>
-          <span className="text-xs bg-pink-50 text-pink-600 font-medium px-3 py-1 rounded-full">Patient</span>
+          <NotificationBell />
         </header>
 
         <div className="flex-1 p-6 space-y-5">
@@ -152,7 +154,7 @@ export default function PatientDashboard() {
                   <div key={apt.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
                     <div>
                       <p className="text-sm font-medium text-gray-800">Appointment #{apt.id}</p>
-                      <p className="text-xs text-gray-400">{new Date(apt.probableStartTime).toLocaleString()}</p>
+                      <p className="text-xs text-gray-400">{new Date(apt.probableStartTime).toLocaleString('en-GB', { timeZone: 'UTC' })}</p>
                     </div>
                     <span className={`text-xs px-3 py-1 rounded-full font-medium
                       ${apt.status?.status === 'Completed' ? 'bg-green-50 text-green-600' : 'bg-blue-50 text-blue-600'}`}>
