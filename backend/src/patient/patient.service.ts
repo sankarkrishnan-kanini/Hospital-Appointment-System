@@ -7,6 +7,7 @@ import { CancelAppointmentDto } from './DTOS/cancelAppointmentDto';
 import { RescheduleAppointmentDto } from './DTOS/rescheduleAppointmentDto';
 import { NotificationService } from '../notification-module/notification.service';
 import { AppointmentHistoryService } from '../appointment-history/appointment-history.service';
+import { MailService } from '../mail/mail.service';
 
 
 @Injectable()
@@ -14,14 +15,10 @@ export class PatientService {
 
   constructor(
     private readonly prisma: PrismaService,
-
     private readonly notificationService: NotificationService,
-
-    private readonly appointmentHistoryService: AppointmentHistoryService
-
+    private readonly appointmentHistoryService: AppointmentHistoryService,
+    private readonly mailService: MailService,
   ) {}
-
-  // ─── CREATE CLIENT ACCOUNT ────────────────────────────────────────────────────
 
   async createClientAccount(userId: number, dto: CreateClientAccountDto) {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
@@ -47,8 +44,6 @@ export class PatientService {
     if (!client) throw new NotFoundException(`Client account not found`);
     return client;
   }
-
-  // ─── SEARCH DOCTORS ───────────────────────────────────────────────────────────
 
   async searchDoctors(dto: SearchDoctorsDto) {
     const doctors = await this.prisma.doctor.findMany({
@@ -97,8 +92,6 @@ export class PatientService {
     }));
   }
 
-  // ─── VIEW DOCTOR PROFILE ──────────────────────────────────────────────────────
-
   async getDoctorProfile(doctorId: number) {
     const doctor = await this.prisma.doctor.findUnique({
       where: { id: doctorId, isVerified: true },
@@ -139,8 +132,6 @@ export class PatientService {
     };
   }
 
-  // ─── VIEW AVAILABLE TIMESLOTS ─────────────────────────────────────────────────
-
   async getAvailableTimeSlots(doctorId: number, doctorHospitalId: number) {
     const doctor = await this.prisma.doctor.findUnique({ where: { id: doctorId, isVerified: true } });
     if (!doctor) throw new NotFoundException(`Doctor with id ${doctorId} not found`);
@@ -149,28 +140,44 @@ export class PatientService {
     if (!doctorHospital) throw new NotFoundException(`Practice with id ${doctorHospitalId} not found`);
     if (doctorHospital.doctorId !== doctorId) throw new BadRequestException(`This practice does not belong to this doctor`);
 
-    const now = new Date();
-    return this.prisma.timeSlot.findMany({
+    // Start of today in UTC
+    const todayStart = new Date();
+    todayStart.setUTCHours(0, 0, 0, 0);
+
+    const slots = await this.prisma.timeSlot.findMany({
       where: {
         doctorHospitalId,
         isBooked: false,
-        startTime: { gt: now }
+        startTime: { gte: todayStart },
       },
-      orderBy: { startTime: 'asc' }
+      orderBy: { startTime: 'asc' },
     });
+
+  
+    const grouped: Record<string, typeof slots> = {};
+    for (const slot of slots) {
+      const dateKey = slot.startTime.toISOString().split('T')[0]; 
+      if (!grouped[dateKey]) grouped[dateKey] = [];
+      grouped[dateKey].push(slot);
+    }
+
+    return Object.entries(grouped).map(([date, daySlots]) => ({
+      date,
+      slots: daySlots,
+    }));
   }
 
-  // ─── BOOK APPOINTMENT ────────────────────────────────────────────────────
+ 
 
   async bookAppointment(userId: number, dto: BookAppointmentDto) {
     const client = await this.prisma.clientAccount.findUnique({ where: { userId } });
     if (!client) throw new NotFoundException(`Client account not found. Please create one first`);
 
-    // 1. Validate specialization exists
+   
     const specialization = await this.prisma.specialization.findUnique({ where: { id: dto.specializationId } });
     if (!specialization) throw new NotFoundException(`Specialization with id ${dto.specializationId} not found`);
 
-    // 2. Validate doctor exists, is verified and has the specialization
+    
     const doctor = await this.prisma.doctor.findUnique({
       where: { id: dto.doctorId },
       include: { specializations: true }
@@ -180,7 +187,7 @@ export class PatientService {
     const hasSpecialization = doctor.specializations.some(s => s.specializationId === dto.specializationId);
     if (!hasSpecialization) throw new BadRequestException(`Doctor does not have the selected specialization`);
 
-    // 3. Validate DoctorHospital belongs to the doctor
+    
     const doctorHospital = await this.prisma.doctorHospital.findUnique({
       where: { id: dto.doctorHospitalId },
       include: { hospital: true }
@@ -188,14 +195,14 @@ export class PatientService {
     if (!doctorHospital) throw new NotFoundException(`Practice with id ${dto.doctorHospitalId} not found`);
     if (doctorHospital.doctorId !== dto.doctorId) throw new BadRequestException(`This practice does not belong to the selected doctor`);
 
-    // 4. Validate TimeSlot belongs to DoctorHospital and is available
+   
     const timeSlot = await this.prisma.timeSlot.findUnique({ where: { id: dto.timeSlotId } });
     if (!timeSlot) throw new NotFoundException(`TimeSlot with id ${dto.timeSlotId} not found`);
     if (timeSlot.doctorHospitalId !== dto.doctorHospitalId) throw new BadRequestException(`TimeSlot does not belong to this practice`);
     if (timeSlot.isBooked) throw new BadRequestException(`TimeSlot is already booked`);
     if (timeSlot.startTime <= new Date()) throw new BadRequestException(`Cannot book a past time slot`);
 
-    // 5. Check doctor unavailability
+    
     const slotDate = new Date(timeSlot.startTime);
     slotDate.setUTCHours(0, 0, 0, 0);
     const slotEnd = new Date(timeSlot.endTime);
@@ -215,12 +222,11 @@ export class PatientService {
     const activeStatus = await this.prisma.appointmentStatus.findFirst({ where: { status: 'ACTIVE' } });
     if (!activeStatus) throw new NotFoundException(`AppointmentStatus 'ACTIVE' not found in DB`);
 
-    // 6. Book with race condition prevention
-    return this.prisma.$transaction(async (tx) => {
+    const appointment = await this.prisma.$transaction(async (tx) => {
       const freshSlot = await tx.timeSlot.findUnique({ where: { id: dto.timeSlotId } });
       if (!freshSlot || freshSlot.isBooked) throw new BadRequestException(`TimeSlot is already booked`);
 
-      const appointment = await tx.appointment.create({
+      const created = await tx.appointment.create({
         data: {
           userAccountId: client.id,
           doctorHospitalId: dto.doctorHospitalId,
@@ -235,47 +241,70 @@ export class PatientService {
 
       await tx.timeSlot.update({ where: { id: dto.timeSlotId }, data: { isBooked: true } });
 
-      // Notify patient and doctor
-      await this.notificationService.notifyAppointmentBooked(
-        client.userId,
-        doctor.userId,
+      return created;
+    });
+
+    const hospitalName = appointment.doctorHospital.isPrivate ? 'Private Practice' : (appointment.doctorHospital.hospital?.name || 'Hospital');
+
+    await this.notificationService.notifyAppointmentBooked(
+      client.userId,
+      doctor.userId,
+      `${doctor.firstName} ${doctor.lastName}`,
+      `${client.firstName} ${client.lastName}`,
+      hospitalName,
+      appointment.probableStartTime
+    );
+
+    await this.mailService.sendAppointmentBookedToPatient(
+      client.email,
+      `${client.firstName} ${client.lastName}`,
+      `${doctor.firstName} ${doctor.lastName}`,
+      hospitalName,
+      appointment.probableStartTime,
+      appointment.id,
+      doctorHospital.firstConsultationFee,
+    ).catch(() => {});
+
+    const doctorUser = await this.prisma.user.findUnique({ where: { id: doctor.userId }, select: { email: true } });
+    if (doctorUser) {
+      await this.mailService.sendAppointmentBookedToDoctor(
+        doctorUser.email,
         `${doctor.firstName} ${doctor.lastName}`,
         `${client.firstName} ${client.lastName}`,
-        appointment.doctorHospital.isPrivate ? 'Private Practice' : (appointment.doctorHospital.hospital?.name || 'Hospital'),
-        appointment.probableStartTime
-      );
+        appointment.probableStartTime,
+        appointment.id,
+      ).catch(() => {});
+    }
 
-      return {
-        id: appointment.id,
-        reason: dto.reason,
-        probableStartTime: appointment.probableStartTime,
-        durationInMinutes: appointment.durationInMinutes,
-        appointmentTakenDate: appointment.appointmentTakenDate,
-        status: appointment.status.status,
-        specialization: specialization.specializationName,
-        timeSlot: {
-          id: appointment.timeSlot.id,
-          startTime: appointment.timeSlot.startTime,
-          endTime: appointment.timeSlot.endTime
-        },
-        doctor: {
-          id: doctor.id,
-          firstName: doctor.firstName,
-          lastName: doctor.lastName
-        },
-        practice: {
-          doctorHospitalId: appointment.doctorHospital.id,
-          isPrivate: appointment.doctorHospital.isPrivate,
-          ...(appointment.doctorHospital.isPrivate
-            ? { address: `${appointment.doctorHospital.streetAddress}, ${appointment.doctorHospital.city}` }
-            : { hospital: appointment.doctorHospital.hospital?.name, city: appointment.doctorHospital.hospital?.city }
-          )
-        }
-      };
-    });
+    return {
+      id: appointment.id,
+      reason: dto.reason,
+      probableStartTime: appointment.probableStartTime,
+      durationInMinutes: appointment.durationInMinutes,
+      appointmentTakenDate: appointment.appointmentTakenDate,
+      status: appointment.status.status,
+      specialization: specialization.specializationName,
+      timeSlot: {
+        id: appointment.timeSlot.id,
+        startTime: appointment.timeSlot.startTime,
+        endTime: appointment.timeSlot.endTime
+      },
+      doctor: {
+        id: doctor.id,
+        firstName: doctor.firstName,
+        lastName: doctor.lastName
+      },
+      practice: {
+        doctorHospitalId: appointment.doctorHospital.id,
+        isPrivate: appointment.doctorHospital.isPrivate,
+        ...(appointment.doctorHospital.isPrivate
+          ? { address: `${appointment.doctorHospital.streetAddress}, ${appointment.doctorHospital.city}` }
+          : { hospital: appointment.doctorHospital.hospital?.name, city: appointment.doctorHospital.hospital?.city }
+        )
+      }
+    };
   }
 
-  // ─── CANCEL APPOINTMENT ────────────────────────────────────────────────────
 
   async cancelAppointment(userId: number, appointmentId: number, dto: CancelAppointmentDto) {
     const client = await this.prisma.clientAccount.findUnique({ where: { userId } });
@@ -301,7 +330,7 @@ export class PatientService {
       });
       await tx.timeSlot.update({ where: { id: appointment.timeSlotId }, data: { isBooked: false } });
 
-      // Notify patient and doctor
+   
       await this.notificationService.notifyAppointmentCancelledByPatient(
         client.userId,
         updated.doctorHospital.doctor.userId,
@@ -313,8 +342,6 @@ export class PatientService {
       return updated;
     });
   }
-
-  // ─── RESCHEDULE APPOINTMENT ────────────────────────────────────────────────────
 
   async rescheduleAppointment(userId: number, appointmentId: number, dto: RescheduleAppointmentDto) {
     const client = await this.prisma.clientAccount.findUnique({ where: { userId } });
@@ -353,7 +380,7 @@ export class PatientService {
       await tx.timeSlot.update({ where: { id: appointment.timeSlotId }, data: { isBooked: false } });
       await tx.timeSlot.updateMany({ where: { id: dto.newTimeSlotId, isBooked: false }, data: { isBooked: true } });
 
-      // Notify patient and doctor
+     
       await this.notificationService.notifyAppointmentRescheduled(
         client.userId,
         updated.doctorHospital.doctor.userId,
@@ -365,8 +392,6 @@ export class PatientService {
       return updated;
     });
   }
-
-  // ─── VIEW OWN APPOINTMENTS ────────────────────────────────────────────────────
 
   async getOwnAppointments(userId: number) {
     const client = await this.prisma.clientAccount.findUnique({ where: { userId } });
@@ -383,7 +408,7 @@ export class PatientService {
     });
   }
 
-  // ─── VIEW APPOINTMENT HISTORY ────────────────────────────────────────────────────
+  
 
   async getAppointmentHistory(userId: number, appointmentId: number) {
     return this.appointmentHistoryService.findByAppointment(userId, appointmentId);

@@ -38,7 +38,6 @@ export default function DoctorProfilePage() {
   const [documentTypes, setDocumentTypes] = useState(['']);
   const [files, setFiles] = useState<File[]>([]);
 
-  // Edit mode state (for verified doctors)
   const [editing, setEditing] = useState(false);
   const [editForm, setEditForm] = useState({ firstName: '', lastName: '', professionalStatement: '', practicingFrom: '' });
 
@@ -96,8 +95,6 @@ export default function DoctorProfilePage() {
   const isProfileSetup = !!doctor?.firstName;
   const isVerified = doctor?.isVerified;
   const verificationRequested = doctor?.verificationRequested;
-
-  // Pre-fill edit form when doctor data loads
   const startEditing = () => {
     setEditForm({
       firstName: doctor?.firstName || '',
@@ -209,7 +206,7 @@ export default function DoctorProfilePage() {
                     </div>
                   </div>
 
-                  {/* Edit / Save / Cancel buttons */}
+                 
                   <div className="flex gap-2 ml-4">
                     {editing ? (
                       <>
@@ -240,8 +237,6 @@ export default function DoctorProfilePage() {
                   </div>
                 </div>
               </div>
-
-              {/* Specializations & Qualifications */}
               <div className="grid grid-cols-2 gap-4">
                 <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
                   <p className="text-xs font-medium text-gray-400 mb-3">Specializations</p>
@@ -272,7 +267,6 @@ export default function DoctorProfilePage() {
             </>
           )}
 
-          {/* ── PENDING VERIFICATION ── */}
           {isProfileSetup && verificationRequested && !isVerified && (
             <div className="bg-white rounded-2xl border border-amber-200 shadow-sm p-8 text-center">
               <div className="w-14 h-14 bg-amber-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
@@ -288,7 +282,7 @@ export default function DoctorProfilePage() {
             </div>
           )}
 
-          {/* ── REQUEST VERIFICATION (profile done, not yet requested) ── */}
+     
           {isProfileSetup && !verificationRequested && !isVerified && (
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8 text-center">
               <h2 className="text-lg font-semibold text-gray-900">Profile Setup Complete</h2>
@@ -300,7 +294,7 @@ export default function DoctorProfilePage() {
             </div>
           )}
 
-          {/* ── SETUP FORM (new doctor) ── */}
+       
           {!isProfileSetup && !verificationRequested && !isVerified && (
             <>
               <div className="bg-blue-50 border border-blue-100 rounded-2xl p-4">
@@ -309,7 +303,7 @@ export default function DoctorProfilePage() {
               </div>
 
               <form onSubmit={handleSetupSubmit} className="space-y-5">
-                {/* Basic Info */}
+              
                 <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 space-y-4">
                   <h3 className="text-sm font-semibold text-gray-800">Basic Information</h3>
                   <div className="grid grid-cols-2 gap-4">
@@ -337,7 +331,6 @@ export default function DoctorProfilePage() {
                   </div>
                 </div>
 
-                {/* Specializations */}
                 <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
                   <h3 className="text-sm font-semibold text-gray-800 mb-4">Specializations *</h3>
                   <div className="grid grid-cols-3 lg:grid-cols-5 gap-2">
@@ -353,7 +346,7 @@ export default function DoctorProfilePage() {
                   </div>
                 </div>
 
-                {/* Qualifications */}
+             
                 <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 space-y-3">
                   <div className="flex items-center justify-between">
                     <h3 className="text-sm font-semibold text-gray-800">Qualifications *</h3>
@@ -375,7 +368,7 @@ export default function DoctorProfilePage() {
                   ))}
                 </div>
 
-                {/* Documents */}
+                
                 <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 space-y-3">
                   <div className="flex items-center justify-between">
                     <h3 className="text-sm font-semibold text-gray-800">Documents *</h3>

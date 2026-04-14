@@ -66,7 +66,6 @@ export default function DoctorAppointmentsPage() {
         </header>
 
         <div className="flex-1 p-6 space-y-5">
-          {/* Stats */}
           <div className="grid grid-cols-3 gap-4">
             {[
               { label: 'Total', value: all.length, border: 'border-l-gray-400' },
@@ -79,8 +78,6 @@ export default function DoctorAppointmentsPage() {
               </div>
             ))}
           </div>
-
-          {/* Filter Tabs */}
           <div className="flex gap-2">
             {(['all', 'upcoming', 'completed'] as const).map((f) => (
               <button key={f} onClick={() => setFilter(f)}
@@ -91,7 +88,7 @@ export default function DoctorAppointmentsPage() {
             ))}
           </div>
 
-          {/* Table */}
+         
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
             {isLoading ? (
               <div className="flex justify-center py-16">
