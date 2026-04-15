@@ -42,13 +42,14 @@ function SpecializationRequestModal({ req, onClose, onApprove, onReject, approvi
     setPdfLoading(true);
     try {
       const res = await viewDoctorDocumentApi(doctorId, docId);
-      const bytes = new Uint8Array(res.data);
-      // Detect mime type from magic bytes
+      const blob: Blob = res.data;
+      const arrayBuffer = await blob.arrayBuffer();
+      const bytes = new Uint8Array(arrayBuffer);
       let mimeType = 'application/pdf';
       if (bytes[0] === 0xFF && bytes[1] === 0xD8) mimeType = 'image/jpeg';
       else if (bytes[0] === 0x89 && bytes[1] === 0x50) mimeType = 'image/png';
-      const blob = new Blob([bytes], { type: mimeType });
-      const url = URL.createObjectURL(blob);
+      const typedBlob = new Blob([bytes], { type: mimeType });
+      const url = URL.createObjectURL(typedBlob);
       if (pdfUrl) URL.revokeObjectURL(pdfUrl.url);
       setPdfUrl({ url, mimeType });
     } catch {

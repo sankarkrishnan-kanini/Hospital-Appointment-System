@@ -15,6 +15,7 @@ import toast from 'react-hot-toast';
 
 const navItems = [
   { label: 'Dashboard', href: '/admin', icon: '🏠' },
+  { label: 'Analytics', href: '/admin/analytics', icon: '' },
   { label: 'Users', href: '/admin/users', icon: '👥' },
   { label: 'Doctors', href: '/admin/doctors', icon: '🩺' },
   { label: 'Patients', href: '/admin/patients', icon: '🧑⚕️' },
@@ -33,12 +34,12 @@ export default function AdminHospitalsPage() {
 
   const [selectedOffice, setSelectedOffice] = useState<any>(null);
 
-  // Office modal
+ 
   const [showOfficeForm, setShowOfficeForm] = useState(false);
   const [editingOffice, setEditingOffice] = useState<any>(null);
   const [officeForm, setOfficeForm] = useState(EMPTY_OFFICE);
 
-  // Hospital modal
+ 
   const [showHospitalForm, setShowHospitalForm] = useState(false);
   const [editingHospital, setEditingHospital] = useState<any>(null);
   const [hospitalForm, setHospitalForm] = useState(EMPTY_HOSPITAL);
@@ -98,7 +99,6 @@ export default function AdminHospitalsPage() {
   const offices = Array.isArray(officesRes?.data) ? officesRes.data : [];
   const hospitals = Array.isArray(hospitalsRes?.data) ? hospitalsRes.data : [];
 
-  // Office modal helpers
   const openCreateOffice = () => { setEditingOffice(null); setOfficeForm(EMPTY_OFFICE); setShowOfficeForm(true); };
   const openEditOffice = (office: any) => {
     setEditingOffice(office);
@@ -106,8 +106,6 @@ export default function AdminHospitalsPage() {
     setShowOfficeForm(true);
   };
   const closeOfficeModal = () => { setShowOfficeForm(false); setEditingOffice(null); setOfficeForm(EMPTY_OFFICE); };
-
-  // Hospital modal helpers
   const openCreateHospital = () => { setEditingHospital(null); setHospitalForm(EMPTY_HOSPITAL); setShowHospitalForm(true); };
   const openEditHospital = (h: any) => {
     setEditingHospital(h);
@@ -153,7 +151,6 @@ export default function AdminHospitalsPage() {
         </header>
 
         <div className="flex-1 p-6 flex gap-6">
-          {/* Offices List */}
           <div className="w-72 space-y-3">
             <h2 className="text-sm font-semibold text-gray-700 px-1">Offices ({offices.length})</h2>
             {isLoading ? (
@@ -177,7 +174,7 @@ export default function AdminHospitalsPage() {
             )}
           </div>
 
-          {/* Hospitals */}
+        
           <div className="flex-1 space-y-4">
             {!selectedOffice ? (
               <div className="bg-white rounded-2xl border border-gray-100 p-12 text-center">
@@ -279,7 +276,7 @@ export default function AdminHospitalsPage() {
           </div>
         </div>
 
-        {/* Office Modal (Create / Edit) */}
+     
         {showOfficeForm && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
             <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md p-8">
@@ -316,7 +313,7 @@ export default function AdminHospitalsPage() {
           </div>
         )}
 
-        {/* Hospital Modal (Create / Edit) */}
+       
         {showHospitalForm && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
             <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl p-8 max-h-[90vh] overflow-y-auto">

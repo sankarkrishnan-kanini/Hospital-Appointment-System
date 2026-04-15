@@ -11,6 +11,7 @@ import AdminTopBar from '@/components/AdminTopBar';
 
 const navItems = [
   { label: 'Dashboard', href: '/admin', icon: '🏠' },
+  { label: 'Analytics', href: '/admin/analytics', icon: '' },
   { label: 'Users', href: '/admin/users', icon: '👥' },
   { label: 'Doctors', href: '/admin/doctors', icon: '🩺' },
   { label: 'Patients', href: '/admin/patients', icon: '🧑⚕️' },
@@ -87,8 +88,6 @@ function DoctorDetailModal({ doctorId, onClose, onVerify, verifying }: {
                   )}
                 </div>
               </div>
-
-              {/* Specializations */}
               {doctor.specializations?.length > 0 && (
                 <div>
                   <div className="flex items-center gap-2 mb-2">
@@ -102,8 +101,6 @@ function DoctorDetailModal({ doctorId, onClose, onVerify, verifying }: {
                   </div>
                 </div>
               )}
-
-              {/* Qualifications */}
               {doctor.qualifications?.length > 0 && (
                 <div>
                   <div className="flex items-center gap-2 mb-2">
@@ -121,7 +118,6 @@ function DoctorDetailModal({ doctorId, onClose, onVerify, verifying }: {
                 </div>
               )}
 
-              {/* Hospitals */}
               {doctor.doctorHospitals?.length > 0 && (
                 <div>
                   <div className="flex items-center gap-2 mb-2">
@@ -138,7 +134,6 @@ function DoctorDetailModal({ doctorId, onClose, onVerify, verifying }: {
                 </div>
               )}
 
-              {/* Documents */}
               {doctor.documents?.length > 0 && (
                 <div>
                   <div className="flex items-center gap-2 mb-2">
@@ -165,7 +160,6 @@ function DoctorDetailModal({ doctorId, onClose, onVerify, verifying }: {
                 </div>
               )}
 
-              {/* Verification status */}
               <div className="flex items-center gap-2">
                 {doctor.isVerified ? (
                   <span className="text-xs bg-green-100 text-green-700 font-semibold px-3 py-1 rounded-full">✅ Verified</span>
@@ -174,7 +168,7 @@ function DoctorDetailModal({ doctorId, onClose, onVerify, verifying }: {
                 )}
               </div>
 
-              {/* Action */}
+              
               {!doctor.isVerified && doctor.verificationRequested && (
                 <button
                   onClick={() => onVerify(doctor.id)}
@@ -189,6 +183,7 @@ function DoctorDetailModal({ doctorId, onClose, onVerify, verifying }: {
 
             {/* Right panel - PDF viewer */}
             <div className="flex-1 bg-gray-100 flex items-center justify-center">
+
               {pdfLoading ? (
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#2d6be4]" />
               ) : pdfUrl ? (
@@ -284,8 +279,11 @@ export default function AdminDoctorsPage() {
         </header>
 
         <div className="flex-1 p-6 space-y-5">
+
           {/* Tabs + Filters */}
           <div className="flex items-center justify-between gap-4 flex-wrap">
+
+
             <div className="flex gap-2">
               <button onClick={() => { setTab('all'); resetFilters(); }}
                 className={`px-4 py-2 rounded-xl text-sm font-semibold transition ${tab === 'all' ? 'bg-[#2d6be4] text-white' : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'}`}>
@@ -324,8 +322,6 @@ export default function AdminDoctorsPage() {
             )}
             <span className="ml-auto text-xs text-gray-400">{filtered.length} result{filtered.length !== 1 ? 's' : ''}</span>
           </div>
-
-          {/* Table */}
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
             {isLoading ? (
               <div className="flex items-center justify-center py-16">

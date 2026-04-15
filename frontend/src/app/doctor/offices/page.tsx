@@ -5,13 +5,14 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import Sidebar from '@/components/Sidebar';
 import DoctorTopBar from '@/components/DoctorTopBar';
-import { Building2, Plus, Trash2, MapPin, DollarSign, Clock } from 'lucide-react';
+import { Building2, Plus, Trash2, MapPin, IndianRupee, Clock } from 'lucide-react';
 import { getDoctorOfficesApi, createOfficeApi, deletePracticeApi, affiliateHospitalApi, getInsurancesApi, addInsuranceApi, deleteInsuranceApi } from '@/lib/api/doctor.api';
 import { getAllOfficesApi, getHospitalsByOfficeApi } from '@/lib/api/admin.api';
 import toast from 'react-hot-toast';
 
 const navItems = [
   { label: 'Dashboard', href: '/doctor', icon: '' },
+  { label: 'Analytics', href: '/doctor/analytics', icon: '' },
   { label: 'My Profile', href: '/doctor/profile', icon: '' },
   { label: 'Offices', href: '/doctor/offices', icon: '' },
   { label: 'Availability', href: '/doctor/availability', icon: '' },
@@ -86,8 +87,6 @@ export default function DoctorOfficesPage() {
     },
     onError: () => toast.error('Failed to remove insurance'),
   });
-
-  // auto-fill fees when hospital is selected
   const handleHospitalSelect = (hospitalId: string) => {
     setAffiliateForm({ ...affiliateForm, hospitalId });
     const hospital = hospitals.find((h: any) => h.id === parseInt(hospitalId));
@@ -203,12 +202,12 @@ export default function DoctorOfficesPage() {
 
                   <div className="grid grid-cols-3 gap-3 mt-3 flex-1">
                     <div className="bg-gray-50 rounded-xl p-3 text-center">
-                      <DollarSign size={14} className="text-gray-400 mx-auto mb-1" />
+                      <IndianRupee size={14} className="text-gray-400 mx-auto mb-1" />
                       <p className="text-sm font-semibold text-gray-800">₹{office.firstConsultationFee}</p>
                       <p className="text-xs text-gray-400">First visit</p>
                     </div>
                     <div className="bg-gray-50 rounded-xl p-3 text-center">
-                      <DollarSign size={14} className="text-gray-400 mx-auto mb-1" />
+                      <IndianRupee size={14} className="text-gray-400 mx-auto mb-1" />
                       <p className="text-sm font-semibold text-gray-800">₹{office.followupConsultationFee}</p>
                       <p className="text-xs text-gray-400">Follow-up</p>
                     </div>
@@ -219,7 +218,6 @@ export default function DoctorOfficesPage() {
                     </div>
                   </div>
 
-                  {/* In-Network Insurance */}
                   <div className="mt-auto border-t border-gray-100 pt-4">
                     <div className="flex items-center justify-between mb-2">
                       <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">In-Network Insurance</p>
@@ -231,7 +229,7 @@ export default function DoctorOfficesPage() {
                       </button>
                     </div>
 
-                    {/* existing insurances from offices data */}
+                  
                     {office.insurances?.length > 0 && insuranceOfficeId !== office.id && (
                       <div className="flex flex-wrap gap-1">
                         {office.insurances.map((ins: any) => (
@@ -242,7 +240,7 @@ export default function DoctorOfficesPage() {
 
                     {insuranceOfficeId === office.id && (
                       <div className="space-y-2">
-                        {/* loaded insurances */}
+                      
                         {insurances.length > 0 ? (
                           <div className="flex flex-wrap gap-1">
                             {insurances.map((ins: any) => (
@@ -255,7 +253,7 @@ export default function DoctorOfficesPage() {
                         ) : (
                           <p className="text-xs text-gray-400">No insurances added yet</p>
                         )}
-                        {/* add new */}
+                       
                         <div className="flex gap-2 mt-2">
                           <input
                             value={newInsurance}
@@ -285,7 +283,7 @@ export default function DoctorOfficesPage() {
           )}
         </div>
 
-        {/* Private Practice Modal */}
+      
         {showPrivateForm && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
             <div className="bg-white rounded-2xl shadow-2xl w-full max-w-xl p-8">
@@ -370,7 +368,7 @@ export default function DoctorOfficesPage() {
           </div>
         )}
 
-        {/* Affiliate Hospital Modal */}
+      
         {showAffiliateForm && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
             <div className="bg-white rounded-2xl shadow-2xl w-full max-w-xl p-8">

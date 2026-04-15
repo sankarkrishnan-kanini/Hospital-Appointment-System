@@ -11,6 +11,7 @@ import AdminTopBar from '@/components/AdminTopBar';
 
 const navItems = [
   { label: 'Dashboard', href: '/admin', icon: '🏠' },
+  { label: 'Analytics', href: '/admin/analytics', icon: '' },
   { label: 'Users', href: '/admin/users', icon: '👥' },
   { label: 'Doctors', href: '/admin/doctors', icon: '🩺' },
   { label: 'Patients', href: '/admin/patients', icon: '🧑⚕️' },
@@ -352,7 +353,6 @@ export default function AdminUsersPage() {
             <span className="ml-auto text-xs text-gray-400">{filtered.length} result{filtered.length !== 1 ? 's' : ''}</span>
           </div>
 
-          {/* Table */}
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
             {isLoading ? (
               <div className="flex items-center justify-center py-16">

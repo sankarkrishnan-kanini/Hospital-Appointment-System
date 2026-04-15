@@ -11,6 +11,7 @@ import toast from 'react-hot-toast';
 
 const navItems = [
   { label: 'Dashboard', href: '/doctor', icon: '' },
+  { label: 'Analytics', href: '/doctor/analytics', icon: '' },
   { label: 'My Profile', href: '/doctor/profile', icon: '' },
   { label: 'Offices', href: '/doctor/offices', icon: '' },
   { label: 'Availability', href: '/doctor/availability', icon: '' },
@@ -106,7 +107,6 @@ export default function DoctorTimeSlotsPage() {
             </div>
           </div>
 
-          {/* Slots View */}
           {selectedOffice && (
             <>
               <div className="grid grid-cols-3 gap-4">

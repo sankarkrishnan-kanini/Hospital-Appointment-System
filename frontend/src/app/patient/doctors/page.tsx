@@ -38,7 +38,7 @@ export default function FindDoctorsPage() {
     ? specsRes.data.map((s: any) => ({ id: s.id, name: s.specializationName }))
     : [];
 
-  // Selected doctor for booking
+
   const [selectedDoctor, setSelectedDoctor] = useState<any>(null);
   const [selectedPractice, setSelectedPractice] = useState<any>(null);
   const [selectedSlot, setSelectedSlot] = useState<number | null>(null);
@@ -73,7 +73,7 @@ export default function FindDoctorsPage() {
   const { mutate: book, isPending: booking } = useMutation({
     mutationFn: bookAppointmentApi,
     onSuccess: () => {
-      toast.success('Appointment booked successfully!');
+      toast.success('Appointment booked! View it in My Appointments.');
       setShowBooking(false);
       setSelectedDoctor(null);
       setSelectedPractice(null);
@@ -90,7 +90,7 @@ export default function FindDoctorsPage() {
   if (!_hasHydrated || !user) return null;
 
   const doctors = Array.isArray(doctorsRes?.data) ? doctorsRes.data : [];
-  const slots = Array.isArray(slotsRes?.data) ? slotsRes.data : [];
+  const groupedSlots: { date: string; slots: any[] }[] = Array.isArray(slotsRes?.data) ? slotsRes.data : [];
 
   const handleSearch = () => {
     setSearched(true);
@@ -102,7 +102,7 @@ export default function FindDoctorsPage() {
     setSelectedPractice(practice);
     setSelectedSlot(null);
     setReason('');
-    // Pre-select: use filter specialization or doctor's first
+ 
     const filterMatch = specializationId ? Number(specializationId) : null;
     if (filterMatch) {
       setSelectedSpecId(filterMatch);
@@ -132,7 +132,7 @@ export default function FindDoctorsPage() {
       <Sidebar items={navItems} />
       <main className="flex-1 flex flex-col ml-60">
         <div className="flex-1 p-6 space-y-5">
-          {/* Search Filters */}
+        
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
             <h3 className="text-sm font-semibold text-gray-800 mb-4">Search Doctors</h3>
             <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
@@ -168,7 +168,7 @@ export default function FindDoctorsPage() {
             </div>
           </div>
 
-          {/* Results */}
+        
           {isLoading && (
             <div className="flex justify-center py-16">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#2d6be4]" />
@@ -199,7 +199,7 @@ export default function FindDoctorsPage() {
                     </div>
                   </div>
 
-                  {/* Practices */}
+                 
                   <div className="space-y-2">
                     {doc.practices?.map((p: any) => (
                       <div key={p.doctorHospitalId} className="bg-gray-50 rounded-xl p-3 flex items-center justify-between">
@@ -236,7 +236,7 @@ export default function FindDoctorsPage() {
           )}
         </div>
 
-        {/* Booking Modal */}
+       
         {showBooking && selectedDoctor && selectedPractice && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
             <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg p-8">
@@ -251,7 +251,6 @@ export default function FindDoctorsPage() {
               </div>
 
               <div className="space-y-4">
-                {/* Practice Info */}
                 <div className="bg-gray-50 rounded-xl p-4">
                   <p className="text-xs text-gray-400 mb-1">Practice</p>
                   <p className="text-sm font-medium text-gray-800">
@@ -277,7 +276,7 @@ export default function FindDoctorsPage() {
                   )}
                 </div>
 
-                {/* Specialization */}
+             
                 <div>
                   <label className="block text-xs font-medium text-gray-600 mb-1">Consulting For *</label>
                   <select value={selectedSpecId ?? ''} onChange={e => setSelectedSpecId(Number(e.target.value))}
@@ -293,32 +292,37 @@ export default function FindDoctorsPage() {
                   </select>
                 </div>
 
-                {/* Time Slots */}
-                <div>
+               <div>
                   <label className="block text-xs font-medium text-gray-600 mb-2">Select Time Slot *</label>
-                  {!slots.length ? (
+                  {!groupedSlots.length ? (
                     <p className="text-sm text-gray-400 bg-gray-50 rounded-xl p-4 text-center">
                       No available slots. Ask the doctor to generate slots.
                     </p>
                   ) : (
-                    <div className="grid grid-cols-3 gap-2 max-h-48 overflow-y-auto">
-                      {slots.map((slot: any) => (
-                        <button key={slot.id} onClick={() => setSelectedSlot(slot.id)}
-                          className={`p-2.5 rounded-xl border text-xs font-medium transition text-center
-                            ${selectedSlot === slot.id
-                              ? 'border-[#2d6be4] bg-blue-50 text-[#2d6be4]'
-                              : 'border-gray-200 text-gray-600 hover:border-gray-300'}`}>
-                          <p>{new Date(slot.startTime).toLocaleDateString('en-GB', { timeZone: 'UTC' })}</p>
-                          <p className="mt-0.5">
-                            {new Date(slot.startTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', timeZone: 'UTC' })}
+                    <div className="space-y-3 max-h-56 overflow-y-auto">
+                      {groupedSlots.map((group) => (
+                        <div key={group.date}>
+                          <p className="text-xs font-semibold text-gray-500 mb-1.5">
+                            {new Date(group.date).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' })}
                           </p>
-                        </button>
+                          <div className="grid grid-cols-3 gap-2">
+                            {group.slots.map((slot: any) => (
+                              <button key={slot.id} onClick={() => setSelectedSlot(slot.id)}
+                                className={`p-2.5 rounded-xl border text-xs font-medium transition text-center
+                                  ${selectedSlot === slot.id
+                                    ? 'border-[#2d6be4] bg-blue-50 text-[#2d6be4]'
+                                    : 'border-gray-200 text-gray-600 hover:border-gray-300'}`}>
+                                {new Date(slot.startTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', timeZone: 'UTC' })}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
                       ))}
                     </div>
                   )}
                 </div>
 
-                {/* Reason */}
+               
                 <div>
                   <label className="block text-xs font-medium text-gray-600 mb-1">Reason (optional)</label>
                   <input value={reason} onChange={e => setReason(e.target.value)}

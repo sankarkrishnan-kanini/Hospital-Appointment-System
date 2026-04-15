@@ -9,13 +9,15 @@ import { Search, X, ChevronRight, UserRound, Stethoscope, CalendarDays, Clock, B
 import AdminTopBar from '@/components/AdminTopBar';
 
 const navItems = [
-  { label: 'Dashboard', href: '/admin', icon: '' },
-  { label: 'Users', href: '/admin/users', icon: '' },
-  { label: 'Doctors', href: '/admin/doctors', icon: '' },
-  { label: 'Patients', href: '/admin/patients', icon: '' },
-  { label: 'Appointments', href: '/admin/appointments', icon: '' },
-  { label: 'Hospitals', href: '/admin/hospitals', icon: '' },
-  { label: 'Specializations', href: '/admin/specializations', icon: '' },
+
+  { label: 'Dashboard', href: '/admin', icon: '🏠' },
+  { label: 'Analytics', href: '/admin/analytics', icon: '' },
+  { label: 'Users', href: '/admin/users', icon: '👥' },
+  { label: 'Doctors', href: '/admin/doctors', icon: '🩺' },
+  { label: 'Patients', href: '/admin/patients', icon: '🧑⚕️' },
+  { label: 'Appointments', href: '/admin/appointments', icon: '📅' },
+  { label: 'Hospitals', href: '/admin/hospitals', icon: '🏥' },
+  { label: 'Specializations', href: '/admin/specializations', icon: '🎓' },
 ];
 
 const statusColor: Record<string, string> = {
@@ -236,7 +238,7 @@ function ByDoctorsTab({ appointments }: { appointments: any[] }) {
   const selected = selectedDoctorId !== null ? doctorMap.get(selectedDoctorId) : null;
 
   // Group selected doctor's appointments by patient for the panel
-  const patientGroupsForDoctor = selected
+  const patientGroupsForDoctor: { patient: any; apts: any[] }[] = selected
     ? Array.from(
         selected.appointments.reduce((map: Map<number, { patient: any; apts: any[] }>, apt: any) => {
           const pid = apt.client?.id;
@@ -244,7 +246,7 @@ function ByDoctorsTab({ appointments }: { appointments: any[] }) {
           if (!map.has(pid)) map.set(pid, { patient: apt.client, apts: [] });
           map.get(pid)!.apts.push(apt);
           return map;
-        }, new Map()).values()
+        }, new Map<number, { patient: any; apts: any[] }>()).values()
       )
     : [];
 
@@ -452,6 +454,7 @@ export default function AdminAppointmentsPage() {
           ) : (
             <ByDoctorsTab appointments={appointments} />
           )}
+
         </div>
       </main>
     </div>

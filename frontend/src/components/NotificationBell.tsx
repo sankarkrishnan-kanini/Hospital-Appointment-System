@@ -1,7 +1,7 @@
 'use client';
 import { useState, useRef, useEffect } from 'react';
 import { Bell } from 'lucide-react';
-import { useNotifications } from '@/hooks/useNotifications';
+import { useNotifications, type Notification } from '@/hooks/useNotifications';
 
 export default function NotificationBell() {
   const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications();
@@ -45,7 +45,7 @@ export default function NotificationBell() {
             {notifications.length === 0 ? (
               <li className="px-4 py-8 text-center text-sm text-gray-400">No notifications</li>
             ) : (
-              notifications.map((n) => (
+              notifications.map((n: Notification) => (
                 <li
                   key={n.id}
                   onClick={() => !n.isRead && markAsRead(n.id)}

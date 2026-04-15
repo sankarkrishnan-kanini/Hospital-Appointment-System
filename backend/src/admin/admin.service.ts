@@ -13,7 +13,7 @@ export class AdminService {
     private readonly notificationService: NotificationService
   ) {}
 
-  // ─── USER MANAGEMENT ─────────────────────────────────────────────────────────
+  
 
   async getAllUsers() {
     const cached = await this.cache.get('admin:users');
@@ -114,7 +114,7 @@ export class AdminService {
     return { id: updated.id, email: updated.email, role: updated.role, isActive: updated.isActive };
   }
 
-  // ─── DOCTOR MANAGEMENT ───────────────────────────────────────────────────────
+ 
 
   async getAllDoctors() {
     const cached = await this.cache.get('admin:doctors');
@@ -242,8 +242,7 @@ export class AdminService {
     return { id: doctor.id, firstName: doctor.firstName, lastName: doctor.lastName, isVerified: true, verifiedAt: new Date() };
   }
 
-  // ─── APPOINTMENT MANAGEMENT ──────────────────────────────────────────────────
-
+ 
   async getAllAppointments() {
     return this.prisma.appointment.findMany({
       include: {
@@ -270,7 +269,6 @@ export class AdminService {
     return appointment;
   }
 
-  // ─── PATIENT MANAGEMENT ──────────────────────────────────────────────────────
 
   async getAllPatients() {
     const cached = await this.cache.get('admin:patients');
@@ -324,7 +322,6 @@ export class AdminService {
     return result;
   }
 
-  // ─── SPECIALIZATION REQUESTS ─────────────────────────────────────────────────
 
   async getAllSpecializations() {
     return this.prisma.specialization.findMany({ orderBy: { id: 'asc' } });
@@ -410,5 +407,88 @@ export class AdminService {
     await this.cache.del(`admin:doctor:${doctorId}`);
     await this.cache.del(`doctorOwnProfile:${doctor.userId}`);
     return { message: `Specialization request rejected and document removed for doctor ${doctorId}` };
+  }
+
+  // ─── ANALYTICS ───────────────────────────────────────────────────────────────
+
+  async getAnalytics() {
+    const [appointments, doctors, patients, users] = await Promise.all([
+      this.prisma.appointment.findMany({
+        include: {
+          status: true,
+          doctorHospital: {
+            include: {
+              doctor: { include: { specializations: { include: { specialization: true } } } }
+            }
+          }
+        }
+      }),
+      this.prisma.doctor.findMany(),
+      this.prisma.clientAccount.findMany(),
+      this.prisma.user.findMany()
+    ]);
+
+    // 1. Appointments per month (last 6 months)
+    const monthMap: Record<string, number> = {};
+    const now = new Date();
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const key = d.toLocaleString('default', { month: 'short', year: '2-digit' });
+      monthMap[key] = 0;
+    }
+    appointments.forEach(a => {
+      const d = new Date(a.appointmentTakenDate);
+      const key = d.toLocaleString('default', { month: 'short', year: '2-digit' });
+      if (key in monthMap) monthMap[key]++;
+    });
+    const appointmentsPerMonth = Object.entries(monthMap).map(([month, count]) => ({ month, count }));
+
+    // 2. Appointment status breakdown
+    const statusMap: Record<string, number> = {};
+    appointments.forEach(a => {
+      const s = a.status?.status ?? 'Unknown';
+      statusMap[s] = (statusMap[s] || 0) + 1;
+    });
+    const statusBreakdown = Object.entries(statusMap).map(([status, count]) => ({ status, count }));
+
+    // 3. Top doctors by appointment count
+    const doctorMap: Record<string, number> = {};
+    appointments.forEach(a => {
+      const name = `Dr. ${a.doctorHospital.doctor.firstName} ${a.doctorHospital.doctor.lastName}`;
+      doctorMap[name] = (doctorMap[name] || 0) + 1;
+    });
+    const topDoctors = Object.entries(doctorMap)
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 5);
+
+    // 4. Top specializations booked
+    const specMap: Record<string, number> = {};
+    appointments.forEach(a => {
+      a.doctorHospital.doctor.specializations.forEach(s => {
+        const name = s.specialization.specializationName;
+        specMap[name] = (specMap[name] || 0) + 1;
+      });
+    });
+    const topSpecializations = Object.entries(specMap)
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 6);
+
+    // 5. Summary stats
+    const summary = {
+      totalAppointments: appointments.length,
+      totalDoctors: doctors.length,
+      verifiedDoctors: doctors.filter(d => d.isVerified).length,
+      totalPatients: patients.length,
+      totalUsers: users.length,
+      completedAppointments: appointments.filter(a => a.status?.status === 'Completed').length,
+      cancelledAppointments: appointments.filter(a => a.status?.status === 'CANCELLED').length,
+      cancellationRate: appointments.length
+        ? Math.round((appointments.filter(a => a.status?.status === 'CANCELLED').length / appointments.length) * 100)
+        : 0
+    };
+
+    return { summary, appointmentsPerMonth, statusBreakdown, topDoctors, topSpecializations };
   }
 }

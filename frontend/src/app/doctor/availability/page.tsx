@@ -11,6 +11,7 @@ import toast from 'react-hot-toast';
 
 const navItems = [
   { label: 'Dashboard', href: '/doctor', icon: '' },
+  { label: 'Analytics', href: '/doctor/analytics', icon: '' },
   { label: 'My Profile', href: '/doctor/profile', icon: '' },
   { label: 'Offices', href: '/doctor/offices', icon: '' },
   { label: 'Availability', href: '/doctor/availability', icon: '' },
@@ -44,7 +45,6 @@ export default function DoctorAvailabilityPage() {
     mutationFn: setAvailabilityApi,
     onSuccess: (res) => {
       const data = res?.data;
-      // if backend returned an error object as 200
       if (data?.statusCode && data?.statusCode >= 400) {
         toast.error(typeof data.message === 'string' ? data.message : 'Failed to set availability');
         return;
@@ -101,7 +101,6 @@ export default function DoctorAvailabilityPage() {
         </header>
 
         <div className="flex-1 p-6 space-y-5">
-          {/* Office Selector */}
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
             <label className="block text-sm font-medium text-gray-700 mb-2">Select Office / Hospital</label>
             <select value={selectedOffice ?? ''} onChange={(e) => setSelectedOffice(Number(e.target.value))}
@@ -150,7 +149,7 @@ export default function DoctorAvailabilityPage() {
                 </form>
               </div>
 
-              {/* Current Availability */}
+              
               <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
                 <h3 className="text-sm font-semibold text-gray-800 mb-4 flex items-center gap-2">
                   <CalendarDays size={15} className="text-green-700" /> Current Schedule
@@ -182,8 +181,10 @@ export default function DoctorAvailabilityPage() {
               </div>
             </div>
 
+
               {/* Mark Unavailability */}
               <div className="bg-white rounded-2xl border border-orange-100 shadow-sm p-6">
+
                 <h3 className="text-sm font-semibold text-gray-800 mb-1 flex items-center gap-2">
                   <span className="text-orange-400">✕</span> Mark Unavailability
                 </h3>

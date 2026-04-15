@@ -3,7 +3,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
 import { jwtDecode } from 'jwt-decode';
@@ -20,10 +20,11 @@ type FormData = z.infer<typeof schema>;
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { setAuth, logout } = useAuthStore();
   const queryClient = useQueryClient();
   const [showPassword, setShowPassword] = useState(false);
-  const [showModal, setShowModal] = useState(true);
+  const [showModal, setShowModal] = useState(() => searchParams.get('modal') === 'true');
 
   const { register, handleSubmit, formState: { errors } } = useForm<FormData>({
     resolver: zodResolver(schema),
@@ -94,7 +95,6 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen bg-white font-sans">
 
-      {/* NAVBAR */}
       <nav className="sticky top-0 z-40 bg-white border-b border-gray-100 shadow-sm">
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -121,8 +121,6 @@ export default function LoginPage() {
           </div>
         </div>
       </nav>
-
-      {/* HERO */}
       <section className="bg-gradient-to-br from-[#eef3ff] to-[#f8f9ff] py-16">
         <div className="max-w-7xl mx-auto px-6">
           <div className="flex flex-col lg:flex-row items-center gap-12">
@@ -189,8 +187,6 @@ export default function LoginPage() {
           </div>
         </div>
       </section>
-
-      {/* SERVICES */}
       <section className="py-16 bg-white">
         <div className="max-w-7xl mx-auto px-6">
           <h2 className="text-2xl font-bold text-gray-900 mb-2">Our Services</h2>
@@ -208,8 +204,6 @@ export default function LoginPage() {
           </div>
         </div>
       </section>
-
-      {/* SPECIALIZATIONS */}
       <section className="py-16 bg-gray-50">
         <div className="max-w-7xl mx-auto px-6">
           <h2 className="text-2xl font-bold text-gray-900 mb-2">Find by Specialization</h2>
@@ -225,8 +219,6 @@ export default function LoginPage() {
           </div>
         </div>
       </section>
-
-      {/* TOP DOCTORS */}
       <section className="py-16 bg-white">
         <div className="max-w-7xl mx-auto px-6">
           <h2 className="text-2xl font-bold text-gray-900 mb-2">Top Doctors</h2>
@@ -260,7 +252,7 @@ export default function LoginPage() {
         </div>
       </section>
 
-      {/* FOOTER */}
+      
       <footer className="bg-gray-900 text-gray-400 py-10">
         <div className="max-w-7xl mx-auto px-6 flex flex-col lg:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
@@ -278,7 +270,7 @@ export default function LoginPage() {
         </div>
       </footer>
 
-      {/* LOGIN MODAL */}
+    
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
           <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md p-8 relative">

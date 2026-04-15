@@ -8,8 +8,12 @@ import { getDoctorProfileApi } from '@/lib/api/doctor.api';
 import { useNotifications } from '@/hooks/useNotifications';
 import {
   LayoutDashboard, Users, Stethoscope, UserRound, CalendarDays,
-  Building2, GraduationCap, Clock, Search, LogOut, Lock, Bell
+  Building2, GraduationCap, Clock, Search, Lock, Bell,
+  BarChart2
+
+
 } from 'lucide-react';
+
 
 interface NavItem {
   label: string;
@@ -23,6 +27,7 @@ interface Props {
 
 const iconMap: Record<string, React.ReactNode> = {
   '/admin': <LayoutDashboard size={16} />,
+  '/admin/analytics': <BarChart2 size={16} />,
   '/admin/users': <Users size={16} />,
   '/admin/doctors': <Stethoscope size={16} />,
   '/admin/patients': <UserRound size={16} />,
@@ -30,6 +35,7 @@ const iconMap: Record<string, React.ReactNode> = {
   '/admin/hospitals': <Building2 size={16} />,
   '/admin/specializations': <GraduationCap size={16} />,
   '/doctor': <LayoutDashboard size={16} />,
+  '/doctor/analytics': <BarChart2 size={16} />,
   '/doctor/profile': <UserRound size={16} />,
   '/doctor/offices': <Building2 size={16} />,
   '/doctor/availability': <CalendarDays size={16} />,
@@ -45,7 +51,7 @@ const DOCTOR_PROTECTED = ['/doctor/offices', '/doctor/availability', '/doctor/ti
 
 export default function Sidebar({ items }: Props) {
   const pathname = usePathname();
-  const { user, logout } = useAuthStore();
+  const { user } = useAuthStore();
   const router = useRouter();
 
   const { data: profileRes } = useQuery({
@@ -93,27 +99,7 @@ export default function Sidebar({ items }: Props) {
         })}
       </nav>
 
-      {/* User + Logout — hidden for admin, shown for doctor/patient */}
-      {user?.role === 'patient' && (
-      <div className="px-3 py-4 border-t border-gray-100">
-        <div className="flex items-center gap-3 px-3 py-2 mb-1">
-          <div className="w-7 h-7 bg-[#eef3ff] rounded-full flex items-center justify-center flex-shrink-0">
-            <span className="text-[#2d6be4] text-xs font-bold">{user?.email?.[0]?.toUpperCase()}</span>
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-xs font-medium text-gray-800 truncate">{user?.email}</p>
-            <p className="text-xs text-gray-400 capitalize">{user?.role}</p>
-          </div>
-        </div>
-        <button
-          onClick={() => { logout(); router.replace('/auth/login'); }}
-          className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-red-500 hover:bg-red-50 hover:text-red-600 transition-colors"
-        >
-          <LogOut size={15} />
-          Logout
-        </button>
-      </div>
-      )}
+
     </aside>
   );
 }

@@ -8,8 +8,6 @@ export class OfficeHospitalService {
 
   constructor(private readonly prisma: PrismaService) {}
 
-  // ─── OFFICE ───────────────────────────────────────────────────────────────────
-
   async createOffice(dto: CreateOfficeDTO) {
     return this.prisma.office.create({ data: dto });
   }
@@ -45,8 +43,6 @@ export class OfficeHospitalService {
     if (hasAffiliatedDoctors) throw new BadRequestException(`Cannot delete office with affiliated doctors`);
     return this.prisma.office.delete({ where: { id } });
   }
-
-  // ─── HOSPITAL ─────────────────────────────────────────────────────────────────
 
   async createHospital(officeId: number, dto: CreateHospitalDto) {
     const office = await this.prisma.office.findUnique({ where: { id: officeId } });
