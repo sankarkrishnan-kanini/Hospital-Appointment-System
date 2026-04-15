@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import Link from 'next/link';
 import Sidebar from '@/components/Sidebar';
-import NotificationBell from '@/components/NotificationBell';
+import DoctorTopBar from '@/components/DoctorTopBar';
 import { CalendarDays, Building2, GraduationCap, FileText, UserRound, Clock, ChevronRight } from 'lucide-react';
 import { getDoctorProfileApi, getDoctorAppointmentsApi, getDoctorOfficesApi } from '@/lib/api/doctor.api';
 
@@ -42,13 +42,10 @@ export default function DoctorDashboard() {
 
   if (!isLoading && (!isProfileSetup || (!isVerified && verificationRequested))) {
     return (
-      <div className="min-h-screen bg-gray-50 flex">
+      <div className="min-h-screen bg-gray-50 flex pt-12">
+        <DoctorTopBar />
         <Sidebar items={navItems} />
         <main className="flex-1 flex flex-col ml-60">
-          <header className="h-16 bg-white border-b border-gray-100 flex items-center justify-between px-6 sticky top-0 z-30">
-            <h1 className="text-base font-semibold text-gray-900">Dashboard</h1>
-            <NotificationBell />
-          </header>
           <div className="flex-1 flex items-center justify-center p-6">
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-12 text-center max-w-md w-full">
               {!isProfileSetup ? (
@@ -93,18 +90,14 @@ export default function DoctorDashboard() {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className="min-h-screen bg-gray-50 flex pt-12">
+      <DoctorTopBar />
       <Sidebar items={navItems} />
       <main className="flex-1 flex flex-col ml-60">
-        <header className="h-16 bg-white border-b border-gray-100 flex items-center justify-between px-6 sticky top-0 z-30">
-          <h1 className="text-base font-semibold text-gray-900">Dashboard</h1>
-          <NotificationBell />
-        </header>
-
         <div className="flex-1 p-6 space-y-5">
-          <div className="bg-[#2d6be4] rounded-2xl p-6 text-white">
-            <h2 className="text-lg font-semibold">Welcome, Dr. {doctor?.firstName} {doctor?.lastName}</h2>
-            <p className="text-blue-100 text-sm mt-1">Manage your practice and appointments.</p>
+          <div className="bg-green-100 border border-green-200 rounded-2xl p-6">
+            <h2 className="text-lg font-semibold text-green-800">Welcome, Dr. {doctor?.firstName} {doctor?.lastName}</h2>
+            <p className="text-green-600 text-sm mt-1">Manage your practice and appointments.</p>
           </div>
 
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">

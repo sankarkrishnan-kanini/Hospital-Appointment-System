@@ -11,6 +11,7 @@ import {
 
 // Profile
 export const getDoctorProfileApi = () => api.get('/doctor-role/profile');
+export const getSpecializationsApi = () => api.get('/doctor-role/specializations');
 export const updateDoctorProfileApi = (dto: UpdateDoctorProfileDto) => api.patch('/doctor-role/profile', dto);
 export const requestVerificationApi = () => api.patch('/doctor-role/request-verification');
 

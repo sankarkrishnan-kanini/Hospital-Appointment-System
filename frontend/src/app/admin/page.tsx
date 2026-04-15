@@ -8,6 +8,7 @@ import Sidebar from '@/components/Sidebar';
 import NotificationBell from '@/components/NotificationBell';
 import { Users, Stethoscope, UserRound, CalendarDays, Building2, GraduationCap, ChevronRight } from 'lucide-react';
 import { getAllUsersApi, getAllDoctorsApi, getAllAppointmentsApi, getAllPatientsApi, getPendingDoctorsApi } from '@/lib/api/admin.api';
+import AdminTopBar from '@/components/AdminTopBar';
 
 const navItems = [
   { label: 'Dashboard', href: '/admin', icon: '' },
@@ -42,21 +43,21 @@ export default function AdminDashboard() {
   const appointments = Array.isArray(appointmentsRes?.data) ? appointmentsRes.data : [];
   const pending = Array.isArray(pendingRes?.data) ? pendingRes.data : [];
 
+  const verifiedDoctors = doctors.filter((d: any) => d.isVerified);
+  const totalUsers = verifiedDoctors.length + patients.length;
+
   const stats = [
-    { label: 'Total Users', value: users.length, icon: <Users size={18} />, color: 'bg-blue-50 text-blue-600', border: 'border-l-blue-500' },
-    { label: 'Total Doctors', value: doctors.length, icon: <Stethoscope size={18} />, color: 'bg-green-50 text-green-600', border: 'border-l-green-500' },
+    { label: 'Total Users', value: totalUsers, icon: <Users size={18} />, color: 'bg-blue-50 text-blue-600', border: 'border-l-blue-500' },
+    { label: 'Total Doctors', value: verifiedDoctors.length, icon: <Stethoscope size={18} />, color: 'bg-green-50 text-green-600', border: 'border-l-green-500' },
     { label: 'Total Patients', value: patients.length, icon: <UserRound size={18} />, color: 'bg-purple-50 text-purple-600', border: 'border-l-purple-500' },
-    { label: 'Appointments', value: appointments.length, icon: <CalendarDays size={18} />, color: 'bg-orange-50 text-orange-600', border: 'border-l-orange-500' },
+    { label: 'Verification Requests', value: pending.length, icon: <CalendarDays size={18} />, color: 'bg-amber-50 text-amber-600', border: 'border-l-amber-500' },
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className="min-h-screen bg-gray-50 flex pt-12">
+      <AdminTopBar />
       <Sidebar items={navItems} />
       <main className="flex-1 flex flex-col ml-60">
-        <header className="h-16 bg-white border-b border-gray-100 flex items-center justify-between px-6 sticky top-0 z-30">
-          <h1 className="text-base font-semibold text-gray-900">Dashboard</h1>
-          <NotificationBell />
-        </header>
 
         <div className="flex-1 p-6 space-y-5">
           <div className="bg-[#2d6be4] rounded-2xl p-6 text-white">

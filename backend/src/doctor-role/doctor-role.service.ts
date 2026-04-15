@@ -22,6 +22,10 @@ export class DoctorRoleService {
     private readonly notificationService: NotificationService
   ) {}
 
+  async getSpecializations() {
+    return this.prisma.specialization.findMany({ orderBy: { id: 'asc' } });
+  }
+
   async setupProfile(userId: number, dto: SetupProfileDto, files: Express.Multer.File[]) {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!user) throw new NotFoundException(`User not found`);
@@ -124,7 +128,24 @@ export class DoctorRoleService {
         institute: q.instituteName,
         year: q.procurementYear
       })),
-      documentCount: doctor.documents.length
+      documentCount: doctor.documents.length,
+      pendingSpecializations: await Promise.all(
+        doctor.documents
+          .filter(d => d.documentType.startsWith('SPECIALIZATION_REQUEST_'))
+          .filter(d => {
+            const specId = parseInt(d.documentType.replace('SPECIALIZATION_REQUEST_', ''));
+            return !doctor.specializations.some(ds => ds.specializationId === specId);
+          })
+          .map(async d => {
+            const specId = parseInt(d.documentType.replace('SPECIALIZATION_REQUEST_', ''));
+            const spec = await this.prisma.specialization.findUnique({ where: { id: specId } });
+            return {
+              specializationId: specId,
+              specializationName: spec?.specializationName ?? `Specialization #${specId}`,
+              uploadedAt: d.uploadedAt
+            };
+          })
+      )
     };
     await this.cache.set(cacheKey, result);
     return result;
@@ -136,15 +157,6 @@ export class DoctorRoleService {
     const doctor = await this.prisma.doctor.findUnique({ where: { userId } });
     if (!doctor) throw new NotFoundException(`Doctor profile not found for user ${userId}`);
 
-<<<<<<< HEAD
-    const { firstName, lastName, professionalStatement, practicingFrom } = dto;
-    const updated = await this.prisma.doctor.update({
-      where: { userId },
-      data: { firstName, lastName, professionalStatement, practicingFrom }
-    });
-    await this.cache.del(`doctorOwnProfile:${userId}`);
-    return updated;
-=======
     const data: any = {};
     if (dto.firstName) data.firstName = dto.firstName;
     if (dto.lastName) data.lastName = dto.lastName;
@@ -156,8 +168,8 @@ export class DoctorRoleService {
       } catch { /* skip invalid date */ }
     }
 
+    await this.cache.del(`doctorOwnProfile:${userId}`);
     return this.prisma.doctor.update({ where: { userId }, data });
->>>>>>> 2cead8bd0d20017ee3a1baf7c4ccb53a2d6349b1
   }
 
   async getDocument(userId: number, documentId: number) {
@@ -208,6 +220,7 @@ export class DoctorRoleService {
         verificationRequested: true
       }
     }).then(async (updated) => {
+      await this.cache.del(`doctorOwnProfile:${userId}`);
       const admins = await this.prisma.user.findMany({ where: { role: 'admin' }, select: { id: true } });
       await this.notificationService.notifyVerificationRequested(
         admins.map(a => a.id),
@@ -250,6 +263,8 @@ export class DoctorRoleService {
       `${doctor.firstName} ${doctor.lastName}`,
       specialization.specializationName
     );
+
+    await this.cache.del(`doctorOwnProfile:${userId}`);
 
     return {
       id: doc.id,

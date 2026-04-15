@@ -20,6 +20,11 @@ export class PatientController {
 
   constructor(private readonly patientService: PatientService) {}
 
+  @Get('specializations')
+  getSpecializations() {
+    return this.patientService.getSpecializations();
+  }
+
   // ─── CREATE CLIENT ACCOUNT ────────────────────────────────────────────────────
 
   @Post('account')

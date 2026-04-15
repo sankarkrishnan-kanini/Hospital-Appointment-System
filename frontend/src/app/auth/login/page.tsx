@@ -23,7 +23,7 @@ export default function LoginPage() {
   const { setAuth, logout } = useAuthStore();
   const queryClient = useQueryClient();
   const [showPassword, setShowPassword] = useState(false);
-  const [showModal, setShowModal] = useState(false);
+  const [showModal, setShowModal] = useState(true);
 
   const { register, handleSubmit, formState: { errors } } = useForm<FormData>({
     resolver: zodResolver(schema),

@@ -1,12 +1,14 @@
 'use client';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/auth.store';
 import { useQuery } from '@tanstack/react-query';
 import { getDoctorProfileApi } from '@/lib/api/doctor.api';
+import { useNotifications } from '@/hooks/useNotifications';
 import {
   LayoutDashboard, Users, Stethoscope, UserRound, CalendarDays,
-  Building2, GraduationCap, Clock, MapPin, Search, LogOut, Lock
+  Building2, GraduationCap, Clock, Search, LogOut, Lock, Bell
 } from 'lucide-react';
 
 interface NavItem {
@@ -60,18 +62,8 @@ export default function Sidebar({ items }: Props) {
     user?.role === 'doctor' && DOCTOR_PROTECTED.includes(href) && !isVerified;
 
   return (
-    <aside className="w-60 bg-white border-r border-gray-100 flex flex-col fixed top-0 left-0 h-screen z-40">
-      {/* Logo */}
-      <div className="h-16 flex items-center gap-2.5 px-5 border-b border-gray-100">
-        <div className="w-7 h-7 bg-[#2d6be4] rounded-lg flex items-center justify-center">
-          <span className="text-white font-bold text-xs">M</span>
-        </div>
-        <span className="text-base font-bold text-gray-900">MediCare</span>
-      </div>
-
-      {/* Nav */}
+    <aside className="w-60 bg-white border-r border-gray-100 flex flex-col fixed top-12 left-0 h-[calc(100vh-3rem)] z-40">
       <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
-        <p className="text-xs text-gray-400 font-medium uppercase tracking-wider mb-2 px-2">Menu</p>
         {items.map((item) => {
           const locked = isLocked(item.href);
           const icon = iconMap[item.href];
@@ -91,17 +83,18 @@ export default function Sidebar({ items }: Props) {
             <Link key={item.href} href={item.href}
               className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors
                 ${isActive
-                  ? 'bg-[#eef3ff] text-[#2d6be4]'
+                  ? user?.role === 'doctor' ? 'bg-green-100 text-green-800' : 'bg-[#eef3ff] text-[#2d6be4]'
                   : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                 }`}>
-              <span className={isActive ? 'text-[#2d6be4]' : 'text-gray-400'}>{icon}</span>
+              <span className={isActive ? user?.role === 'doctor' ? 'text-green-700' : 'text-[#2d6be4]' : 'text-gray-400'}>{icon}</span>
               {item.label}
             </Link>
           );
         })}
       </nav>
 
-      {/* User + Logout */}
+      {/* User + Logout — hidden for admin, shown for doctor/patient */}
+      {user?.role === 'patient' && (
       <div className="px-3 py-4 border-t border-gray-100">
         <div className="flex items-center gap-3 px-3 py-2 mb-1">
           <div className="w-7 h-7 bg-[#eef3ff] rounded-full flex items-center justify-center flex-shrink-0">
@@ -120,6 +113,7 @@ export default function Sidebar({ items }: Props) {
           Logout
         </button>
       </div>
+      )}
     </aside>
   );
 }

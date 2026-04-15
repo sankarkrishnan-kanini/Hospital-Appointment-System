@@ -25,6 +25,14 @@ import { CustomExceptionFilter } from 'src/CustomExceptionFilter';
 export class DoctorRoleController {
 
   constructor(private readonly doctorRoleService: DoctorRoleService) {}
+  @Get('specializations')
+  @Roles(Role.Doctor)
+  @UseGuards(RoleGuard)
+  @UseFilters(new CustomExceptionFilter())
+  getSpecializations() {
+    return this.doctorRoleService.getSpecializations();
+  }
+
   @Post('setup-profile')
   @Roles(Role.Doctor)
   @UseGuards(RoleGuard)

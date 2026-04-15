@@ -23,6 +23,10 @@ export class PatientService {
 
   ) {}
 
+  async getSpecializations() {
+    return this.prisma.specialization.findMany({ orderBy: { id: 'asc' } });
+  }
+
   // ─── CREATE CLIENT ACCOUNT ────────────────────────────────────────────────────
 
   async createClientAccount(userId: number, dto: CreateClientAccountDto) {
@@ -57,26 +61,44 @@ export class PatientService {
     const cached = await this.cache.get(cacheKey);
     if (cached) return cached;
 
+    const andConditions: any[] = [{ isVerified: true }];
+
+    if (dto.specializationId) {
+      andConditions.push({ specializations: { some: { specializationId: dto.specializationId } } });
+    }
+
+    // Build practice-level filter
+    if (dto.city || dto.maxFee || dto.insurance) {
+      const practiceConditions: any[] = [];
+
+      if (dto.city) {
+        practiceConditions.push({
+          OR: [
+            { city: { contains: dto.city } },
+            { hospital: { city: { contains: dto.city } } }
+          ]
+        });
+      }
+      if (dto.maxFee) {
+        practiceConditions.push({ firstConsultationFee: { lte: Number(dto.maxFee) } });
+      }
+      if (dto.insurance) {
+        practiceConditions.push({
+          insurances: { some: { insuranceName: { contains: dto.insurance } } }
+        });
+      }
+
+      andConditions.push({
+        doctorHospitals: {
+          some: practiceConditions.length === 1
+            ? practiceConditions[0]
+            : { AND: practiceConditions }
+        }
+      });
+    }
+
     const doctors = await this.prisma.doctor.findMany({
-      where: {
-        isVerified: true,
-        ...(dto.specializationId && {
-          specializations: { some: { specializationId: dto.specializationId } }
-        }),
-        ...(dto.city && {
-          doctorHospitals: {
-            some: {
-              OR: [
-                { city: { contains: dto.city } },
-                { hospital: { city: { contains: dto.city } } }
-              ]
-            }
-          }
-        }),
-        ...(dto.maxFee && {
-          doctorHospitals: { some: { firstConsultationFee: { lte: dto.maxFee } } }
-        })
-      },
+      where: { AND: andConditions },
       include: {
         specializations: { include: { specialization: true } },
         doctorHospitals: {

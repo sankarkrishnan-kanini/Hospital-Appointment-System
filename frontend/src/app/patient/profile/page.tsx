@@ -4,6 +4,7 @@ import { useAuthStore } from '@/store/auth.store';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import Sidebar from '@/components/Sidebar';
+import PatientTopBar from '@/components/PatientTopBar';
 import { UserRound } from 'lucide-react';
 import { getClientAccountApi, createClientAccountApi } from '@/lib/api/patient.api';
 import toast from 'react-hot-toast';
@@ -49,13 +50,10 @@ export default function PatientProfilePage() {
   const profile = profileRes?.data && !profileRes.data.statusCode ? profileRes.data : null;
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className="min-h-screen bg-gray-50 flex pt-12">
+      <PatientTopBar />
       <Sidebar items={navItems} />
       <main className="flex-1 flex flex-col ml-60">
-        <header className="h-16 bg-white border-b border-gray-100 flex items-center justify-between px-6 sticky top-0 z-30">
-          <h1 className="text-base font-semibold text-gray-900">My Profile</h1>
-        </header>
-
         <div className="flex-1 p-6 max-w-2xl">
           {isLoading ? (
             <div className="flex justify-center py-16">
@@ -64,15 +62,16 @@ export default function PatientProfilePage() {
           ) : profile ? (
             // View Profile
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8">
-              <div className="flex items-center gap-4 mb-6">
-                <div className="w-16 h-16 bg-[#eef3ff] rounded-full flex items-center justify-center">
-                  <UserRound size={28} className="text-[#2d6be4]" />
+              <div className="flex items-center gap-4 mb-8">
+                <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0">
+                  <span className="text-purple-700 font-bold text-2xl">{profile.firstName?.[0]}</span>
                 </div>
                 <div>
                   <h2 className="text-xl font-bold text-gray-900">{profile.firstName} {profile.lastName}</h2>
-                  <p className="text-sm text-gray-400">Patient Account</p>
+                  <span className="text-xs bg-purple-50 text-purple-700 font-semibold px-2.5 py-1 rounded-full">Patient Account</span>
                 </div>
               </div>
+
               <div className="grid grid-cols-2 gap-4">
                 {[
                   { label: 'First Name', value: profile.firstName },
@@ -80,9 +79,9 @@ export default function PatientProfilePage() {
                   { label: 'Email', value: profile.email },
                   { label: 'Contact Number', value: profile.contactNumber },
                 ].map((f) => (
-                  <div key={f.label} className="bg-gray-50 rounded-xl p-4">
-                    <p className="text-xs text-gray-400 font-medium mb-1">{f.label}</p>
-                    <p className="text-sm font-medium text-gray-800">{f.value}</p>
+                  <div key={f.label} className="bg-gray-50 rounded-xl p-4 border border-gray-100">
+                    <p className="text-xs text-gray-400 font-medium mb-1.5">{f.label}</p>
+                    <p className="text-sm font-semibold text-gray-800">{f.value}</p>
                   </div>
                 ))}
               </div>

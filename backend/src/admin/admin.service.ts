@@ -18,16 +18,80 @@ export class AdminService {
   async getAllUsers() {
     const cached = await this.cache.get('admin:users');
     if (cached) return cached;
-    const users = await this.prisma.user.findMany();
+    const users = await this.prisma.user.findMany({
+      include: { doctor: { select: { isVerified: true, verificationRequested: true } } }
+    });
     const result = users.map(user => ({
       id: user.id,
       email: user.email,
       role: user.role,
       isActive: user.isActive,
-      createdAt: user.createdAt
+      createdAt: user.createdAt,
+      isVerified: user.doctor?.isVerified ?? null,
+      verificationRequested: user.doctor?.verificationRequested ?? null,
     }));
     await this.cache.set('admin:users', result);
     return result;
+  }
+
+  async getUserDetail(userId: number) {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user) throw new NotFoundException(`User with id ${userId} not found`);
+
+    if (user.role === 'doctor') {
+      const doctor = await this.prisma.doctor.findUnique({
+        where: { userId },
+        include: {
+          specializations: { include: { specialization: true } },
+          doctorHospitals: { include: { hospital: true } },
+          documents: true,
+          qualifications: true
+        }
+      });
+      if (!doctor) throw new NotFoundException(`Doctor profile not found for user ${userId}`);
+      return {
+        role: 'doctor',
+        id: doctor.id,
+        firstName: doctor.firstName,
+        lastName: doctor.lastName,
+        professionalStatement: doctor.professionalStatement,
+        practicingFrom: doctor.practicingFrom,
+        isVerified: doctor.isVerified,
+        verificationRequested: doctor.verificationRequested,
+        specializations: doctor.specializations.map(ds => ds.specialization.specializationName),
+        doctorHospitals: doctor.doctorHospitals,
+        documents: doctor.documents.map(d => ({ id: d.id, documentType: d.documentType, uploadedAt: d.uploadedAt })),
+        qualifications: doctor.qualifications.map(q => ({ name: q.qualificationName, institute: q.instituteName, year: q.procurementYear }))
+      };
+    }
+
+    if (user.role === 'patient') {
+      const patient = await this.prisma.clientAccount.findUnique({
+        where: { userId },
+        include: {
+          appointments: {
+            include: {
+              status: true,
+              timeSlot: true,
+              doctorHospital: { include: { doctor: true, hospital: true } }
+            },
+            orderBy: { appointmentTakenDate: 'desc' }
+          }
+        }
+      });
+      if (!patient) throw new NotFoundException(`Patient profile not found for user ${userId}`);
+      return {
+        role: 'patient',
+        id: patient.id,
+        firstName: patient.firstName,
+        lastName: patient.lastName,
+        email: patient.email,
+        contactNumber: patient.contactNumber,
+        appointments: patient.appointments
+      };
+    }
+
+    throw new BadRequestException(`Cannot fetch details for role: ${user.role}`);
   }
 
   async deactivateUser(id: number) {
@@ -172,6 +236,9 @@ export class AdminService {
     await this.cache.del(`admin:doctor:${id}`);
     await this.cache.del('admin:doctors');
     await this.cache.del('admin:doctors:pending');
+    await this.cache.del('admin:users');
+    // Clear doctor's own profile cache so they see isVerified: true immediately
+    await this.cache.del(`doctorOwnProfile:${doctor.userId}`);
     return { id: doctor.id, firstName: doctor.firstName, lastName: doctor.lastName, isVerified: true, verifiedAt: new Date() };
   }
 
@@ -208,14 +275,18 @@ export class AdminService {
   async getAllPatients() {
     const cached = await this.cache.get('admin:patients');
     if (cached) return cached;
-    const patients = await this.prisma.clientAccount.findMany({ include: { user: true } });
+    const patients = await this.prisma.clientAccount.findMany({
+      include: { user: true, _count: { select: { appointments: true } } }
+    });
     const result = patients.map(patient => ({
       id: patient.id,
       firstName: patient.firstName,
       lastName: patient.lastName,
       email: patient.email,
       contactNumber: patient.contactNumber,
-      isActive: patient.user.isActive
+      isActive: patient.user.isActive,
+      createdAt: patient.user.createdAt,
+      appointments: { length: patient._count.appointments }
     }));
     await this.cache.set('admin:patients', result);
     return result;
@@ -255,6 +326,10 @@ export class AdminService {
 
   // ─── SPECIALIZATION REQUESTS ─────────────────────────────────────────────────
 
+  async getAllSpecializations() {
+    return this.prisma.specialization.findMany({ orderBy: { id: 'asc' } });
+  }
+
   async getSpecializationRequests() {
     const cached = await this.cache.get('admin:specialization-requests');
     if (cached) return cached;
@@ -263,15 +338,34 @@ export class AdminService {
       include: { doctor: true }
     });
 
-    const result = documents.map(doc => ({
+    const rawResult = documents.map(doc => ({
       documentId: doc.id,
       doctorId: doc.doctorId,
       doctorName: `${doc.doctor.firstName} ${doc.doctor.lastName}`,
       specializationId: parseInt(doc.documentType.replace('SPECIALIZATION_REQUEST_', '')),
-      uploadedAt: doc.uploadedAt
+      specializationName: null as string | null,
+      uploadedAt: doc.uploadedAt,
+      status: 'pending' as 'pending' | 'approved'
     }));
-    await this.cache.set('admin:specialization-requests', result);
-    return result;
+
+    // Fetch specialization names
+    const specializationIds = [...new Set(rawResult.map(r => r.specializationId))];
+    const specializations = await this.prisma.specialization.findMany({
+      where: { id: { in: specializationIds } }
+    });
+    const specMap = new Map(specializations.map(s => [s.id, s.specializationName]));
+    rawResult.forEach(r => { r.specializationName = specMap.get(r.specializationId) ?? `ID #${r.specializationId}`; });
+
+    // Check which ones are already approved (exist in DoctorSpecialization)
+    for (const r of rawResult) {
+      const approved = await this.prisma.doctorSpecialization.findFirst({
+        where: { doctorId: r.doctorId, specializationId: r.specializationId }
+      });
+      if (approved) r.status = 'approved';
+    }
+
+    await this.cache.set('admin:specialization-requests', rawResult);
+    return rawResult;
   }
 
   async approveSpecialization(doctorId: number, specializationId: number) {
@@ -294,6 +388,7 @@ export class AdminService {
     await this.cache.del('admin:specialization-requests');
     await this.cache.del(`admin:doctor:${doctorId}`);
     await this.cache.del('admin:doctors');
+    await this.cache.del(`doctorOwnProfile:${doctor.userId}`);
     return result;
   }
 
@@ -313,6 +408,7 @@ export class AdminService {
     await this.notificationService.notifySpecializationRejected(doctor.userId, specialization.specializationName);
     await this.cache.del('admin:specialization-requests');
     await this.cache.del(`admin:doctor:${doctorId}`);
+    await this.cache.del(`doctorOwnProfile:${doctor.userId}`);
     return { message: `Specialization request rejected and document removed for doctor ${doctorId}` };
   }
 }

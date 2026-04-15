@@ -3,6 +3,7 @@ import { CreateOfficeDto, UpdateOfficeDto, CreateHospitalDto, UpdateHospitalDto 
 
 // Users
 export const getAllUsersApi = () => api.get('/admin/users');
+export const getUserDetailApi = (userId: number) => api.get(`/admin/users/${userId}/detail`);
 export const activateUserApi = (id: number) => api.patch(`/admin/users/${id}/activate`);
 export const deactivateUserApi = (id: number) => api.patch(`/admin/users/${id}/deactivate`);
 
@@ -47,4 +48,4 @@ export const updateHospitalApi = (id: number, dto: UpdateHospitalDto) =>
 export const deleteHospitalApi = (id: number) => api.delete(`/admin/hospitals/${id}`);
 
 // Specializations
-export const getAllSpecializationsApi = () => api.get('/admin/specialization-requests').then(() => ({ data: [] }));
+export const getAllSpecializationsApi = () => api.get('/admin/specializations');

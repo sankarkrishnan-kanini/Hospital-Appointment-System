@@ -4,7 +4,7 @@ import { useAuthStore } from '@/store/auth.store';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import Sidebar from '@/components/Sidebar';
-import NotificationBell from '@/components/NotificationBell';
+import PatientTopBar from '@/components/PatientTopBar';
 import { CalendarDays, X, RefreshCw } from 'lucide-react';
 import { getPatientAppointmentsApi, cancelAppointmentApi, rescheduleAppointmentApi, getAvailableTimeSlotsApi } from '@/lib/api/patient.api';
 import toast from 'react-hot-toast';
@@ -93,14 +93,10 @@ export default function PatientAppointmentsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className="min-h-screen bg-gray-50 flex pt-12">
+      <PatientTopBar />
       <Sidebar items={navItems} />
       <main className="flex-1 flex flex-col ml-60">
-        <header className="h-16 bg-white border-b border-gray-100 flex items-center justify-between px-6 sticky top-0 z-30">
-          <h1 className="text-base font-semibold text-gray-900">My Appointments</h1>
-          <NotificationBell />
-        </header>
-
         <div className="flex-1 p-6 space-y-5">
           {/* Stats */}
           <div className="grid grid-cols-4 gap-4">
