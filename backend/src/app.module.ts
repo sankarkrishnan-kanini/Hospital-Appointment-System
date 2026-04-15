@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { CacheModule } from '@nestjs/cache-manager';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { PrismaService } from './prisma/prisma.service';
@@ -18,7 +19,11 @@ import { TimeslotCleanupModule } from './timeslot-cleanup/timeslot-cleanup.modul
 
 @Module({
   imports: [
+
+    CacheModule.register({ isGlobal: true, ttl: 60000 }),
+
     ScheduleModule.forRoot(),
+
     UsersModule,
     AuthModule,
     AdminModule,

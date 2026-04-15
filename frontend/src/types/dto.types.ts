@@ -106,6 +106,7 @@ export interface SearchDoctorsDto {
   specializationId?: number;
   city?: string;
   maxFee?: number;
+  insurance?: string;
 }
 
 export interface BookAppointmentDto {

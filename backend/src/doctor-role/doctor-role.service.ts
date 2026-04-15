@@ -1,4 +1,6 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, Inject } from '@nestjs/common';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { Cache } from 'cache-manager';
 import { PrismaService } from '../prisma/prisma.service';
 import { UpdateDoctorSetupProfileDTO } from './DTOS/UpdateDoctorSetupProfileDTO';
 import { SetupProfileDto } from './DTOS/setupProfileDto';
@@ -17,9 +19,17 @@ export class DoctorRoleService {
 
   constructor(
     private readonly prisma: PrismaService,
+
+    @Inject(CACHE_MANAGER) private readonly cache: Cache,
+  
     private readonly notificationService: NotificationService,
     private readonly mailService: MailService,
+
   ) {}
+
+  async getSpecializations() {
+    return this.prisma.specialization.findMany({ orderBy: { id: 'asc' } });
+  }
 
   async setupProfile(userId: number, dto: SetupProfileDto, files: Express.Multer.File[]) {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
@@ -93,6 +103,10 @@ export class DoctorRoleService {
 
 
   async getProfile(userId: number) {
+    const cacheKey = `doctorOwnProfile:${userId}`;
+    const cached = await this.cache.get(cacheKey);
+    if (cached) return cached;
+
     const doctor = await this.prisma.doctor.findUnique({
       where: { userId },
       include: {
@@ -104,7 +118,7 @@ export class DoctorRoleService {
     });
     if (!doctor) throw new NotFoundException(`Doctor profile not found for user ${userId}`);
 
-    return {
+    const result = {
       id: doctor.id,
       firstName: doctor.firstName,
       lastName: doctor.lastName,
@@ -119,8 +133,27 @@ export class DoctorRoleService {
         institute: q.instituteName,
         year: q.procurementYear
       })),
-      documentCount: doctor.documents.length
+      documentCount: doctor.documents.length,
+      pendingSpecializations: await Promise.all(
+        doctor.documents
+          .filter(d => d.documentType.startsWith('SPECIALIZATION_REQUEST_'))
+          .filter(d => {
+            const specId = parseInt(d.documentType.replace('SPECIALIZATION_REQUEST_', ''));
+            return !doctor.specializations.some(ds => ds.specializationId === specId);
+          })
+          .map(async d => {
+            const specId = parseInt(d.documentType.replace('SPECIALIZATION_REQUEST_', ''));
+            const spec = await this.prisma.specialization.findUnique({ where: { id: specId } });
+            return {
+              specializationId: specId,
+              specializationName: spec?.specializationName ?? `Specialization #${specId}`,
+              uploadedAt: d.uploadedAt
+            };
+          })
+      )
     };
+    await this.cache.set(cacheKey, result);
+    return result;
   }
 
   async updateProfile(userId: number, dto: UpdateDoctorSetupProfileDTO) {
@@ -138,6 +171,7 @@ export class DoctorRoleService {
       } catch { /* skip invalid date */ }
     }
 
+    await this.cache.del(`doctorOwnProfile:${userId}`);
     return this.prisma.doctor.update({ where: { userId }, data });
   }
 
@@ -188,6 +222,7 @@ export class DoctorRoleService {
         verificationRequested: true
       }
     }).then(async (updated) => {
+      await this.cache.del(`doctorOwnProfile:${userId}`);
       const admins = await this.prisma.user.findMany({ where: { role: 'admin' }, select: { id: true } });
       await this.notificationService.notifyVerificationRequested(
         admins.map(a => a.id),
@@ -229,6 +264,8 @@ export class DoctorRoleService {
       `${doctor.firstName} ${doctor.lastName}`,
       specialization.specializationName
     );
+
+    await this.cache.del(`doctorOwnProfile:${userId}`);
 
     return {
       id: doc.id,

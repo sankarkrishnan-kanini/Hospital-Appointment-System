@@ -1,4 +1,6 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, Inject } from '@nestjs/common';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { Cache } from 'cache-manager';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateClientAccountDto } from './DTOS/createClientAccountDto';
 import { SearchDoctorsDto } from './DTOS/searchDoctorsDto';
@@ -15,10 +17,21 @@ export class PatientService {
 
   constructor(
     private readonly prisma: PrismaService,
+
+    @Inject(CACHE_MANAGER) private readonly cache: Cache,
+
     private readonly notificationService: NotificationService,
     private readonly appointmentHistoryService: AppointmentHistoryService,
     private readonly mailService: MailService,
   ) {}
+
+
+  async getSpecializations() {
+    return this.prisma.specialization.findMany({ orderBy: { id: 'asc' } });
+  }
+
+  // ─── CREATE CLIENT ACCOUNT ────────────────────────────────────────────────────
+
 
   async createClientAccount(userId: number, dto: CreateClientAccountDto) {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
@@ -46,26 +59,48 @@ export class PatientService {
   }
 
   async searchDoctors(dto: SearchDoctorsDto) {
+    const cacheKey = `searchDoctors:${JSON.stringify(dto)}`;
+    const cached = await this.cache.get(cacheKey);
+    if (cached) return cached;
+
+    const andConditions: any[] = [{ isVerified: true }];
+
+    if (dto.specializationId) {
+      andConditions.push({ specializations: { some: { specializationId: dto.specializationId } } });
+    }
+
+    // Build practice-level filter
+    if (dto.city || dto.maxFee || dto.insurance) {
+      const practiceConditions: any[] = [];
+
+      if (dto.city) {
+        practiceConditions.push({
+          OR: [
+            { city: { contains: dto.city } },
+            { hospital: { city: { contains: dto.city } } }
+          ]
+        });
+      }
+      if (dto.maxFee) {
+        practiceConditions.push({ firstConsultationFee: { lte: Number(dto.maxFee) } });
+      }
+      if (dto.insurance) {
+        practiceConditions.push({
+          insurances: { some: { insuranceName: { contains: dto.insurance } } }
+        });
+      }
+
+      andConditions.push({
+        doctorHospitals: {
+          some: practiceConditions.length === 1
+            ? practiceConditions[0]
+            : { AND: practiceConditions }
+        }
+      });
+    }
+
     const doctors = await this.prisma.doctor.findMany({
-      where: {
-        isVerified: true,
-        ...(dto.specializationId && {
-          specializations: { some: { specializationId: dto.specializationId } }
-        }),
-        ...(dto.city && {
-          doctorHospitals: {
-            some: {
-              OR: [
-                { city: { contains: dto.city } },
-                { hospital: { city: { contains: dto.city } } }
-              ]
-            }
-          }
-        }),
-        ...(dto.maxFee && {
-          doctorHospitals: { some: { firstConsultationFee: { lte: dto.maxFee } } }
-        })
-      },
+      where: { AND: andConditions },
       include: {
         specializations: { include: { specialization: true } },
         doctorHospitals: {
@@ -74,7 +109,7 @@ export class PatientService {
       }
     });
 
-    return doctors.map(doctor => ({
+    const result = doctors.map(doctor => ({
       id: doctor.id,
       firstName: doctor.firstName,
       lastName: doctor.lastName,
@@ -90,9 +125,15 @@ export class PatientService {
         hospital: dh.isPrivate ? null : { name: dh.hospital?.name, city: dh.hospital?.city }
       }))
     }));
+    await this.cache.set(cacheKey, result);
+    return result;
   }
 
   async getDoctorProfile(doctorId: number) {
+    const cacheKey = `doctorProfile:${doctorId}`;
+    const cached = await this.cache.get(cacheKey);
+    if (cached) return cached;
+
     const doctor = await this.prisma.doctor.findUnique({
       where: { id: doctorId, isVerified: true },
       include: {
@@ -105,7 +146,7 @@ export class PatientService {
     });
     if (!doctor) throw new NotFoundException(`Doctor with id ${doctorId} not found`);
 
-    return {
+    const result = {
       id: doctor.id,
       firstName: doctor.firstName,
       lastName: doctor.lastName,
@@ -130,6 +171,8 @@ export class PatientService {
         )
       }))
     };
+    await this.cache.set(cacheKey, result);
+    return result;
   }
 
   async getAvailableTimeSlots(doctorId: number, doctorHospitalId: number) {
@@ -247,7 +290,7 @@ export class PatientService {
           durationInMinutes: doctorHospital.timeSlotPerClientInMin,
           appointmentStatusId: activeStatus.id,
           appointmentTakenDate: new Date(),
-          consultationFee,
+          consultationFee: consultationFee ?? 0,
         },
         include: { status: true, timeSlot: true, doctorHospital: { include: { doctor: true, hospital: true } } }
       });
@@ -257,7 +300,7 @@ export class PatientService {
       return created;
     });
 
-    const hospitalName = appointment.doctorHospital.isPrivate ? 'Private Practice' : (appointment.doctorHospital.hospital?.name || 'Hospital');
+    const hospitalName = doctorHospital.isPrivate ? 'Private Practice' : (doctorHospital.hospital?.name || 'Hospital');
 
     await this.notificationService.notifyAppointmentBooked(
       client.userId,
@@ -292,7 +335,7 @@ export class PatientService {
     return {
       id: appointment.id,
       reason: dto.reason,
-      consultationFee: appointment.consultationFee,
+      consultationFee,
       isFollowup: !!hasPriorVisit,
       probableStartTime: appointment.probableStartTime,
       durationInMinutes: appointment.durationInMinutes,
@@ -310,11 +353,11 @@ export class PatientService {
         lastName: doctor.lastName
       },
       practice: {
-        doctorHospitalId: appointment.doctorHospital.id,
-        isPrivate: appointment.doctorHospital.isPrivate,
-        ...(appointment.doctorHospital.isPrivate
-          ? { address: `${appointment.doctorHospital.streetAddress}, ${appointment.doctorHospital.city}` }
-          : { hospital: appointment.doctorHospital.hospital?.name, city: appointment.doctorHospital.hospital?.city }
+        doctorHospitalId: doctorHospital.id,
+        isPrivate: doctorHospital.isPrivate,
+        ...(doctorHospital.isPrivate
+          ? { address: `${doctorHospital.streetAddress}, ${doctorHospital.city}` }
+          : { hospital: doctorHospital.hospital?.name, city: doctorHospital.hospital?.city }
         )
       }
     };
