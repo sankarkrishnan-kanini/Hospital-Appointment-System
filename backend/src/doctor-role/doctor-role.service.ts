@@ -10,13 +10,15 @@ import { GenerateTimeSlotsDto } from '../doctor-role/DTOS/generateTimeSlotsDto';
 import { MarkUnavailabilityDto } from '../doctor-role/DTOS/markUnavailabilityDto';
 import { NotificationService } from '../notification-module/notification.service';
 import {QualificationDTO} from '../doctor-role/DTOS/QualificationDTO';
+import { MailService } from '../mail/mail.service';
 
 @Injectable()
 export class DoctorRoleService {
 
   constructor(
     private readonly prisma: PrismaService,
-    private readonly notificationService: NotificationService
+    private readonly notificationService: NotificationService,
+    private readonly mailService: MailService,
   ) {}
 
   async setupProfile(userId: number, dto: SetupProfileDto, files: Express.Multer.File[]) {
@@ -121,8 +123,6 @@ export class DoctorRoleService {
     };
   }
 
-  // ─── UPDATE BASIC INFO (AFTER VERIFICATION) ──────────────────────────────────
-
   async updateProfile(userId: number, dto: UpdateDoctorSetupProfileDTO) {
     const doctor = await this.prisma.doctor.findUnique({ where: { userId } });
     if (!doctor) throw new NotFoundException(`Doctor profile not found for user ${userId}`);
@@ -154,7 +154,6 @@ export class DoctorRoleService {
     return { buffer: Buffer.isBuffer(document.fileUrl) ? document.fileUrl : Buffer.from(document.fileUrl) };
   }
 
-  // ─── REQUEST VERIFICATION ────────────────────────────────────────────────────
 
   async requestVerification(userId: number) {
     const doctor = await this.prisma.doctor.findUnique({
@@ -198,7 +197,6 @@ export class DoctorRoleService {
     });
   }
 
-  // ─── REQUEST SPECIALIZATION ─────────────────────────────────────────────────
 
   async requestSpecialization(userId: number, specializationId: number, file: Express.Multer.File) {
     const doctor = await this.prisma.doctor.findUnique({ where: { userId } });
@@ -451,6 +449,14 @@ export class DoctorRoleService {
               `${appt.doctorHospital.doctor.firstName} ${appt.doctorHospital.doctor.lastName}`,
               slot.startTime
             );
+            await this.mailService.sendUnavailabilityCancellation(
+              appt.client.email,
+              `${appt.client.firstName} ${appt.client.lastName}`,
+              `${appt.doctorHospital.doctor.firstName} ${appt.doctorHospital.doctor.lastName}`,
+              slot.startTime,
+              isFullDay,
+              dto.reason,
+            ).catch(() => {});
           }
 
           await tx.timeSlot.update({ where: { id: slot.id }, data: { isBooked: false } });

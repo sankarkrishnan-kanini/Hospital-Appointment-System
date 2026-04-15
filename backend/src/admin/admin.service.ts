@@ -10,7 +10,7 @@ export class AdminService {
     private readonly notificationService: NotificationService
   ) {}
 
-  // ─── USER MANAGEMENT ─────────────────────────────────────────────────────────
+  
 
   async getAllUsers() {
     const users = await this.prisma.user.findMany();
@@ -41,7 +41,7 @@ export class AdminService {
     return { id: updated.id, email: updated.email, role: updated.role, isActive: updated.isActive };
   }
 
-  // ─── DOCTOR MANAGEMENT ───────────────────────────────────────────────────────
+ 
 
   async getAllDoctors() {
     const doctors = await this.prisma.doctor.findMany({
@@ -151,8 +151,7 @@ export class AdminService {
     return { id: doctor.id, firstName: doctor.firstName, lastName: doctor.lastName, isVerified: true, verifiedAt: new Date() };
   }
 
-  // ─── APPOINTMENT MANAGEMENT ──────────────────────────────────────────────────
-
+ 
   async getAllAppointments() {
     return this.prisma.appointment.findMany({
       include: {
@@ -179,7 +178,6 @@ export class AdminService {
     return appointment;
   }
 
-  // ─── PATIENT MANAGEMENT ──────────────────────────────────────────────────────
 
   async getAllPatients() {
     const patients = await this.prisma.clientAccount.findMany({ include: { user: true } });
@@ -220,7 +218,6 @@ export class AdminService {
     };
   }
 
-  // ─── SPECIALIZATION REQUESTS ─────────────────────────────────────────────────
 
   async getSpecializationRequests() {
     const documents = await this.prisma.doctorDocument.findMany({

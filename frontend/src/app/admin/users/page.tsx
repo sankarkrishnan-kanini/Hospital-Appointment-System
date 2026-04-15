@@ -82,7 +82,6 @@ export default function AdminUsersPage() {
         </header>
 
         <div className="flex-1 p-6 space-y-5">
-          {/* Search */}
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex items-center gap-3">
             <span className="text-gray-400">🔍</span>
             <input
@@ -96,8 +95,6 @@ export default function AdminUsersPage() {
               <button onClick={() => setSearch('')} className="text-gray-400 hover:text-gray-600 text-xs">Clear</button>
             )}
           </div>
-
-          {/* Stats row */}
           <div className="grid grid-cols-3 gap-4">
             {[
               { label: 'Admins', value: users.filter((u: any) => u.role === 'admin').length, color: 'bg-blue-50 text-blue-600' },
@@ -111,7 +108,6 @@ export default function AdminUsersPage() {
             ))}
           </div>
 
-          {/* Table */}
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
             {isLoading ? (
               <div className="flex items-center justify-center py-16">

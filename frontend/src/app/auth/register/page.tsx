@@ -44,7 +44,6 @@ export default function RegisterPage() {
   return (
     <div className="min-h-screen bg-white font-sans">
 
-      {/* NAVBAR */}
       <nav className="sticky top-0 z-40 bg-white border-b border-gray-100 shadow-sm">
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -72,7 +71,7 @@ export default function RegisterPage() {
         </div>
       </nav>
 
-      {/* HERO */}
+     
       <section className="bg-gradient-to-br from-[#eef3ff] to-[#f8f9ff] py-16">
         <div className="max-w-7xl mx-auto px-6 flex flex-col lg:flex-row items-center gap-12">
           <div className="flex-1 space-y-6">
@@ -123,7 +122,7 @@ export default function RegisterPage() {
         </div>
       </section>
 
-      {/* REGISTER MODAL — always open */}
+     
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
         <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md p-8 relative">
           <Link href="/auth/login"
@@ -138,7 +137,7 @@ export default function RegisterPage() {
           </div>
 
           <form onSubmit={handleSubmit((data) => mutate(data))} className="space-y-4">
-            {/* Role selector */}
+           
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">I want to</label>
               <div className="grid grid-cols-2 gap-3">

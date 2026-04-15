@@ -16,9 +16,6 @@ import { RoleGuard } from 'src/auth/role.guard';
 export class OfficeHospitalController {
 
   constructor(private readonly officeHospitalService: OfficeHospitalService) {}
-
-  // ─── OFFICE ───────────────────────────────────────────────────────────────────
-
   @Post('offices')
   createOffice(@Body() dto: CreateOfficeDTO) {
     return this.officeHospitalService.createOffice(dto);
@@ -55,7 +52,6 @@ export class OfficeHospitalController {
   ) {
     return this.officeHospitalService.deleteOffice(id);
   }
-  // ─── HOSPITAL ─────────────────────────────────────────────────────────────────
 
   @Post('offices/:officeId/hospitals')
   createHospital(

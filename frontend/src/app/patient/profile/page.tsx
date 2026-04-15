@@ -62,7 +62,7 @@ export default function PatientProfilePage() {
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#2d6be4]" />
             </div>
           ) : profile ? (
-            // View Profile
+         
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8">
               <div className="flex items-center gap-4 mb-6">
                 <div className="w-16 h-16 bg-[#eef3ff] rounded-full flex items-center justify-center">
@@ -88,7 +88,7 @@ export default function PatientProfilePage() {
               </div>
             </div>
           ) : (
-            // Create Profile Form
+          
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8">
               <div className="mb-6">
                 <h2 className="text-lg font-semibold text-gray-900">Complete Your Profile</h2>

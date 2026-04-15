@@ -211,6 +211,7 @@ model Appointment {
   durationInMinutes    Int
   appointmentStatusId  Int
   appointmentTakenDate DateTime
+  consultationFee      Float
   cancellationReason   String?
   createdAt            DateTime  @default(now())
   updatedAt            DateTime  @updatedAt

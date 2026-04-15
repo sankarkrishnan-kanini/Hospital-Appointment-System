@@ -6,8 +6,12 @@ import { useQuery } from '@tanstack/react-query';
 import { getDoctorProfileApi } from '@/lib/api/doctor.api';
 import {
   LayoutDashboard, Users, Stethoscope, UserRound, CalendarDays,
-  Building2, GraduationCap, Clock, MapPin, Search, LogOut, Lock, BarChart2
+
+  Building2, GraduationCap, Clock, MapPin, Search, LogOut, Lock, BarChart2,
+  Bell
 } from 'lucide-react';
+import { useNotifications } from '@/hooks/useNotifications';
+import { useState,useEffect,useRef } from 'react';
 
 interface NavItem {
   label: string;

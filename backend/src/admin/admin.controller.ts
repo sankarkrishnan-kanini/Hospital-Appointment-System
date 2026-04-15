@@ -15,8 +15,6 @@ export class AdminController {
 
   constructor(private readonly adminService: AdminService) {}
 
-  // ─── USER MANAGEMENT ─────────────────────────────────────────────────────────
-
   @Get('users')
   getAllUsers() {
     return this.adminService.getAllUsers();
@@ -35,8 +33,6 @@ export class AdminController {
   ) {
     return this.adminService.activateUser(id);
   }
-
-  // ─── DOCTOR MANAGEMENT ───────────────────────────────────────────────────────
 
   @Get('doctors')
   getAllDoctors() {
@@ -73,8 +69,6 @@ export class AdminController {
     return this.adminService.verifyDoctor(id);
   }
 
-  // ─── APPOINTMENT MANAGEMENT ──────────────────────────────────────────────────
-
   @Get('appointments')
   getAllAppointments() {
     return this.adminService.getAllAppointments();
@@ -87,8 +81,6 @@ export class AdminController {
     return this.adminService.getAppointmentById(id);
   }
 
-  // ─── PATIENT MANAGEMENT ──────────────────────────────────────────────────────
-
   @Get('patients')
   getAllPatients() {
     return this.adminService.getAllPatients();
@@ -100,8 +92,6 @@ export class AdminController {
   ) {
     return this.adminService.getPatientById(id);
   }
-
-  // ─── SPECIALIZATION REQUESTS ─────────────────────────────────────────────────
 
   @Get('specialization-requests')
   getSpecializationRequests() {
