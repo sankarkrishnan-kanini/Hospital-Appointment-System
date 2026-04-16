@@ -5,9 +5,9 @@ import { useAuthStore } from '@/store/auth.store';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import Sidebar from '@/components/Sidebar';
-import NotificationBell from '@/components/NotificationBell';
 import { Search, X, ChevronRight, Clock, DollarSign } from 'lucide-react';
-import { searchDoctorsApi, getDoctorProfileApi, getAvailableTimeSlotsApi, bookAppointmentApi } from '@/lib/api/patient.api';
+import { searchDoctorsApi, getAvailableTimeSlotsApi, bookAppointmentApi, getSpecializationsApi } from '@/lib/api/patient.api';
+import PatientTopBar from '@/components/PatientTopBar';
 import toast from 'react-hot-toast';
 
 const navItems = [
@@ -15,14 +15,6 @@ const navItems = [
   { label: 'Find Doctors', href: '/patient/doctors', icon: '' },
   { label: 'My Appointments', href: '/patient/appointments', icon: '' },
   { label: 'My Profile', href: '/patient/profile', icon: '' },
-];
-
-const SPECIALIZATIONS = [
-  { id: 1, name: 'Cardiology' }, { id: 2, name: 'Neurology' },
-  { id: 3, name: 'Dermatology' }, { id: 4, name: 'Orthopedics' },
-  { id: 5, name: 'Pediatrics' }, { id: 6, name: 'Gynecology' },
-  { id: 7, name: 'Ophthalmology' }, { id: 8, name: 'Psychiatry' },
-  { id: 9, name: 'Radiology' }, { id: 10, name: 'General Surgery' },
 ];
 
 export default function FindDoctorsPage() {
@@ -33,7 +25,20 @@ export default function FindDoctorsPage() {
   const [city, setCity] = useState('');
   const [specializationId, setSpecializationId] = useState<number | ''>('');
   const [maxFee, setMaxFee] = useState('');
+  const [insurance, setInsurance] = useState('');
   const [searched, setSearched] = useState(false);
+
+  const { data: specsRes } = useQuery({
+    queryKey: ['patient-specializations'],
+    queryFn: getSpecializationsApi,
+    retry: false,
+  });
+
+  const SPECIALIZATIONS = Array.isArray(specsRes?.data)
+    ? specsRes.data.map((s: any) => ({ id: s.id, name: s.specializationName }))
+    : [];
+
+
   const [selectedDoctor, setSelectedDoctor] = useState<any>(null);
   const [selectedPractice, setSelectedPractice] = useState<any>(null);
   const [selectedSlot, setSelectedSlot] = useState<number | null>(null);
@@ -52,6 +57,7 @@ export default function FindDoctorsPage() {
       ...(city && { city }),
       ...(specializationId && { specializationId }),
       ...(maxFee && { maxFee: Number(maxFee) }),
+      ...(insurance && { insurance }),
     }),
     enabled: false,
     retry: false,
@@ -121,19 +127,15 @@ export default function FindDoctorsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className="min-h-screen bg-gray-50 flex pt-12">
+      <PatientTopBar />
       <Sidebar items={navItems} />
       <main className="flex-1 flex flex-col ml-60">
-        <header className="h-16 bg-white border-b border-gray-100 flex items-center justify-between px-6 sticky top-0 z-30">
-          <h1 className="text-base font-semibold text-gray-900">Find Doctors</h1>
-          <NotificationBell />
-        </header>
-
         <div className="flex-1 p-6 space-y-5">
         
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
             <h3 className="text-sm font-semibold text-gray-800 mb-4">Search Doctors</h3>
-            <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
               <div>
                 <label className="block text-xs font-medium text-gray-600 mb-1">Specialization</label>
                 <select value={specializationId} onChange={e => setSpecializationId(e.target.value ? Number(e.target.value) : '')}
@@ -150,6 +152,11 @@ export default function FindDoctorsPage() {
               <div>
                 <label className="block text-xs font-medium text-gray-600 mb-1">Max Fee (₹)</label>
                 <input type="number" value={maxFee} onChange={e => setMaxFee(e.target.value)} placeholder="e.g. 500"
+                  className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#2d6be4]" />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Insurance</label>
+                <input value={insurance} onChange={e => setInsurance(e.target.value)} placeholder="e.g. Star Health"
                   className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#2d6be4]" />
               </div>
               <div className="flex items-end">
@@ -185,8 +192,8 @@ export default function FindDoctorsPage() {
                     <div className="flex-1">
                       <h3 className="font-semibold text-gray-900">Dr. {doc.firstName} {doc.lastName}</h3>
                       <div className="flex flex-wrap gap-1 mt-1">
-                        {doc.specializations?.map((s: string) => (
-                          <span key={s} className="text-xs bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full">{s}</span>
+                        {[...new Set(doc.specializations as string[])]?.map((s: string, i: number) => (
+                          <span key={`${s}-${i}`} className="text-xs bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full">{s}</span>
                         ))}
                       </div>
                     </div>
@@ -198,7 +205,9 @@ export default function FindDoctorsPage() {
                       <div key={p.doctorHospitalId} className="bg-gray-50 rounded-xl p-3 flex items-center justify-between">
                         <div>
                           <p className="text-xs font-medium text-gray-700">
-                            {p.isPrivate ? 'Private Practice' : p.hospital?.name}
+                            {p.isPrivate
+                              ? p.city ? `Private · ${p.city}` : 'Private Practice'
+                              : p.hospital?.name}
                           </p>
                           <div className="flex items-center gap-3 mt-1">
                             <span className="flex items-center gap-1 text-xs text-gray-400">
@@ -245,7 +254,9 @@ export default function FindDoctorsPage() {
                 <div className="bg-gray-50 rounded-xl p-4">
                   <p className="text-xs text-gray-400 mb-1">Practice</p>
                   <p className="text-sm font-medium text-gray-800">
-                    {selectedPractice.isPrivate ? 'Private Practice' : selectedPractice.hospital?.name}
+                    {selectedPractice.isPrivate
+                      ? selectedPractice.city ? `Private · ${selectedPractice.city}` : 'Private Practice'
+                      : selectedPractice.hospital?.name}
                   </p>
                   <div className="flex gap-4 mt-2">
                     <span className="flex items-center gap-1 text-xs text-gray-500">
