@@ -249,7 +249,6 @@ export class PatientService {
           appointmentTakenDate: new Date(),
           consultationFee,
         },
-        include: { status: true, timeSlot: true, doctorHospital: { include: { doctor: true, hospital: true } } }
       });
 
       await tx.timeSlot.update({ where: { id: dto.timeSlotId }, data: { isBooked: true } });
@@ -257,7 +256,7 @@ export class PatientService {
       return created;
     });
 
-    const hospitalName = appointment.doctorHospital.isPrivate ? 'Private Practice' : (appointment.doctorHospital.hospital?.name || 'Hospital');
+    const hospitalName = doctorHospital.isPrivate ? 'Private Practice' : (doctorHospital.hospital?.name || 'Hospital');
 
     await this.notificationService.notifyAppointmentBooked(
       client.userId,
@@ -297,12 +296,12 @@ export class PatientService {
       probableStartTime: appointment.probableStartTime,
       durationInMinutes: appointment.durationInMinutes,
       appointmentTakenDate: appointment.appointmentTakenDate,
-      status: appointment.status.status,
+      status: activeStatus.status,
       specialization: specialization.specializationName,
       timeSlot: {
-        id: appointment.timeSlot.id,
-        startTime: appointment.timeSlot.startTime,
-        endTime: appointment.timeSlot.endTime
+        id: timeSlot.id,
+        startTime: timeSlot.startTime,
+        endTime: timeSlot.endTime
       },
       doctor: {
         id: doctor.id,
@@ -310,11 +309,11 @@ export class PatientService {
         lastName: doctor.lastName
       },
       practice: {
-        doctorHospitalId: appointment.doctorHospital.id,
-        isPrivate: appointment.doctorHospital.isPrivate,
-        ...(appointment.doctorHospital.isPrivate
-          ? { address: `${appointment.doctorHospital.streetAddress}, ${appointment.doctorHospital.city}` }
-          : { hospital: appointment.doctorHospital.hospital?.name, city: appointment.doctorHospital.hospital?.city }
+        doctorHospitalId: doctorHospital.id,
+        isPrivate: doctorHospital.isPrivate,
+        ...(doctorHospital.isPrivate
+          ? { address: `${doctorHospital.streetAddress}, ${doctorHospital.city}` }
+          : { hospital: doctorHospital.hospital?.name, city: doctorHospital.hospital?.city }
         )
       }
     };

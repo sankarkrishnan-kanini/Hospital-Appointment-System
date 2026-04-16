@@ -49,17 +49,14 @@ export default function PatientDashboard() {
       <Sidebar items={navItems} />
       <main className="flex-1 flex flex-col ml-60">
         <header className="h-16 bg-white border-b border-gray-100 flex items-center justify-between px-6 sticky top-0 z-30">
-          <h1 className="text-base font-semibold text-gray-900">Dashboard</h1>
+          <div>
+            <h1 className="text-base font-semibold text-gray-900">Dashboard</h1>
+            <p className="text-xs text-gray-500">Welcome back, {user.email} — good to see you</p>
+          </div>
           <NotificationBell />
         </header>
 
         <div className="flex-1 p-6 space-y-5">
-          <div className="bg-[#2d6be4] rounded-2xl p-6 text-white">
-            <h2 className="text-lg font-semibold">Welcome back</h2>
-            <p className="text-blue-100 text-sm mt-1">{user.email}</p>
-          </div>
-
-      
           {profileRes && !profile && (
             <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 flex items-center justify-between">
               <div>

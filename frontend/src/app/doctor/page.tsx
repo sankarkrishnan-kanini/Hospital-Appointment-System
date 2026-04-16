@@ -98,16 +98,14 @@ export default function DoctorDashboard() {
       <Sidebar items={navItems} />
       <main className="flex-1 flex flex-col ml-60">
         <header className="h-16 bg-white border-b border-gray-100 flex items-center justify-between px-6 sticky top-0 z-30">
-          <h1 className="text-base font-semibold text-gray-900">Dashboard</h1>
+          <div>
+            <h1 className="text-base font-semibold text-gray-900">Dashboard</h1>
+            <p className="text-xs text-gray-500">Welcome, Dr. {doctor?.firstName} {doctor?.lastName} — manage your practice</p>
+          </div>
           <NotificationBell />
         </header>
 
         <div className="flex-1 p-6 space-y-5">
-          <div className="bg-[#2d6be4] rounded-2xl p-6 text-white">
-            <h2 className="text-lg font-semibold">Welcome, Dr. {doctor?.firstName} {doctor?.lastName}</h2>
-            <p className="text-blue-100 text-sm mt-1">Manage your practice and appointments.</p>
-          </div>
-
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             {stats.map((s) => (
               <div key={s.label} className="bg-white rounded-xl p-5 border border-gray-100 shadow-sm">
