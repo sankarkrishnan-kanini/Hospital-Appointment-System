@@ -10,8 +10,6 @@ export class NotificationService {
     return this.prisma.notification.create({ data: { userId, message } });
   }
 
-  // ─── TRIGGERS ─────────────────────────────────────────────────────────────────
-
   async notifyAppointmentBooked(patientUserId: number, doctorUserId: number, doctorName: string, patientName: string, hospitalName: string, date: Date) {
     const formattedDate = date.toUTCString();
     await this.notify(patientUserId, `Your appointment with Dr. ${doctorName} at ${hospitalName} on ${formattedDate} has been booked`);
@@ -62,8 +60,6 @@ export class NotificationService {
   async notifySpecializationRejected(doctorUserId: number, specializationName: string) {
     await this.notify(doctorUserId, `Your specialization request for ${specializationName} has been rejected`);
   }
-
-  // ─── VIEW & READ ──────────────────────────────────────────────────────────────
 
   async getNotifications(userId: number) {
     return this.prisma.notification.findMany({

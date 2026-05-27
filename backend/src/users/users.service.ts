@@ -4,15 +4,17 @@ import { CreateUserDTO } from './DTOS/CreateUserDTO';
 import { UpdateUserDTO } from './DTOS/UpdateUserDTO';
 import { User } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
+import { MailService } from '../mail/mail.service';
 
 @Injectable()
 export class UsersService {
 
 
-    constructor(private readonly prisma:PrismaService)
-    {
-       
-    }
+    constructor(
+      private readonly prisma: PrismaService,
+      private readonly mailService: MailService,
+    ) {}
+
     async createUser(dto:CreateUserDTO,role:string):Promise<User>
     {
         const check =await this.prisma.user.findFirst({
@@ -42,6 +44,8 @@ export class UsersService {
 			
 		}
 		);
+
+		await this.mailService.sendWelcome(created.email, created.email, role).catch(() => {});
 		
 		return created;
         

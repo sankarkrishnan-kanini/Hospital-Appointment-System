@@ -4,25 +4,19 @@ import { useAuthStore } from '@/store/auth.store';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import Sidebar from '@/components/Sidebar';
+import DoctorTopBar from '@/components/DoctorTopBar';
 import { Pencil, Check, X, Clock } from 'lucide-react';
-import { getDoctorProfileApi, setupProfileApi, requestVerificationApi, updateDoctorProfileApi } from '@/lib/api/doctor.api';
+import { getDoctorProfileApi, setupProfileApi, requestVerificationApi, updateDoctorProfileApi, requestSpecializationApi, getSpecializationsApi } from '@/lib/api/doctor.api';
 import toast from 'react-hot-toast';
 
 const navItems = [
   { label: 'Dashboard', href: '/doctor', icon: '' },
+  { label: 'Analytics', href: '/doctor/analytics', icon: '' },
   { label: 'My Profile', href: '/doctor/profile', icon: '' },
   { label: 'Offices', href: '/doctor/offices', icon: '' },
   { label: 'Availability', href: '/doctor/availability', icon: '' },
   { label: 'Time Slots', href: '/doctor/timeslots', icon: '' },
   { label: 'Appointments', href: '/doctor/appointments', icon: '' },
-];
-
-const SPECIALIZATIONS = [
-  { id: 1, name: 'Cardiology' }, { id: 2, name: 'Neurology' },
-  { id: 3, name: 'Dermatology' }, { id: 4, name: 'Orthopedics' },
-  { id: 5, name: 'Pediatrics' }, { id: 6, name: 'Gynecology' },
-  { id: 7, name: 'Ophthalmology' }, { id: 8, name: 'Psychiatry' },
-  { id: 9, name: 'Radiology' }, { id: 10, name: 'General Surgery' },
 ];
 
 export default function DoctorProfilePage() {
@@ -38,9 +32,12 @@ export default function DoctorProfilePage() {
   const [documentTypes, setDocumentTypes] = useState(['']);
   const [files, setFiles] = useState<File[]>([]);
 
-  // Edit mode state (for verified doctors)
   const [editing, setEditing] = useState(false);
   const [editForm, setEditForm] = useState({ firstName: '', lastName: '', professionalStatement: '', practicingFrom: '' });
+
+  // Request specialization state
+  const [specRequestId, setSpecRequestId] = useState<number | null>(null);
+  const [specFile, setSpecFile] = useState<File | null>(null);
 
   useEffect(() => {
     if (!_hasHydrated) return;
@@ -51,7 +48,20 @@ export default function DoctorProfilePage() {
     queryKey: ['doctor-profile'],
     queryFn: getDoctorProfileApi,
     retry: false,
+    staleTime: 0,
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
   });
+
+  const { data: specsRes } = useQuery({
+    queryKey: ['specializations'],
+    queryFn: getSpecializationsApi,
+    retry: false,
+  });
+
+  const SPECIALIZATIONS: { id: number; name: string }[] = Array.isArray(specsRes?.data)
+    ? specsRes.data.map((s: any) => ({ id: s.id, name: s.specializationName }))
+    : [];
 
   const { mutate: setupProfile, isPending: submitting } = useMutation({
     mutationFn: setupProfileApi,
@@ -90,14 +100,30 @@ export default function DoctorProfilePage() {
     },
   });
 
+  const { mutate: requestSpecialization, isPending: requestingSpec } = useMutation({
+    mutationFn: ({ id, file }: { id: number; file: File }) => {
+      const fd = new FormData();
+      fd.append('file', file);
+      return requestSpecializationApi(id, fd);
+    },
+    onSuccess: () => {
+      toast.success('Specialization request submitted! Awaiting admin approval.');
+      setSpecRequestId(null);
+      setSpecFile(null);
+      queryClient.invalidateQueries({ queryKey: ['doctor-profile'] });
+    },
+    onError: (err: any) => {
+      const msg = err?.response?.data?.message || 'Failed to submit request';
+      toast.error(typeof msg === 'string' ? msg : msg[0]);
+    },
+  });
+
   if (!_hasHydrated || !user) return null;
 
   const doctor = profileRes?.data && !profileRes.data.statusCode ? profileRes.data : null;
   const isProfileSetup = !!doctor?.firstName;
-  const isVerified = doctor?.isVerified;
+  const isVerified = doctor?.isVerified === true || doctor?.isVerified === 1;
   const verificationRequested = doctor?.verificationRequested;
-
-  // Pre-fill edit form when doctor data loads
   const startEditing = () => {
     setEditForm({
       firstName: doctor?.firstName || '',
@@ -133,27 +159,29 @@ export default function DoctorProfilePage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex">
+      <div className="min-h-screen bg-gray-50 flex pt-12">
+        <DoctorTopBar />
         <Sidebar items={navItems} />
         <main className="flex-1 ml-60 flex items-center justify-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#2d6be4]" />
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600" />
         </main>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className="min-h-screen bg-gray-50 flex pt-12">
+      <DoctorTopBar />
       <Sidebar items={navItems} />
       <main className="flex-1 flex flex-col ml-60">
-        <header className="h-16 bg-white border-b border-gray-100 flex items-center justify-between px-6 sticky top-0 z-30">
+        <header className="h-16 bg-white border-b border-gray-100 flex items-center justify-between px-6 sticky top-12 z-30">
           <h1 className="text-base font-semibold text-gray-900">My Profile</h1>
           {isVerified && (
             <span className="text-xs bg-green-50 text-green-600 font-medium px-3 py-1 rounded-full">Verified</span>
           )}
         </header>
 
-        <div className="flex-1 p-6 space-y-5 max-w-3xl">
+        <div className="flex-1 p-8 space-y-5 max-w-7xl">
 
           {/* ── VERIFIED DOCTOR VIEW ── */}
           {isVerified && doctor && (
@@ -161,7 +189,7 @@ export default function DoctorProfilePage() {
               <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-4">
-                    <div className="w-14 h-14 bg-[#eef3ff] rounded-full flex items-center justify-center text-[#2d6be4] font-bold text-xl">
+                    <div className="w-14 h-14 bg-green-100 rounded-full flex items-center justify-center text-green-800 font-bold text-xl">
                       {doctor.firstName?.[0]}
                     </div>
                     <div>
@@ -172,13 +200,13 @@ export default function DoctorProfilePage() {
                               <label className="block text-xs font-medium text-gray-500 mb-1">First Name</label>
                               <input value={editForm.firstName}
                                 onChange={e => setEditForm({ ...editForm, firstName: e.target.value })}
-                                className="border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#2d6be4] w-full" />
+                                className="border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 w-full" />
                             </div>
                             <div>
                               <label className="block text-xs font-medium text-gray-500 mb-1">Last Name</label>
                               <input value={editForm.lastName}
                                 onChange={e => setEditForm({ ...editForm, lastName: e.target.value })}
-                                className="border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#2d6be4] w-full" />
+                                className="border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 w-full" />
                             </div>
                           </div>
                           <div>
@@ -186,13 +214,13 @@ export default function DoctorProfilePage() {
                             <textarea value={editForm.professionalStatement}
                               onChange={e => setEditForm({ ...editForm, professionalStatement: e.target.value })}
                               rows={2}
-                              className="border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#2d6be4] w-full resize-none" />
+                              className="border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 w-full resize-none" />
                           </div>
                           <div>
                             <label className="block text-xs font-medium text-gray-500 mb-1">Practicing From</label>
                             <input type="date" value={editForm.practicingFrom}
                               onChange={e => setEditForm({ ...editForm, practicingFrom: e.target.value })}
-                              className="border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#2d6be4] w-full" />
+                              className="border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 w-full" />
                           </div>
                         </div>
                       ) : (
@@ -209,7 +237,7 @@ export default function DoctorProfilePage() {
                     </div>
                   </div>
 
-                  {/* Edit / Save / Cancel buttons */}
+                 
                   <div className="flex gap-2 ml-4">
                     {editing ? (
                       <>
@@ -227,27 +255,25 @@ export default function DoctorProfilePage() {
                             }),
                           })}
                           disabled={updating}
-                          className="flex items-center gap-1.5 text-xs font-medium text-white bg-[#2d6be4] hover:bg-blue-700 px-3 py-2 rounded-xl transition disabled:opacity-60">
+                          className="flex items-center gap-1.5 text-xs font-medium text-white bg-green-700 hover:bg-green-800 px-3 py-2 rounded-xl transition disabled:opacity-60">
                           <Check size={13} /> {updating ? 'Saving...' : 'Save'}
                         </button>
                       </>
                     ) : (
                       <button onClick={startEditing}
-                        className="flex items-center gap-1.5 text-xs font-medium text-[#2d6be4] bg-blue-50 hover:bg-blue-100 px-3 py-2 rounded-xl transition">
+                        className="flex items-center gap-1.5 text-xs font-medium text-green-700 bg-green-50 hover:bg-green-100 px-3 py-2 rounded-xl transition">
                         <Pencil size={13} /> Edit Profile
                       </button>
                     )}
                   </div>
                 </div>
               </div>
-
-              {/* Specializations & Qualifications */}
               <div className="grid grid-cols-2 gap-4">
                 <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
                   <p className="text-xs font-medium text-gray-400 mb-3">Specializations</p>
                   <div className="flex flex-wrap gap-2">
-                    {doctor.specializations?.map((s: string) => (
-                      <span key={s} className="text-xs bg-blue-50 text-blue-600 px-2.5 py-1 rounded-full font-medium">{s}</span>
+                    {[...new Set(doctor.specializations as string[])]?.map((s: string, i: number) => (
+                      <span key={`spec-${i}`} className="text-xs bg-green-50 text-green-700 px-2.5 py-1 rounded-full font-medium">{s}</span>
                     ))}
                   </div>
                 </div>
@@ -269,10 +295,82 @@ export default function DoctorProfilePage() {
                 <p className="text-2xl font-bold text-gray-900">{doctor.documentCount}</p>
                 <p className="text-xs text-gray-400 mt-1">documents on file</p>
               </div>
+
+              {/* Request New Specialization */}
+              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <p className="text-sm font-semibold text-gray-800">Request New Specialization</p>
+                    <p className="text-xs text-gray-400 mt-0.5">Upload a supporting document to request a new specialization</p>
+                  </div>
+                </div>
+
+                {/* Pending requests */}
+                {doctor.pendingSpecializations?.length > 0 && (
+                  <div className="mb-4 space-y-2">
+                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Pending Approval</p>
+                    {doctor.pendingSpecializations.map((p: any) => (
+                        <div key={p.specializationId} className="flex items-center justify-between bg-amber-50 border border-amber-100 rounded-xl px-4 py-2.5">
+                          <div className="flex items-center gap-2">
+                            <span className="w-2 h-2 rounded-full bg-amber-400 flex-shrink-0" />
+                            <p className="text-sm font-medium text-gray-800">{p.specializationName}</p>
+                          </div>
+                          <span className="text-xs text-amber-600 font-semibold bg-amber-100 px-2.5 py-1 rounded-full">Awaiting Approval</span>
+                        </div>
+                      ))}
+                  </div>
+                )}
+
+                {/* Available specializations — exclude ones already assigned */}
+                <div className="grid grid-cols-3 lg:grid-cols-5 gap-2 mb-4">
+                  {SPECIALIZATIONS.filter(s =>
+                    !(doctor.specializations as string[])?.includes(s.name) &&
+                    !doctor.pendingSpecializations?.some((p: any) => p.specializationId === s.id)
+                  ).map(spec => (
+                    <button key={spec.id} type="button"
+                      onClick={() => setSpecRequestId(specRequestId === spec.id ? null : spec.id)}
+                      className={`p-2.5 rounded-xl border-2 text-xs font-medium transition text-center
+                        ${specRequestId === spec.id
+                          ? 'border-green-600 bg-green-50 text-green-700'
+                          : 'border-gray-100 text-gray-600 hover:border-gray-200'}`}>
+                      {spec.name}
+                    </button>
+                  ))}
+                </div>
+
+                {specRequestId && (
+                  <div className="border border-green-100 bg-green-50/40 rounded-xl p-4 space-y-3">
+                    <p className="text-xs font-medium text-gray-700">
+                      Upload supporting document for <span className="text-green-700">{SPECIALIZATIONS.find(s => s.id === specRequestId)?.name}</span>
+                    </p>
+                    <div className="border-2 border-dashed border-green-200 rounded-xl p-4 text-center">
+                      <input type="file" accept=".jpg,.jpeg,.png,.pdf"
+                        onChange={e => setSpecFile(e.target.files?.[0] || null)}
+                        className="hidden" id="spec-file-upload" />
+                      <label htmlFor="spec-file-upload" className="cursor-pointer">
+                        <p className="text-sm font-medium text-gray-600">Click to upload</p>
+                        <p className="text-xs text-gray-400 mt-0.5">jpg, jpeg, png, pdf — max 2MB</p>
+                      </label>
+                      {specFile && <p className="text-xs text-green-600 mt-2">✓ {specFile.name}</p>}
+                    </div>
+                    <div className="flex gap-2">
+                      <button onClick={() => { setSpecRequestId(null); setSpecFile(null); }}
+                        className="flex-1 border border-gray-200 text-gray-600 py-2 rounded-xl text-xs font-semibold hover:bg-gray-50 transition">
+                        Cancel
+                      </button>
+                      <button
+                        onClick={() => { if (specFile) requestSpecialization({ id: specRequestId, file: specFile }); else toast.error('Please upload a document'); }}
+                        disabled={requestingSpec}
+                        className="flex-1 bg-green-700 text-white py-2 rounded-xl text-xs font-semibold hover:bg-green-800 transition disabled:opacity-60">
+                        {requestingSpec ? 'Submitting...' : 'Submit Request'}
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
             </>
           )}
 
-          {/* ── PENDING VERIFICATION ── */}
           {isProfileSetup && verificationRequested && !isVerified && (
             <div className="bg-white rounded-2xl border border-amber-200 shadow-sm p-8 text-center">
               <div className="w-14 h-14 bg-amber-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
@@ -288,64 +386,63 @@ export default function DoctorProfilePage() {
             </div>
           )}
 
-          {/* ── REQUEST VERIFICATION (profile done, not yet requested) ── */}
+     
           {isProfileSetup && !verificationRequested && !isVerified && (
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8 text-center">
               <h2 className="text-lg font-semibold text-gray-900">Profile Setup Complete</h2>
               <p className="text-gray-400 text-sm mt-2 mb-5">Click below to send your profile for admin verification.</p>
               <button onClick={() => requestVerification()} disabled={requesting}
-                className="bg-[#2d6be4] text-white font-medium px-8 py-2.5 rounded-xl hover:bg-blue-700 transition disabled:opacity-60 text-sm">
+                className="bg-green-700 text-white font-medium px-8 py-2.5 rounded-xl hover:bg-green-800 transition disabled:opacity-60 text-sm">
                 {requesting ? 'Sending...' : 'Request Verification'}
               </button>
             </div>
           )}
 
-          {/* ── SETUP FORM (new doctor) ── */}
+       
           {!isProfileSetup && !verificationRequested && !isVerified && (
             <>
-              <div className="bg-blue-50 border border-blue-100 rounded-2xl p-4">
-                <p className="text-sm font-medium text-blue-800">Complete your profile to get started</p>
-                <p className="text-xs text-blue-600 mt-0.5">Fill in your details, upload documents, then request verification.</p>
+              <div className="bg-green-50 border border-green-100 rounded-2xl p-4">
+                <p className="text-sm font-medium text-green-800">Complete your profile to get started</p>
+                <p className="text-xs text-green-600 mt-0.5">Fill in your details, upload documents, then request verification.</p>
               </div>
 
               <form onSubmit={handleSetupSubmit} className="space-y-5">
-                {/* Basic Info */}
+              
                 <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 space-y-4">
                   <h3 className="text-sm font-semibold text-gray-800">Basic Information</h3>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-xs font-medium text-gray-600 mb-1">First Name *</label>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">First Name <span className="text-red-400">*</span></label>
                       <input value={firstName} onChange={e => setFirstName(e.target.value)} required placeholder="e.g. Rahul"
-                        className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#2d6be4]" />
+                        className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-500" />
                     </div>
                     <div>
-                      <label className="block text-xs font-medium text-gray-600 mb-1">Last Name *</label>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">Last Name <span className="text-red-400">*</span></label>
                       <input value={lastName} onChange={e => setLastName(e.target.value)} required placeholder="e.g. Sharma"
-                        className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#2d6be4]" />
+                        className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-500" />
                     </div>
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-gray-600 mb-1">Professional Statement</label>
                     <textarea value={professionalStatement} onChange={e => setProfessionalStatement(e.target.value)}
                       placeholder="e.g. Experienced cardiologist with 10+ years..." rows={3}
-                      className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#2d6be4] resize-none" />
+                      className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 resize-none" />
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-gray-600 mb-1">Practicing From</label>
                     <input type="date" value={practicingFrom} onChange={e => setPracticingFrom(e.target.value)}
-                      className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#2d6be4]" />
+                      className="w-full border-2 border-gray-200 rounded-2xl px-5 py-4 text-base font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 min-w-[220px] cursor-pointer h-14 bg-gray-50 hover:bg-white transition" />
                   </div>
                 </div>
 
-                {/* Specializations */}
                 <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-                  <h3 className="text-sm font-semibold text-gray-800 mb-4">Specializations *</h3>
+                  <h3 className="text-sm font-semibold text-gray-800 mb-4">Specializations <span className="text-red-400">*</span></h3>
                   <div className="grid grid-cols-3 lg:grid-cols-5 gap-2">
                     {SPECIALIZATIONS.map(spec => (
                       <button key={spec.id} type="button" onClick={() => toggleSpec(spec.id)}
                         className={`p-2.5 rounded-xl border-2 text-xs font-medium transition text-center
                           ${selectedSpecs.includes(spec.id)
-                            ? 'border-[#2d6be4] bg-blue-50 text-[#2d6be4]'
+                            ? 'border-green-600 bg-green-50 text-green-700'
                             : 'border-gray-100 text-gray-600 hover:border-gray-200'}`}>
                         {spec.name}
                       </button>
@@ -353,42 +450,48 @@ export default function DoctorProfilePage() {
                   </div>
                 </div>
 
-                {/* Qualifications */}
+             
                 <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 space-y-3">
                   <div className="flex items-center justify-between">
-                    <h3 className="text-sm font-semibold text-gray-800">Qualifications *</h3>
+                    <h3 className="text-sm font-semibold text-gray-800">Qualifications <span className="text-red-400">*</span></h3>
                     <button type="button" onClick={() => setQualifications([...qualifications, { qualificationName: '', instituteName: '', procurementYear: '' }])}
-                      className="text-xs text-[#2d6be4] hover:underline">+ Add</button>
+                      className="text-xs text-green-700 hover:underline">+ Add</button>
                   </div>
                   {qualifications.map((q, i) => (
-                    <div key={i} className="grid grid-cols-3 gap-3">
+                    <div key={i} className="grid grid-cols-[1fr_1fr_2fr] gap-4 items-center">
                       <input placeholder="Qualification (e.g. MBBS)" value={q.qualificationName}
                         onChange={e => { const u = [...qualifications]; u[i].qualificationName = e.target.value; setQualifications(u); }}
-                        className="border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#2d6be4]" />
+                        className="border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-500" />
                       <input placeholder="Institute (e.g. AIIMS)" value={q.instituteName}
                         onChange={e => { const u = [...qualifications]; u[i].instituteName = e.target.value; setQualifications(u); }}
-                        className="border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#2d6be4]" />
-                      <input type="date" value={q.procurementYear}
-                        onChange={e => { const u = [...qualifications]; u[i].procurementYear = e.target.value; setQualifications(u); }}
-                        className="border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#2d6be4]" />
+                        className="border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-500" />
+                      <div className="flex gap-2">
+                        <input type="date" value={q.procurementYear}
+                          onChange={e => { const u = [...qualifications]; u[i].procurementYear = e.target.value; setQualifications(u); }}
+                          className="flex-1 border-2 border-gray-200 rounded-2xl px-5 py-4 text-base font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 min-w-[220px] cursor-pointer h-14 bg-gray-50 hover:bg-white transition" />
+                        {i > 0 && (
+                          <button type="button" onClick={() => setQualifications(qualifications.filter((_, idx) => idx !== i))}
+                            className="text-gray-400 hover:text-gray-600 px-2 text-lg font-bold">−</button>
+                        )}
+                      </div>
                     </div>
                   ))}
                 </div>
 
-                {/* Documents */}
+                
                 <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 space-y-3">
                   <div className="flex items-center justify-between">
-                    <h3 className="text-sm font-semibold text-gray-800">Documents *</h3>
+                    <h3 className="text-sm font-semibold text-gray-800">Documents <span className="text-red-400">*</span></h3>
                     <button type="button" onClick={() => setDocumentTypes([...documentTypes, ''])}
-                      className="text-xs text-[#2d6be4] hover:underline">+ Add Type</button>
+                      className="text-xs text-green-700 hover:underline">+ Add Type</button>
                   </div>
                   <p className="text-xs text-gray-400">Upload medical license, degree certificates (jpg, jpeg, png, pdf — max 2MB)</p>
                   {documentTypes.map((dt, i) => (
                     <input key={i} placeholder={`Document type (e.g. Medical License)`} value={dt}
                       onChange={e => { const u = [...documentTypes]; u[i] = e.target.value; setDocumentTypes(u); }}
-                      className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#2d6be4]" />
+                      className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-500" />
                   ))}
-                  <div className="border-2 border-dashed border-gray-200 rounded-xl p-6 text-center">
+                  <div className="border-2 border-dashed border-green-200 rounded-xl p-6 text-center bg-green-50/40">
                     <input type="file" multiple accept=".jpg,.jpeg,.png,.pdf" onChange={e => { if (e.target.files) setFiles(Array.from(e.target.files)); }}
                       className="hidden" id="file-upload" />
                     <label htmlFor="file-upload" className="cursor-pointer">
@@ -404,7 +507,7 @@ export default function DoctorProfilePage() {
                 </div>
 
                 <button type="submit" disabled={submitting}
-                  className="w-full bg-[#2d6be4] text-white py-3 rounded-2xl text-sm font-medium hover:bg-blue-700 transition disabled:opacity-60">
+                  className="w-full bg-green-700 text-white py-3 rounded-2xl text-sm font-medium hover:bg-green-800 transition disabled:opacity-60">
                   {submitting ? 'Submitting...' : 'Submit Profile & Request Verification'}
                 </button>
               </form>
@@ -415,3 +518,4 @@ export default function DoctorProfilePage() {
     </div>
   );
 }
+

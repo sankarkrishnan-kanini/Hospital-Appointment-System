@@ -11,6 +11,7 @@ import { getAllUsersApi, getAllDoctorsApi, getAllAppointmentsApi, getAllPatients
 
 const navItems = [
   { label: 'Dashboard', href: '/admin', icon: '' },
+  { label: 'Analytics', href: '/admin/analytics', icon: '' },
   { label: 'Users', href: '/admin/users', icon: '' },
   { label: 'Doctors', href: '/admin/doctors', icon: '' },
   { label: 'Patients', href: '/admin/patients', icon: '' },
@@ -43,31 +44,28 @@ export default function AdminDashboard() {
   const pending = Array.isArray(pendingRes?.data) ? pendingRes.data : [];
 
   const stats = [
-    { label: 'Total Users', value: users.length, icon: <Users size={18} />, color: 'bg-blue-50 text-blue-600', border: 'border-l-blue-500' },
-    { label: 'Total Doctors', value: doctors.length, icon: <Stethoscope size={18} />, color: 'bg-green-50 text-green-600', border: 'border-l-green-500' },
-    { label: 'Total Patients', value: patients.length, icon: <UserRound size={18} />, color: 'bg-purple-50 text-purple-600', border: 'border-l-purple-500' },
-    { label: 'Appointments', value: appointments.length, icon: <CalendarDays size={18} />, color: 'bg-orange-50 text-orange-600', border: 'border-l-orange-500' },
+    { label: 'Total Users', value: users.length, icon: <Users size={18} /> },
+    { label: 'Total Doctors', value: doctors.length, icon: <Stethoscope size={18} /> },
+    { label: 'Total Patients', value: patients.length, icon: <UserRound size={18} /> },
+    { label: 'Appointments', value: appointments.length, icon: <CalendarDays size={18} /> },
   ];
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
       <Sidebar items={navItems} />
-      <main className="flex-1 flex flex-col ml-60">
-        <header className="h-16 bg-white border-b border-gray-100 flex items-center justify-between px-6 sticky top-0 z-30">
-          <h1 className="text-base font-semibold text-gray-900">Dashboard</h1>
-          <NotificationBell />
+      <main className="flex-1 flex flex-col ml-60 mt-12">
+        <header className="h-14 bg-white border-b border-gray-100 flex items-center px-6 sticky top-12 z-30">
+          <div>
+            <h1 className="text-base font-semibold text-gray-900">Dashboard</h1>
+            <p className="text-xs text-gray-500">Welcome back, Admin — here is your system overview</p>
+          </div>
         </header>
 
         <div className="flex-1 p-6 space-y-5">
-          <div className="bg-[#2d6be4] rounded-2xl p-6 text-white">
-            <h2 className="text-lg font-semibold">Welcome back, Admin</h2>
-            <p className="text-blue-100 text-sm mt-1">Here is an overview of your hospital system.</p>
-          </div>
-
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             {stats.map((s) => (
-              <div key={s.label} className={`bg-white rounded-xl p-5 border border-gray-100 border-l-4 ${s.border} shadow-sm`}>
-                <div className={`w-9 h-9 ${s.color} rounded-lg flex items-center justify-center mb-3`}>{s.icon}</div>
+              <div key={s.label} className="bg-white rounded-xl p-5 border border-gray-100 shadow-sm">
+                <div className="w-9 h-9 bg-[#eef3ff] text-[#2d6be4] rounded-lg flex items-center justify-center mb-3">{s.icon}</div>
                 <p className="text-2xl font-bold text-gray-900">{s.value}</p>
                 <p className="text-xs text-gray-400 mt-1">{s.label}</p>
               </div>
@@ -106,15 +104,15 @@ export default function AdminDashboard() {
               <h3 className="text-sm font-semibold text-gray-800 mb-4">Quick Actions</h3>
               <div className="space-y-1">
                 {[
-                  { label: 'Manage Doctors', href: '/admin/doctors', icon: <Stethoscope size={15} />, color: 'text-green-600 bg-green-50' },
-                  { label: 'Manage Patients', href: '/admin/patients', icon: <UserRound size={15} />, color: 'text-purple-600 bg-purple-50' },
-                  { label: 'View Appointments', href: '/admin/appointments', icon: <CalendarDays size={15} />, color: 'text-orange-600 bg-orange-50' },
-                  { label: 'Manage Hospitals', href: '/admin/hospitals', icon: <Building2 size={15} />, color: 'text-blue-600 bg-blue-50' },
-                  { label: 'Specializations', href: '/admin/specializations', icon: <GraduationCap size={15} />, color: 'text-pink-600 bg-pink-50' },
+                  { label: 'Manage Doctors', href: '/admin/doctors', icon: <Stethoscope size={15} /> },
+                  { label: 'Manage Patients', href: '/admin/patients', icon: <UserRound size={15} /> },
+                  { label: 'View Appointments', href: '/admin/appointments', icon: <CalendarDays size={15} /> },
+                  { label: 'Manage Hospitals', href: '/admin/hospitals', icon: <Building2 size={15} /> },
+                  { label: 'Specializations', href: '/admin/specializations', icon: <GraduationCap size={15} /> },
                 ].map((a) => (
                   <Link key={a.label} href={a.href}
                     className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-gray-50 transition group">
-                    <div className={`w-7 h-7 ${a.color} rounded-lg flex items-center justify-center`}>{a.icon}</div>
+                    <div className="w-7 h-7 bg-[#eef3ff] text-[#2d6be4] rounded-lg flex items-center justify-center">{a.icon}</div>
                     <span className="text-sm text-gray-700 group-hover:text-[#2d6be4] transition">{a.label}</span>
                     <ChevronRight size={14} className="ml-auto text-gray-300 group-hover:text-[#2d6be4]" />
                   </Link>

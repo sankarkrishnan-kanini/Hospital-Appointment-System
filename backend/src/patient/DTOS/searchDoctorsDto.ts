@@ -19,4 +19,9 @@ export class SearchDoctorsDto {
   @IsOptional()
   @Type(() => Number)
   maxFee?: number;
+
+  @ApiProperty({ example: 'Star Health', required: false, description: 'Insurance name' })
+  @IsString()
+  @IsOptional()
+  insurance?: string;
 }

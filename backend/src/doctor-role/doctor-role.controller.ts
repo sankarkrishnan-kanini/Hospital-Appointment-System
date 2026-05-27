@@ -25,6 +25,14 @@ import { CustomExceptionFilter } from 'src/CustomExceptionFilter';
 export class DoctorRoleController {
 
   constructor(private readonly doctorRoleService: DoctorRoleService) {}
+  @Get('specializations')
+  @Roles(Role.Doctor)
+  @UseGuards(RoleGuard)
+  @UseFilters(new CustomExceptionFilter())
+  getSpecializations() {
+    return this.doctorRoleService.getSpecializations();
+  }
+
   @Post('setup-profile')
   @Roles(Role.Doctor)
   @UseGuards(RoleGuard)
@@ -280,5 +288,15 @@ export class DoctorRoleController {
     @Param('doctorHospitalId', new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE })) doctorHospitalId: number
   ) {
     return this.doctorRoleService.getTimeSlots(userid, doctorHospitalId);
+  }
+
+  // ─── ANALYTICS ───────────────────────────────────────────────────────────────
+
+  @Get('analytics')
+  @Roles(Role.Doctor)
+  @UseGuards(RoleGuard)
+  @UseFilters(new CustomExceptionFilter())
+  getAnalytics(@User('sub', new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE })) userid: number) {
+    return this.doctorRoleService.getAnalytics(userid);
   }
 }

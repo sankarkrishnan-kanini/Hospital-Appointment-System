@@ -20,7 +20,13 @@ export class PatientController {
 
   constructor(private readonly patientService: PatientService) {}
 
+  @Get('specializations')
+  getSpecializations() {
+    return this.patientService.getSpecializations();
+  }
+
   // ─── CREATE CLIENT ACCOUNT ────────────────────────────────────────────────────
+
 
   @Post('account')
   createClientAccount(
@@ -37,14 +43,12 @@ export class PatientController {
     return this.patientService.getClientAccount(userId);
   }
 
-  // ─── SEARCH DOCTORS ───────────────────────────────────────────────────────────
+ 
 
   @Get('doctors')
   searchDoctors(@Query() dto: SearchDoctorsDto) {
     return this.patientService.searchDoctors(dto);
   }
-
-  // ─── VIEW DOCTOR PROFILE ──────────────────────────────────────────────────────
 
   @Get('doctors/:id')
   getDoctorProfile(
@@ -53,7 +57,6 @@ export class PatientController {
     return this.patientService.getDoctorProfile(id);
   }
 
-  // ─── VIEW AVAILABLE TIMESLOTS ─────────────────────────────────────────────────
 
   @Get('doctors/:id/timeslots')
   getAvailableTimeSlots(
@@ -63,7 +66,7 @@ export class PatientController {
     return this.patientService.getAvailableTimeSlots(id, doctorHospitalId);
   }
 
-  // ─── BOOK APPOINTMENT ────────────────────────────────────────────────────
+ 
 
   @Post('appointments/book')
   bookAppointment(
@@ -72,8 +75,6 @@ export class PatientController {
   ) {
     return this.patientService.bookAppointment(userId, dto);
   }
-
-  // ─── CANCEL APPOINTMENT ────────────────────────────────────────────────────
 
   @Patch('appointments/:id/cancel')
   cancelAppointment(
@@ -84,8 +85,6 @@ export class PatientController {
     return this.patientService.cancelAppointment(userId, id, dto);
   }
 
-  // ─── RESCHEDULE APPOINTMENT ────────────────────────────────────────────────────
-
   @Patch('appointments/:id/reschedule')
   rescheduleAppointment(
     @User('sub', new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE })) userId: number,
@@ -95,7 +94,6 @@ export class PatientController {
     return this.patientService.rescheduleAppointment(userId, id, dto);
   }
 
-  // ─── VIEW OWN APPOINTMENTS ────────────────────────────────────────────────────
 
   @Get('appointments')
   getOwnAppointments(
@@ -103,8 +101,6 @@ export class PatientController {
   ) {
     return this.patientService.getOwnAppointments(userId);
   }
-
-  // ─── VIEW APPOINTMENT HISTORY ────────────────────────────────────────────────────
 
   @Get('appointments/:id/history')
   getAppointmentHistory(

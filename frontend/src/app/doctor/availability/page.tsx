@@ -4,12 +4,14 @@ import { useAuthStore } from '@/store/auth.store';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import Sidebar from '@/components/Sidebar';
+import DoctorTopBar from '@/components/DoctorTopBar';
 import { CalendarDays, Plus, Trash2 } from 'lucide-react';
 import { getDoctorOfficesApi, setAvailabilityApi, getAvailabilityApi, deleteAvailabilityApi, markUnavailabilityApi } from '@/lib/api/doctor.api';
 import toast from 'react-hot-toast';
 
 const navItems = [
   { label: 'Dashboard', href: '/doctor', icon: '' },
+  { label: 'Analytics', href: '/doctor/analytics', icon: '' },
   { label: 'My Profile', href: '/doctor/profile', icon: '' },
   { label: 'Offices', href: '/doctor/offices', icon: '' },
   { label: 'Availability', href: '/doctor/availability', icon: '' },
@@ -43,7 +45,6 @@ export default function DoctorAvailabilityPage() {
     mutationFn: setAvailabilityApi,
     onSuccess: (res) => {
       const data = res?.data;
-      // if backend returned an error object as 200
       if (data?.statusCode && data?.statusCode >= 400) {
         toast.error(typeof data.message === 'string' ? data.message : 'Failed to set availability');
         return;
@@ -88,10 +89,11 @@ export default function DoctorAvailabilityPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className="min-h-screen bg-gray-50 flex pt-12">
+      <DoctorTopBar />
       <Sidebar items={navItems} />
       <main className="flex-1 flex flex-col ml-60">
-        <header className="h-16 bg-white border-b border-gray-100 flex items-center justify-between px-6 sticky top-0 z-30">
+        <header className="h-16 bg-white border-b border-gray-100 flex items-center justify-between px-6 sticky top-12 z-30">
           <div>
             <h1 className="text-base font-semibold text-gray-900">Availability</h1>
             <p className="text-xs text-gray-400">Set your weekly schedule</p>
@@ -99,11 +101,10 @@ export default function DoctorAvailabilityPage() {
         </header>
 
         <div className="flex-1 p-6 space-y-5">
-          {/* Office Selector */}
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
             <label className="block text-sm font-medium text-gray-700 mb-2">Select Office / Hospital</label>
             <select value={selectedOffice ?? ''} onChange={(e) => setSelectedOffice(Number(e.target.value))}
-              className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#2d6be4] bg-white">
+              className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 bg-white">
               <option value="">Choose an office</option>
               {offices.map((o: any) => (
                 <option key={o.id} value={o.id}>
@@ -119,13 +120,13 @@ export default function DoctorAvailabilityPage() {
               {/* Add Availability Form */}
               <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
                 <h3 className="text-sm font-semibold text-gray-800 mb-4 flex items-center gap-2">
-                  <Plus size={15} className="text-[#2d6be4]" /> Add Availability
+                  <Plus size={15} className="text-green-700" /> Add Availability
                 </h3>
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div>
                     <label className="block text-xs font-medium text-gray-600 mb-1">Day of Week</label>
                     <select value={form.dayOfWeek} onChange={(e) => setForm({ ...form, dayOfWeek: e.target.value })}
-                      className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#2d6be4] bg-white">
+                      className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 bg-white">
                       {DAYS.map(d => <option key={d} value={d}>{d}</option>)}
                     </select>
                   </div>
@@ -133,25 +134,25 @@ export default function DoctorAvailabilityPage() {
                     <div>
                       <label className="block text-xs font-medium text-gray-600 mb-1">Start Time</label>
                       <input type="time" value={form.startTime} onChange={(e) => setForm({ ...form, startTime: e.target.value })}
-                        className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#2d6be4]" />
+                        className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-500" />
                     </div>
                     <div>
                       <label className="block text-xs font-medium text-gray-600 mb-1">End Time</label>
                       <input type="time" value={form.endTime} onChange={(e) => setForm({ ...form, endTime: e.target.value })}
-                        className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#2d6be4]" />
+                        className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-500" />
                     </div>
                   </div>
                   <button type="submit" disabled={isPending}
-                    className="w-full bg-[#2d6be4] text-white py-2.5 rounded-xl text-sm font-medium hover:bg-blue-700 transition disabled:opacity-60">
+                    className="w-full bg-green-700 text-white py-2.5 rounded-xl text-sm font-medium hover:bg-green-800 transition disabled:opacity-60">
                     {isPending ? 'Saving...' : 'Set Availability'}
                   </button>
                 </form>
               </div>
 
-              {/* Current Availability */}
+              
               <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
                 <h3 className="text-sm font-semibold text-gray-800 mb-4 flex items-center gap-2">
-                  <CalendarDays size={15} className="text-[#2d6be4]" /> Current Schedule
+                  <CalendarDays size={15} className="text-green-700" /> Current Schedule
                 </h3>
                 {!availability.length ? (
                   <p className="text-sm text-gray-400">No availability set yet</p>
@@ -180,10 +181,12 @@ export default function DoctorAvailabilityPage() {
               </div>
             </div>
 
+
               {/* Mark Unavailability */}
-              <div className="bg-white rounded-2xl border border-red-100 shadow-sm p-6">
+              <div className="bg-white rounded-2xl border border-orange-100 shadow-sm p-6">
+
                 <h3 className="text-sm font-semibold text-gray-800 mb-1 flex items-center gap-2">
-                  <span className="text-red-500">✕</span> Mark Unavailability
+                  <span className="text-orange-400">✕</span> Mark Unavailability
                 </h3>
                 <p className="text-xs text-gray-400 mb-4">Block a date or time range. Existing slots will be deleted and booked appointments will be cancelled.</p>
                 <div className="space-y-3">
@@ -192,7 +195,7 @@ export default function DoctorAvailabilityPage() {
                     <input type="date" value={unavailForm.date}
                       min={new Date().toISOString().split('T')[0]}
                       onChange={e => setUnavailForm({ ...unavailForm, date: e.target.value })}
-                      className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-400" />
+                      className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-300" />
                   </div>
 
                   <div className="flex items-center gap-2">
@@ -208,13 +211,13 @@ export default function DoctorAvailabilityPage() {
                         <label className="block text-xs font-medium text-gray-600 mb-1">Start Time</label>
                         <input type="time" value={unavailForm.startTime}
                           onChange={e => setUnavailForm({ ...unavailForm, startTime: e.target.value })}
-                          className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-400" />
+                          className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-300" />
                       </div>
                       <div>
                         <label className="block text-xs font-medium text-gray-600 mb-1">End Time</label>
                         <input type="time" value={unavailForm.endTime}
                           onChange={e => setUnavailForm({ ...unavailForm, endTime: e.target.value })}
-                          className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-400" />
+                          className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-300" />
                       </div>
                     </div>
                   )}
@@ -224,7 +227,7 @@ export default function DoctorAvailabilityPage() {
                     <input value={unavailForm.reason}
                       onChange={e => setUnavailForm({ ...unavailForm, reason: e.target.value })}
                       placeholder="e.g. Personal leave, emergency..."
-                      className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-400" />
+                      className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-300" />
                   </div>
 
                   <button
@@ -241,7 +244,7 @@ export default function DoctorAvailabilityPage() {
                       markUnavailability(dto);
                     }}
                     disabled={markingUnavail}
-                    className="w-full bg-red-500 text-white py-2.5 rounded-xl text-sm font-medium hover:bg-red-600 transition disabled:opacity-60">
+                    className="w-full bg-orange-400 text-white py-2.5 rounded-xl text-sm font-medium hover:bg-orange-500 transition disabled:opacity-60">
                     {markingUnavail ? 'Marking...' : 'Mark as Unavailable'}
                   </button>
                 </div>

@@ -6,10 +6,12 @@ import { useEffect, useState } from 'react';
 import Sidebar from '@/components/Sidebar';
 import { getAllDoctorsApi, getPendingDoctorsApi, verifyDoctorApi, getDoctorByIdApi, viewDoctorDocumentApi } from '@/lib/api/admin.api';
 import toast from 'react-hot-toast';
-import { X, CheckCircle, FileText, Stethoscope, GraduationCap, Building2, Eye } from 'lucide-react';
+import { X, CheckCircle, FileText, Stethoscope, GraduationCap, Building2, Eye, Search } from 'lucide-react';
+import AdminTopBar from '@/components/AdminTopBar';
 
 const navItems = [
   { label: 'Dashboard', href: '/admin', icon: '🏠' },
+  { label: 'Analytics', href: '/admin/analytics', icon: '' },
   { label: 'Users', href: '/admin/users', icon: '👥' },
   { label: 'Doctors', href: '/admin/doctors', icon: '🩺' },
   { label: 'Patients', href: '/admin/patients', icon: '🧑⚕️' },
@@ -51,7 +53,7 @@ function DoctorDetailModal({ doctorId, onClose, onVerify, verifying }: {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-4xl mx-4 max-h-[90vh] overflow-y-auto">
+      <div className="bg-white rounded-2xl shadow-xl w-full max-w-7xl mx-4 h-[95vh] flex flex-col overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
           <h2 className="text-base font-bold text-gray-900">Doctor Details</h2>
@@ -65,9 +67,9 @@ function DoctorDetailModal({ doctorId, onClose, onVerify, verifying }: {
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#2d6be4]" />
           </div>
         ) : doctor ? (
-          <div className="flex gap-0">
+          <div className="flex flex-1 overflow-hidden">
             {/* Left panel - doctor info */}
-            <div className="p-6 space-y-5 w-full max-w-sm border-r border-gray-100 overflow-y-auto">
+            <div className="p-6 space-y-5 w-80 flex-shrink-0 border-r border-gray-100 overflow-y-auto">
               {/* Basic Info */}
               <div className="flex items-center gap-4">
                 <div className="w-14 h-14 bg-[#eef3ff] rounded-full flex items-center justify-center text-[#2d6be4] font-bold text-xl">
@@ -86,8 +88,6 @@ function DoctorDetailModal({ doctorId, onClose, onVerify, verifying }: {
                   )}
                 </div>
               </div>
-
-              {/* Specializations */}
               {doctor.specializations?.length > 0 && (
                 <div>
                   <div className="flex items-center gap-2 mb-2">
@@ -101,8 +101,6 @@ function DoctorDetailModal({ doctorId, onClose, onVerify, verifying }: {
                   </div>
                 </div>
               )}
-
-              {/* Qualifications */}
               {doctor.qualifications?.length > 0 && (
                 <div>
                   <div className="flex items-center gap-2 mb-2">
@@ -120,7 +118,6 @@ function DoctorDetailModal({ doctorId, onClose, onVerify, verifying }: {
                 </div>
               )}
 
-              {/* Hospitals */}
               {doctor.doctorHospitals?.length > 0 && (
                 <div>
                   <div className="flex items-center gap-2 mb-2">
@@ -137,7 +134,6 @@ function DoctorDetailModal({ doctorId, onClose, onVerify, verifying }: {
                 </div>
               )}
 
-              {/* Documents */}
               {doctor.documents?.length > 0 && (
                 <div>
                   <div className="flex items-center gap-2 mb-2">
@@ -164,7 +160,6 @@ function DoctorDetailModal({ doctorId, onClose, onVerify, verifying }: {
                 </div>
               )}
 
-              {/* Verification status */}
               <div className="flex items-center gap-2">
                 {doctor.isVerified ? (
                   <span className="text-xs bg-green-100 text-green-700 font-semibold px-3 py-1 rounded-full">✅ Verified</span>
@@ -173,7 +168,7 @@ function DoctorDetailModal({ doctorId, onClose, onVerify, verifying }: {
                 )}
               </div>
 
-              {/* Action */}
+              
               {!doctor.isVerified && doctor.verificationRequested && (
                 <button
                   onClick={() => onVerify(doctor.id)}
@@ -187,11 +182,12 @@ function DoctorDetailModal({ doctorId, onClose, onVerify, verifying }: {
             </div>
 
             {/* Right panel - PDF viewer */}
-            <div className="flex-1 min-h-[500px] bg-gray-100 rounded-br-2xl flex items-center justify-center">
+            <div className="flex-1 bg-gray-100 flex items-center justify-center">
+
               {pdfLoading ? (
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#2d6be4]" />
               ) : pdfUrl ? (
-                <iframe src={pdfUrl} className="w-full h-full min-h-[500px] rounded-br-2xl" title="Document Viewer" />
+                <iframe src={pdfUrl} className="w-full h-full" title="Document Viewer" />
               ) : (
                 <div className="text-center text-gray-400">
                   <FileText size={40} className="mx-auto mb-2 opacity-30" />
@@ -214,6 +210,7 @@ export default function AdminDoctorsPage() {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
   const [tab, setTab] = useState<'all' | 'pending'>('all');
+  const [verificationFilter, setVerificationFilter] = useState<'all' | 'verified' | 'pending' | 'not_requested'>('all');
   const [selectedDoctorId, setSelectedDoctorId] = useState<number | null>(null);
 
   useEffect(() => {
@@ -250,12 +247,18 @@ export default function AdminDoctorsPage() {
   const pendingDoctors = Array.isArray(pendingRes?.data) ? pendingRes.data : [];
   const displayList = tab === 'all' ? allDoctors : pendingDoctors;
 
-  const filtered = displayList.filter((d: any) =>
-    `${d.firstName} ${d.lastName}`.toLowerCase().includes(search.toLowerCase())
-  );
+  const filtered = displayList.filter((d: any) => {
+    if (search && !`${d.firstName} ${d.lastName}`.toLowerCase().includes(search.toLowerCase())) return false;
+    if (verificationFilter === 'verified' && !d.isVerified) return false;
+    if (verificationFilter === 'pending' && (!d.verificationRequested || d.isVerified)) return false;
+    if (verificationFilter === 'not_requested' && (d.verificationRequested || d.isVerified)) return false;
+    return true;
+  });
+  const resetFilters = () => { setSearch(''); setVerificationFilter('all'); };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className="min-h-screen bg-gray-50 flex pt-12">
+      <AdminTopBar />
       <Sidebar items={navItems} />
       <main className="flex-1 flex flex-col ml-64">
         <header className="h-16 bg-white border-b border-gray-100 shadow-sm flex items-center justify-between px-6 sticky top-0 z-30">
@@ -276,19 +279,18 @@ export default function AdminDoctorsPage() {
         </header>
 
         <div className="flex-1 p-6 space-y-5">
-          {/* Tabs + Search */}
-          <div className="flex items-center justify-between gap-4">
+
+          {/* Tabs + Filters */}
+          <div className="flex items-center justify-between gap-4 flex-wrap">
+
+
             <div className="flex gap-2">
-              <button
-                onClick={() => setTab('all')}
-                className={`px-4 py-2 rounded-xl text-sm font-semibold transition ${tab === 'all' ? 'bg-[#2d6be4] text-white' : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'}`}
-              >
+              <button onClick={() => { setTab('all'); resetFilters(); }}
+                className={`px-4 py-2 rounded-xl text-sm font-semibold transition ${tab === 'all' ? 'bg-[#2d6be4] text-white' : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'}`}>
                 All Doctors
               </button>
-              <button
-                onClick={() => setTab('pending')}
-                className={`px-4 py-2 rounded-xl text-sm font-semibold transition flex items-center gap-2 ${tab === 'pending' ? 'bg-yellow-500 text-white' : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'}`}
-              >
+              <button onClick={() => { setTab('pending'); resetFilters(); }}
+                className={`px-4 py-2 rounded-xl text-sm font-semibold transition flex items-center gap-2 ${tab === 'pending' ? 'bg-yellow-500 text-white' : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'}`}>
                 Pending Verification
                 {pendingDoctors.length > 0 && (
                   <span className={`text-xs px-1.5 py-0.5 rounded-full ${tab === 'pending' ? 'bg-white text-yellow-600' : 'bg-yellow-100 text-yellow-700'}`}>
@@ -297,19 +299,29 @@ export default function AdminDoctorsPage() {
                 )}
               </button>
             </div>
-            <div className="flex items-center gap-2 bg-white border border-gray-200 rounded-xl px-4 py-2 w-64">
-              <span className="text-gray-400 text-sm">🔍</span>
-              <input
-                type="text"
-                placeholder="Search doctors..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="flex-1 text-sm outline-none text-gray-700 placeholder:text-gray-400"
-              />
-            </div>
           </div>
 
-          {/* Table */}
+          {/* Filter Bar */}
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex flex-wrap items-center gap-3">
+            <div className="flex items-center gap-2 border border-gray-200 rounded-xl px-3 py-2 flex-1 min-w-[180px]">
+              <Search size={15} className="text-gray-400 flex-shrink-0" />
+              <input type="text" placeholder="Search by name..." value={search}
+                onChange={e => setSearch(e.target.value)}
+                className="flex-1 text-sm outline-none text-gray-700 placeholder:text-gray-400" />
+              {search && <button onClick={() => setSearch('')} className="text-gray-400 hover:text-gray-600 text-xs">✕</button>}
+            </div>
+            <select value={verificationFilter} onChange={e => setVerificationFilter(e.target.value as any)}
+              className="border border-gray-200 rounded-xl px-4 py-2 text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#2d6be4] bg-white cursor-pointer hover:border-gray-300 transition min-w-[160px]">
+              <option value="all">All Verification</option>
+              <option value="verified">Verified</option>
+              <option value="pending">Pending</option>
+              <option value="not_requested">Not Requested</option>
+            </select>
+            {(search || verificationFilter !== 'all') && (
+              <button onClick={resetFilters} className="text-xs font-semibold text-gray-500 bg-gray-100 hover:bg-gray-200 px-3 py-2 rounded-xl transition">Reset</button>
+            )}
+            <span className="ml-auto text-xs text-gray-400">{filtered.length} result{filtered.length !== 1 ? 's' : ''}</span>
+          </div>
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
             {isLoading ? (
               <div className="flex items-center justify-center py-16">

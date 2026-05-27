@@ -1,11 +1,9 @@
-// ─── Auth ─────────────────────────────────────────────────────────────────────
+
 
 export interface LoginDto {
   email: string;
   password: string;
 }
-
-// ─── Office ───────────────────────────────────────────────────────────────────
 
 export interface CreateOfficeDto {
   name: string;
@@ -16,7 +14,7 @@ export interface CreateOfficeDto {
 
 export type UpdateOfficeDto = Partial<CreateOfficeDto>;
 
-// ─── Hospital ─────────────────────────────────────────────────────────────────
+
 
 export interface CreateHospitalDto {
   name: string;
@@ -31,7 +29,7 @@ export interface CreateHospitalDto {
 
 export type UpdateHospitalDto = Partial<CreateHospitalDto>;
 
-// ─── Doctor Profile ───────────────────────────────────────────────────────────
+
 
 export interface QualificationDto {
   qualificationName: string;
@@ -54,7 +52,7 @@ export interface UpdateDoctorProfileDto {
   practicingFrom?: string;
 }
 
-// ─── Doctor Practice ──────────────────────────────────────────────────────────
+
 
 export interface CreatePrivatePracticeDto {
   timeSlotPerClientInMin: number;
@@ -76,7 +74,6 @@ export interface AffiliateHospitalDto {
   timeSlotPerClientInMin: number;
 }
 
-// ─── Doctor Availability ──────────────────────────────────────────────────────
 
 export interface SetAvailabilityDto {
   doctorHospitalId: number;
@@ -97,7 +94,6 @@ export interface MarkUnavailabilityDto {
   reason?: string;
 }
 
-// ─── Patient ──────────────────────────────────────────────────────────────────
 
 export interface CreateClientAccountDto {
   firstName: string;
@@ -110,6 +106,7 @@ export interface SearchDoctorsDto {
   specializationId?: number;
   city?: string;
   maxFee?: number;
+  insurance?: string;
 }
 
 export interface BookAppointmentDto {

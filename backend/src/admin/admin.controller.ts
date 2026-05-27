@@ -15,11 +15,16 @@ export class AdminController {
 
   constructor(private readonly adminService: AdminService) {}
 
-  // ─── USER MANAGEMENT ─────────────────────────────────────────────────────────
-
   @Get('users')
   getAllUsers() {
     return this.adminService.getAllUsers();
+  }
+
+  @Get('users/:id/detail')
+  getUserDetail(
+    @Param('id', new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE })) id: number
+  ) {
+    return this.adminService.getUserDetail(id);
   }
 
   @Patch('users/:id/deactivate')
@@ -35,8 +40,6 @@ export class AdminController {
   ) {
     return this.adminService.activateUser(id);
   }
-
-  // ─── DOCTOR MANAGEMENT ───────────────────────────────────────────────────────
 
   @Get('doctors')
   getAllDoctors() {
@@ -73,8 +76,6 @@ export class AdminController {
     return this.adminService.verifyDoctor(id);
   }
 
-  // ─── APPOINTMENT MANAGEMENT ──────────────────────────────────────────────────
-
   @Get('appointments')
   getAllAppointments() {
     return this.adminService.getAllAppointments();
@@ -86,8 +87,6 @@ export class AdminController {
   ) {
     return this.adminService.getAppointmentById(id);
   }
-
-  // ─── PATIENT MANAGEMENT ──────────────────────────────────────────────────────
 
   @Get('patients')
   getAllPatients() {
@@ -101,7 +100,14 @@ export class AdminController {
     return this.adminService.getPatientById(id);
   }
 
+
   // ─── SPECIALIZATION REQUESTS ─────────────────────────────────────────────────
+
+  @Get('specializations')
+  getAllSpecializations() {
+    return this.adminService.getAllSpecializations();
+  }
+
 
   @Get('specialization-requests')
   getSpecializationRequests() {
@@ -122,5 +128,12 @@ export class AdminController {
     @Param('specializationId', new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE })) specializationId: number
   ) {
     return this.adminService.rejectSpecialization(doctorId, specializationId);
+  }
+
+  // ─── ANALYTICS ───────────────────────────────────────────────────────────────
+
+  @Get('analytics')
+  getAnalytics() {
+    return this.adminService.getAnalytics();
   }
 }

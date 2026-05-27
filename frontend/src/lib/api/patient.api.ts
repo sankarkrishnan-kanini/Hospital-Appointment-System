@@ -23,3 +23,4 @@ export const rescheduleAppointmentApi = (id: number, dto: RescheduleAppointmentD
 export const getPatientAppointmentsApi = () => api.get('/patient/appointments');
 export const getAppointmentHistoryApi = (id: number) =>
   api.get(`/patient/appointments/${id}/history`);
+export const getSpecializationsApi = () => api.get('/patient/specializations');

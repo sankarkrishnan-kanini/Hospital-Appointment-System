@@ -1,4 +1,6 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, Inject } from '@nestjs/common';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { Cache } from 'cache-manager';
 import { PrismaService } from '../prisma/prisma.service';
 import { UpdateDoctorSetupProfileDTO } from './DTOS/UpdateDoctorSetupProfileDTO';
 import { SetupProfileDto } from './DTOS/setupProfileDto';
@@ -10,14 +12,24 @@ import { GenerateTimeSlotsDto } from '../doctor-role/DTOS/generateTimeSlotsDto';
 import { MarkUnavailabilityDto } from '../doctor-role/DTOS/markUnavailabilityDto';
 import { NotificationService } from '../notification-module/notification.service';
 import {QualificationDTO} from '../doctor-role/DTOS/QualificationDTO';
+import { MailService } from '../mail/mail.service';
 
 @Injectable()
 export class DoctorRoleService {
 
   constructor(
     private readonly prisma: PrismaService,
-    private readonly notificationService: NotificationService
+
+    @Inject(CACHE_MANAGER) private readonly cache: Cache,
+  
+    private readonly notificationService: NotificationService,
+    private readonly mailService: MailService,
+
   ) {}
+
+  async getSpecializations() {
+    return this.prisma.specialization.findMany({ orderBy: { id: 'asc' } });
+  }
 
   async setupProfile(userId: number, dto: SetupProfileDto, files: Express.Multer.File[]) {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
@@ -91,6 +103,10 @@ export class DoctorRoleService {
 
 
   async getProfile(userId: number) {
+    const cacheKey = `doctorOwnProfile:${userId}`;
+    const cached = await this.cache.get(cacheKey);
+    if (cached) return cached;
+
     const doctor = await this.prisma.doctor.findUnique({
       where: { userId },
       include: {
@@ -102,7 +118,7 @@ export class DoctorRoleService {
     });
     if (!doctor) throw new NotFoundException(`Doctor profile not found for user ${userId}`);
 
-    return {
+    const result = {
       id: doctor.id,
       firstName: doctor.firstName,
       lastName: doctor.lastName,
@@ -117,11 +133,28 @@ export class DoctorRoleService {
         institute: q.instituteName,
         year: q.procurementYear
       })),
-      documentCount: doctor.documents.length
+      documentCount: doctor.documents.length,
+      pendingSpecializations: await Promise.all(
+        doctor.documents
+          .filter(d => d.documentType.startsWith('SPECIALIZATION_REQUEST_'))
+          .filter(d => {
+            const specId = parseInt(d.documentType.replace('SPECIALIZATION_REQUEST_', ''));
+            return !doctor.specializations.some(ds => ds.specializationId === specId);
+          })
+          .map(async d => {
+            const specId = parseInt(d.documentType.replace('SPECIALIZATION_REQUEST_', ''));
+            const spec = await this.prisma.specialization.findUnique({ where: { id: specId } });
+            return {
+              specializationId: specId,
+              specializationName: spec?.specializationName ?? `Specialization #${specId}`,
+              uploadedAt: d.uploadedAt
+            };
+          })
+      )
     };
+    await this.cache.set(cacheKey, result);
+    return result;
   }
-
-  // ─── UPDATE BASIC INFO (AFTER VERIFICATION) ──────────────────────────────────
 
   async updateProfile(userId: number, dto: UpdateDoctorSetupProfileDTO) {
     const doctor = await this.prisma.doctor.findUnique({ where: { userId } });
@@ -138,6 +171,7 @@ export class DoctorRoleService {
       } catch { /* skip invalid date */ }
     }
 
+    await this.cache.del(`doctorOwnProfile:${userId}`);
     return this.prisma.doctor.update({ where: { userId }, data });
   }
 
@@ -154,7 +188,6 @@ export class DoctorRoleService {
     return { buffer: Buffer.isBuffer(document.fileUrl) ? document.fileUrl : Buffer.from(document.fileUrl) };
   }
 
-  // ─── REQUEST VERIFICATION ────────────────────────────────────────────────────
 
   async requestVerification(userId: number) {
     const doctor = await this.prisma.doctor.findUnique({
@@ -189,6 +222,7 @@ export class DoctorRoleService {
         verificationRequested: true
       }
     }).then(async (updated) => {
+      await this.cache.del(`doctorOwnProfile:${userId}`);
       const admins = await this.prisma.user.findMany({ where: { role: 'admin' }, select: { id: true } });
       await this.notificationService.notifyVerificationRequested(
         admins.map(a => a.id),
@@ -198,7 +232,6 @@ export class DoctorRoleService {
     });
   }
 
-  // ─── REQUEST SPECIALIZATION ─────────────────────────────────────────────────
 
   async requestSpecialization(userId: number, specializationId: number, file: Express.Multer.File) {
     const doctor = await this.prisma.doctor.findUnique({ where: { userId } });
@@ -231,6 +264,8 @@ export class DoctorRoleService {
       `${doctor.firstName} ${doctor.lastName}`,
       specialization.specializationName
     );
+
+    await this.cache.del(`doctorOwnProfile:${userId}`);
 
     return {
       id: doc.id,
@@ -451,6 +486,14 @@ export class DoctorRoleService {
               `${appt.doctorHospital.doctor.firstName} ${appt.doctorHospital.doctor.lastName}`,
               slot.startTime
             );
+            await this.mailService.sendUnavailabilityCancellation(
+              appt.client.email,
+              `${appt.client.firstName} ${appt.client.lastName}`,
+              `${appt.doctorHospital.doctor.firstName} ${appt.doctorHospital.doctor.lastName}`,
+              slot.startTime,
+              isFullDay,
+              dto.reason,
+            ).catch(() => {});
           }
 
           await tx.timeSlot.update({ where: { id: slot.id }, data: { isBooked: false } });
@@ -696,5 +739,81 @@ export class DoctorRoleService {
       where: { doctorHospitalId },
       orderBy: { startTime: 'asc' }
     });
+  }
+
+  // ─── ANALYTICS ───────────────────────────────────────────────────────────────
+
+  async getAnalytics(userId: number) {
+    const doctor = await this.prisma.doctor.findUnique({ where: { userId } });
+    if (!doctor) throw new NotFoundException(`Doctor profile not found`);
+
+    const appointments = await this.prisma.appointment.findMany({
+      where: { doctorHospital: { doctorId: doctor.id } },
+      include: {
+        status: true,
+        client: true,
+        doctorHospital: { include: { hospital: true } }
+      }
+    });
+
+    // 1. Appointments per month (last 6 months)
+    const monthMap: Record<string, number> = {};
+    const now = new Date();
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const key = d.toLocaleString('default', { month: 'short', year: '2-digit' });
+      monthMap[key] = 0;
+    }
+    appointments.forEach(a => {
+      const key = new Date(a.appointmentTakenDate).toLocaleString('default', { month: 'short', year: '2-digit' });
+      if (key in monthMap) monthMap[key]++;
+    });
+    const appointmentsPerMonth = Object.entries(monthMap).map(([month, count]) => ({ month, count }));
+
+    // 2. Status breakdown
+    const statusMap: Record<string, number> = {};
+    appointments.forEach(a => {
+      const s = a.status?.status ?? 'Unknown';
+      statusMap[s] = (statusMap[s] || 0) + 1;
+    });
+    const statusBreakdown = Object.entries(statusMap).map(([status, count]) => ({ status, count }));
+
+    // 3. Top patients
+    const patientMap: Record<string, number> = {};
+    appointments.forEach(a => {
+      const name = `${a.client.firstName} ${a.client.lastName}`;
+      patientMap[name] = (patientMap[name] || 0) + 1;
+    });
+    const topPatients = Object.entries(patientMap)
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 5);
+
+    // 4. Estimated earnings per month
+    const earningsMap: Record<string, number> = {};
+    for (const key of Object.keys(monthMap)) earningsMap[key] = 0;
+    appointments
+      .filter(a => a.status?.status === 'Completed')
+      .forEach(a => {
+        const key = new Date(a.appointmentTakenDate).toLocaleString('default', { month: 'short', year: '2-digit' });
+        if (key in earningsMap) earningsMap[key] += a.doctorHospital.firstConsultationFee;
+      });
+    const earningsPerMonth = Object.entries(earningsMap).map(([month, amount]) => ({ month, amount }));
+
+    // 5. Summary
+    const completed = appointments.filter(a => a.status?.status === 'Completed').length;
+    const cancelled = appointments.filter(a => a.status?.status === 'CANCELLED').length;
+    const summary = {
+      totalAppointments: appointments.length,
+      completedAppointments: completed,
+      cancelledAppointments: cancelled,
+      cancellationRate: appointments.length ? Math.round((cancelled / appointments.length) * 100) : 0,
+      totalEarnings: appointments
+        .filter(a => a.status?.status === 'Completed')
+        .reduce((sum, a) => sum + a.doctorHospital.firstConsultationFee, 0),
+      totalPatients: new Set(appointments.map(a => a.client.id)).size
+    };
+
+    return { summary, appointmentsPerMonth, statusBreakdown, topPatients, earningsPerMonth };
   }
 }

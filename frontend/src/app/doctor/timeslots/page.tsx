@@ -4,12 +4,14 @@ import { useAuthStore } from '@/store/auth.store';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import Sidebar from '@/components/Sidebar';
+import DoctorTopBar from '@/components/DoctorTopBar';
 import { Clock, Plus } from 'lucide-react';
 import { getDoctorOfficesApi, generateTimeSlotsApi, getTimeSlotsApi } from '@/lib/api/doctor.api';
 import toast from 'react-hot-toast';
 
 const navItems = [
   { label: 'Dashboard', href: '/doctor', icon: '' },
+  { label: 'Analytics', href: '/doctor/analytics', icon: '' },
   { label: 'My Profile', href: '/doctor/profile', icon: '' },
   { label: 'Offices', href: '/doctor/offices', icon: '' },
   { label: 'Availability', href: '/doctor/availability', icon: '' },
@@ -53,10 +55,11 @@ export default function DoctorTimeSlotsPage() {
   const availableSlots = slots.filter((s: any) => !s.isBooked);
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className="min-h-screen bg-gray-50 flex pt-12">
+      <DoctorTopBar />
       <Sidebar items={navItems} />
       <main className="flex-1 flex flex-col ml-60">
-        <header className="h-16 bg-white border-b border-gray-100 flex items-center justify-between px-6 sticky top-0 z-30">
+        <header className="h-16 bg-white border-b border-gray-100 flex items-center justify-between px-6 sticky top-12 z-30">
           <div>
             <h1 className="text-base font-semibold text-gray-900">Time Slots</h1>
             <p className="text-xs text-gray-400">Generate and manage appointment slots</p>
@@ -104,7 +107,6 @@ export default function DoctorTimeSlotsPage() {
             </div>
           </div>
 
-          {/* Slots View */}
           {selectedOffice && (
             <>
               <div className="grid grid-cols-3 gap-4">

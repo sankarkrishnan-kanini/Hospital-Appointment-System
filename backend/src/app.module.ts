@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { CacheModule } from '@nestjs/cache-manager';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { PrismaService } from './prisma/prisma.service';
@@ -12,9 +13,17 @@ import { NotificationModule } from './notification-module/notification.module';
 import { AppointmentStatusModule } from './appointment-status/appointment-status.module';
 import { AppointmentHistoryModule } from './appointment-history/appointment-history.module';
 import { InNetworkInsuranceModule } from './in-network-insurance/in-network-insurance.module';
+import { MailModule } from './mail/mail.module';
+import { ScheduleModule } from '@nestjs/schedule';
+import { TimeslotCleanupModule } from './timeslot-cleanup/timeslot-cleanup.module';
 
 @Module({
   imports: [
+
+    CacheModule.register({ isGlobal: true, ttl: 60000 }),
+
+    ScheduleModule.forRoot(),
+
     UsersModule,
     AuthModule,
     AdminModule,
@@ -25,6 +34,8 @@ import { InNetworkInsuranceModule } from './in-network-insurance/in-network-insu
     AppointmentStatusModule,
     AppointmentHistoryModule,
     InNetworkInsuranceModule,
+    MailModule,
+    TimeslotCleanupModule,
   ],
   controllers: [AppController],
   providers: [AppService, PrismaService],

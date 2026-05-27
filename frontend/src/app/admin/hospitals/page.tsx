@@ -4,7 +4,8 @@ import { useAuthStore } from '@/store/auth.store';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import Sidebar from '@/components/Sidebar';
-import { Pencil } from 'lucide-react';
+import { Pencil, Trash2, MapPin, Building2 } from 'lucide-react';
+import AdminTopBar from '@/components/AdminTopBar';
 import {
   getAllOfficesApi, createOfficeApi, updateOfficeApi,
   getHospitalsByOfficeApi, createHospitalApi, updateHospitalApi,
@@ -14,6 +15,7 @@ import toast from 'react-hot-toast';
 
 const navItems = [
   { label: 'Dashboard', href: '/admin', icon: '🏠' },
+  { label: 'Analytics', href: '/admin/analytics', icon: '' },
   { label: 'Users', href: '/admin/users', icon: '👥' },
   { label: 'Doctors', href: '/admin/doctors', icon: '🩺' },
   { label: 'Patients', href: '/admin/patients', icon: '🧑⚕️' },
@@ -32,12 +34,12 @@ export default function AdminHospitalsPage() {
 
   const [selectedOffice, setSelectedOffice] = useState<any>(null);
 
-  // Office modal
+ 
   const [showOfficeForm, setShowOfficeForm] = useState(false);
   const [editingOffice, setEditingOffice] = useState<any>(null);
   const [officeForm, setOfficeForm] = useState(EMPTY_OFFICE);
 
-  // Hospital modal
+ 
   const [showHospitalForm, setShowHospitalForm] = useState(false);
   const [editingHospital, setEditingHospital] = useState<any>(null);
   const [hospitalForm, setHospitalForm] = useState(EMPTY_HOSPITAL);
@@ -97,17 +99,13 @@ export default function AdminHospitalsPage() {
   const offices = Array.isArray(officesRes?.data) ? officesRes.data : [];
   const hospitals = Array.isArray(hospitalsRes?.data) ? hospitalsRes.data : [];
 
-  // Office modal helpers
   const openCreateOffice = () => { setEditingOffice(null); setOfficeForm(EMPTY_OFFICE); setShowOfficeForm(true); };
-  const openEditOffice = (office: any, e: any) => {
-    e.stopPropagation();
+  const openEditOffice = (office: any) => {
     setEditingOffice(office);
     setOfficeForm({ name: office.name, city: office.city, state: office.state, country: office.country });
     setShowOfficeForm(true);
   };
   const closeOfficeModal = () => { setShowOfficeForm(false); setEditingOffice(null); setOfficeForm(EMPTY_OFFICE); };
-
-  // Hospital modal helpers
   const openCreateHospital = () => { setEditingHospital(null); setHospitalForm(EMPTY_HOSPITAL); setShowHospitalForm(true); };
   const openEditHospital = (h: any) => {
     setEditingHospital(h);
@@ -137,7 +135,8 @@ export default function AdminHospitalsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className="min-h-screen bg-gray-50 flex pt-12">
+      <AdminTopBar />
       <Sidebar items={navItems} />
       <main className="flex-1 flex flex-col ml-64">
         <header className="h-16 bg-white border-b border-gray-100 shadow-sm flex items-center justify-between px-6 sticky top-0 z-30">
@@ -152,7 +151,6 @@ export default function AdminHospitalsPage() {
         </header>
 
         <div className="flex-1 p-6 flex gap-6">
-          {/* Offices List */}
           <div className="w-72 space-y-3">
             <h2 className="text-sm font-semibold text-gray-700 px-1">Offices ({offices.length})</h2>
             {isLoading ? (
@@ -168,38 +166,54 @@ export default function AdminHospitalsPage() {
               offices.map((office: any) => (
                 <div key={office.id} onClick={() => setSelectedOffice(office)}
                   className={`bg-white rounded-2xl border-2 p-4 cursor-pointer transition ${selectedOffice?.id === office.id ? 'border-[#2d6be4] bg-blue-50' : 'border-gray-100 hover:border-gray-200'}`}>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-semibold text-gray-800 text-sm">{office.name}</p>
-                      <p className="text-xs text-gray-400 mt-0.5">{office.city}, {office.country}</p>
-                    </div>
-                    <div className="flex gap-2">
-                      <button onClick={(e) => openEditOffice(office, e)}
-                        className="text-blue-400 hover:text-blue-600 text-xs">
-                        <Pencil size={13} />
-                      </button>
-                      <button onClick={(e) => { e.stopPropagation(); deleteOffice(office.id); }}
-                        className="text-red-400 hover:text-red-600 text-xs">🗑️</button>
-                    </div>
-                  </div>
+                  <p className="font-semibold text-gray-800 text-sm">{office.name}</p>
+                  <p className="text-xs text-gray-400 mt-0.5">{office.city}, {office.country}</p>
+                  <p className="text-xs text-gray-300 mt-1">{office.hospitals?.length ?? 0} hospital{office.hospitals?.length !== 1 ? 's' : ''}</p>
                 </div>
               ))
             )}
           </div>
 
-          {/* Hospitals */}
+        
           <div className="flex-1 space-y-4">
             {!selectedOffice ? (
               <div className="bg-white rounded-2xl border border-gray-100 p-12 text-center">
-                <p className="text-4xl mb-3">🏥</p>
-                <p className="text-gray-400 text-sm">Select an office to view its hospitals</p>
+                <Building2 size={32} className="mx-auto text-gray-200 mb-3" />
+                <p className="text-gray-400 text-sm">Select an office to view details</p>
               </div>
             ) : (
               <>
+                {/* Office detail card */}
+                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 flex items-start justify-between">
+                  <div className="flex items-start gap-4">
+                    <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center flex-shrink-0">
+                      <Building2 size={18} className="text-[#2d6be4]" />
+                    </div>
+                    <div>
+                      <p className="text-base font-bold text-gray-900">{selectedOffice.name}</p>
+                      <div className="flex items-center gap-1 mt-1">
+                        <MapPin size={11} className="text-gray-400" />
+                        <p className="text-xs text-gray-500">{selectedOffice.city}, {selectedOffice.state}, {selectedOffice.country}</p>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button onClick={() => openEditOffice(selectedOffice)}
+                      className="flex items-center gap-1.5 text-xs font-semibold text-[#2d6be4] bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg transition">
+                      <Pencil size={12} /> Edit
+                    </button>
+                    <button onClick={() => { deleteOffice(selectedOffice.id); }}
+                      className="flex items-center gap-1.5 text-xs font-semibold text-red-500 bg-red-50 hover:bg-red-100 px-3 py-1.5 rounded-lg transition">
+                      <Trash2 size={12} /> Delete
+                    </button>
+                  </div>
+                </div>
+
+                {/* Hospitals header */}
                 <div className="flex items-center justify-between">
-                  <h2 className="text-sm font-semibold text-gray-700">
+                  <p className="text-sm font-semibold text-gray-700">
                     Hospitals under <span className="text-[#2d6be4]">{selectedOffice.name}</span>
-                  </h2>
+                  </p>
                   <button onClick={openCreateHospital}
                     className="text-sm font-semibold bg-green-500 text-white px-4 py-2 rounded-xl hover:bg-green-600 transition">
                     + Add Hospital
@@ -210,30 +224,51 @@ export default function AdminHospitalsPage() {
                     <p className="text-gray-400 text-sm">No hospitals under this office</p>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-2 gap-4">
-                    {hospitals.map((h: any) => (
-                      <div key={h.id} className="bg-white rounded-2xl border border-gray-100 p-5 hover:shadow-md transition">
-                        <div className="flex items-start justify-between">
-                          <div>
-                            <p className="font-semibold text-gray-800">{h.name}</p>
-                            <p className="text-xs text-gray-400 mt-1">{h.streetAddress}</p>
-                            <p className="text-xs text-gray-400">{h.city}, {h.state}, {h.country} - {h.zip}</p>
-                            <div className="flex gap-2 mt-2">
-                              <span className="text-xs bg-green-50 text-green-700 px-2 py-0.5 rounded-full font-medium">First: ₹{h.defaultFirstConsultationFee}</span>
-                              <span className="text-xs bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full font-medium">Follow-up: ₹{h.defaultFollowupFee}</span>
-                            </div>
-                          </div>
-                          <div className="flex gap-2">
-                            <button onClick={() => openEditHospital(h)}
-                              className="text-blue-400 hover:text-blue-600">
-                              <Pencil size={14} />
-                            </button>
-                            <button onClick={() => deleteHospital(h.id)}
-                              className="text-red-400 hover:text-red-600 text-xs">🗑️</button>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
+                  <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                    <table className="w-full text-sm">
+                      <thead className="bg-gray-50 border-b border-gray-100">
+                        <tr className="text-left text-gray-500">
+                          <th className="px-5 py-3 font-medium">#</th>
+                          <th className="px-5 py-3 font-medium">Hospital Name</th>
+                          <th className="px-5 py-3 font-medium">Address</th>
+                          <th className="px-5 py-3 font-medium">First Visit</th>
+                          <th className="px-5 py-3 font-medium">Follow-up</th>
+                          <th className="px-5 py-3 font-medium">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-50">
+                        {hospitals.map((h: any, i: number) => (
+                          <tr key={h.id} className="hover:bg-gray-50 transition">
+                            <td className="px-5 py-3 text-gray-400">{i + 1}</td>
+                            <td className="px-5 py-3">
+                              <p className="font-semibold text-gray-800">{h.name}</p>
+                              <p className="text-xs text-gray-400">{h.city}, {h.state}</p>
+                            </td>
+                            <td className="px-5 py-3 text-gray-500 text-xs">
+                              {h.streetAddress}, {h.zip}
+                            </td>
+                            <td className="px-5 py-3">
+                              <span className="text-xs bg-green-50 text-green-700 px-2 py-0.5 rounded-full font-medium">₹{h.defaultFirstConsultationFee}</span>
+                            </td>
+                            <td className="px-5 py-3">
+                              <span className="text-xs bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full font-medium">₹{h.defaultFollowupFee}</span>
+                            </td>
+                            <td className="px-5 py-3">
+                              <div className="flex items-center gap-2">
+                                <button onClick={() => openEditHospital(h)}
+                                  className="text-xs font-medium text-[#2d6be4] bg-blue-50 hover:bg-blue-100 px-2.5 py-1 rounded-lg transition flex items-center gap-1">
+                                  <Pencil size={11} /> Edit
+                                </button>
+                                <button onClick={() => deleteHospital(h.id)}
+                                  className="text-xs font-medium text-red-500 bg-red-50 hover:bg-red-100 px-2.5 py-1 rounded-lg transition">
+                                  Delete
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
                   </div>
                 )}
               </>
@@ -241,7 +276,7 @@ export default function AdminHospitalsPage() {
           </div>
         </div>
 
-        {/* Office Modal (Create / Edit) */}
+     
         {showOfficeForm && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
             <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md p-8">
@@ -278,54 +313,87 @@ export default function AdminHospitalsPage() {
           </div>
         )}
 
-        {/* Hospital Modal (Create / Edit) */}
+       
         {showHospitalForm && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-            <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md p-8 max-h-[90vh] overflow-y-auto">
-              <h2 className="text-lg font-bold text-gray-900 mb-5">
+            <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl p-8 max-h-[90vh] overflow-y-auto">
+              <h2 className="text-lg font-bold text-gray-900 mb-1">
                 {editingHospital ? `Edit ${editingHospital.name}` : `Add Hospital to ${selectedOffice?.name}`}
               </h2>
-              <div className="space-y-4">
-                {[
-                  { key: 'name', label: 'Hospital Name', placeholder: 'e.g. Apollo Hospital' },
-                  { key: 'streetAddress', label: 'Street Address', placeholder: 'e.g. 123 Main St' },
-                  { key: 'city', label: 'City', placeholder: 'e.g. Hyderabad' },
-                  { key: 'state', label: 'State', placeholder: 'e.g. Telangana' },
-                  { key: 'country', label: 'Country', placeholder: 'e.g. India' },
-                  { key: 'zip', label: 'ZIP Code', placeholder: 'e.g. 500001' },
-                ].map((f) => (
-                  <div key={f.key}>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">{f.label}</label>
-                    <input type="text" placeholder={f.placeholder}
-                      value={(hospitalForm as any)[f.key]}
-                      onChange={(e) => setHospitalForm({ ...hospitalForm, [f.key]: e.target.value })}
-                      className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#2d6be4]" />
-                  </div>
-                ))}
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Default First Visit Fee (₹)</label>
-                    <input type="number" placeholder="e.g. 500"
-                      value={hospitalForm.defaultFirstConsultationFee}
-                      onChange={(e) => setHospitalForm({ ...hospitalForm, defaultFirstConsultationFee: e.target.value })}
-                      className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#2d6be4]" />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Default Follow-up Fee (₹)</label>
-                    <input type="number" placeholder="e.g. 300"
-                      value={hospitalForm.defaultFollowupFee}
-                      onChange={(e) => setHospitalForm({ ...hospitalForm, defaultFollowupFee: e.target.value })}
-                      className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#2d6be4]" />
+              <p className="text-xs text-gray-400 mb-6">{editingHospital ? 'Update hospital details below' : 'Fill in the details for the new hospital'}</p>
+
+              <div className="grid grid-cols-2 gap-5">
+                <div className="col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Hospital Name</label>
+                  <input type="text" placeholder="e.g. Apollo Hospital"
+                    value={hospitalForm.name}
+                    onChange={(e) => setHospitalForm({ ...hospitalForm, name: e.target.value })}
+                    className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#2d6be4]" />
+                </div>
+                <div className="col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Street Address</label>
+                  <input type="text" placeholder="e.g. 123 Main St"
+                    value={hospitalForm.streetAddress}
+                    onChange={(e) => setHospitalForm({ ...hospitalForm, streetAddress: e.target.value })}
+                    className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#2d6be4]" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">City</label>
+                  <input type="text" placeholder="e.g. Hyderabad"
+                    value={hospitalForm.city}
+                    onChange={(e) => setHospitalForm({ ...hospitalForm, city: e.target.value })}
+                    className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#2d6be4]" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">State</label>
+                  <input type="text" placeholder="e.g. Telangana"
+                    value={hospitalForm.state}
+                    onChange={(e) => setHospitalForm({ ...hospitalForm, state: e.target.value })}
+                    className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#2d6be4]" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Country</label>
+                  <input type="text" placeholder="e.g. India"
+                    value={hospitalForm.country}
+                    onChange={(e) => setHospitalForm({ ...hospitalForm, country: e.target.value })}
+                    className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#2d6be4]" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">ZIP Code</label>
+                  <input type="text" placeholder="e.g. 500001"
+                    value={hospitalForm.zip}
+                    onChange={(e) => setHospitalForm({ ...hospitalForm, zip: e.target.value })}
+                    className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#2d6be4]" />
+                </div>
+
+                <div className="col-span-2 border-t border-gray-100 pt-4">
+                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-4">Consultation Fees</p>
+                  <div className="grid grid-cols-2 gap-5">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1.5">Default First Visit Fee (₹)</label>
+                      <input type="number" placeholder="e.g. 500"
+                        value={hospitalForm.defaultFirstConsultationFee}
+                        onChange={(e) => setHospitalForm({ ...hospitalForm, defaultFirstConsultationFee: e.target.value })}
+                        className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#2d6be4]" />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1.5">Default Follow-up Fee (₹)</label>
+                      <input type="number" placeholder="e.g. 300"
+                        value={hospitalForm.defaultFollowupFee}
+                        onChange={(e) => setHospitalForm({ ...hospitalForm, defaultFollowupFee: e.target.value })}
+                        className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#2d6be4]" />
+                    </div>
                   </div>
                 </div>
               </div>
-              <div className="flex gap-3 mt-6">
+
+              <div className="flex gap-3 mt-8">
                 <button onClick={closeHospitalModal}
-                  className="flex-1 border border-gray-200 text-gray-600 py-2.5 rounded-xl text-sm font-semibold hover:bg-gray-50 transition">
+                  className="flex-1 border border-gray-200 text-gray-600 py-3 rounded-xl text-sm font-semibold hover:bg-gray-50 transition">
                   Cancel
                 </button>
                 <button onClick={handleHospitalSubmit} disabled={creatingHospital || updatingHospital}
-                  className="flex-1 bg-green-500 text-white py-2.5 rounded-xl text-sm font-semibold hover:bg-green-600 transition disabled:opacity-60">
+                  className="flex-1 bg-green-500 text-white py-3 rounded-xl text-sm font-semibold hover:bg-green-600 transition disabled:opacity-60">
                   {creatingHospital || updatingHospital ? 'Saving...' : editingHospital ? 'Save Changes' : 'Add Hospital'}
                 </button>
               </div>
