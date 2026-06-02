@@ -19,6 +19,7 @@ type FormData = z.infer<typeof schema>;
 export default function RegisterPage() {
   const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
+  const [registered, setRegistered] = useState<{ role: 'patient' | 'doctor' } | null>(null);
 
   const { register, handleSubmit, watch, formState: { errors } } = useForm<FormData>({
     resolver: zodResolver(schema),
@@ -32,9 +33,8 @@ export default function RegisterPage() {
       data.role === 'doctor'
         ? registerDoctorApi({ email: data.email, password: data.password })
         : registerPatientApi({ email: data.email, password: data.password }),
-    onSuccess: () => {
-      toast.success('Account created! Please login.');
-      router.replace('/auth/login');
+    onSuccess: (_, variables) => {
+      setRegistered({ role: variables.role });
     },
     onError: (err: any) => {
       toast.error(err?.response?.data?.message || 'Registration failed');
@@ -125,8 +125,43 @@ export default function RegisterPage() {
      
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
         <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md p-8 relative">
-          <Link href="/auth/login"
-            className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-xl">✕</Link>
+
+          {/* ── SUCCESS SCREEN ── */}
+          {registered ? (
+            <div className="text-center space-y-5">
+              <div className="w-16 h-16 bg-green-50 rounded-full flex items-center justify-center mx-auto">
+                <span className="text-3xl">✅</span>
+              </div>
+              <div>
+                <h2 className="text-xl font-bold text-gray-900">Account Created!</h2>
+                {registered.role === 'doctor' ? (
+                  <>
+                    <p className="text-gray-500 text-sm mt-2">
+                      Welcome, Doctor! Your account is ready.
+                    </p>
+                    <div className="mt-4 bg-blue-50 border border-blue-100 rounded-2xl p-4 text-left space-y-1.5">
+                      <p className="text-sm font-semibold text-blue-800">Next steps to get started:</p>
+                      <p className="text-xs text-blue-700">1. Login to your doctor dashboard</p>
+                      <p className="text-xs text-blue-700">2. Complete your profile (specializations, qualifications, documents)</p>
+                      <p className="text-xs text-blue-700">3. Request verification — admin will review and approve</p>
+                      <p className="text-xs text-blue-700">4. Once verified, start managing appointments!</p>
+                    </div>
+                  </>
+                ) : (
+                  <p className="text-gray-500 text-sm mt-2">
+                    Your patient account is ready. Login to book appointments with verified doctors.
+                  </p>
+                )}
+              </div>
+              <button onClick={() => router.push('/auth/login?modal=true')}
+                className="block w-full bg-[#2d6be4] hover:bg-blue-700 text-white font-semibold py-3 rounded-xl transition text-sm text-center">
+                Login to your dashboard →
+              </button>
+            </div>
+          ) : (
+          <>
+          <button onClick={() => router.push('/auth/login?modal=true')}
+            className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-xl">✕</button>
 
           <div className="text-center mb-6">
             <div className="w-12 h-12 bg-[#eef3ff] rounded-2xl flex items-center justify-center mx-auto mb-3">
@@ -199,8 +234,10 @@ export default function RegisterPage() {
 
           <p className="text-center text-sm text-gray-400 mt-4">
             Already have an account?{' '}
-            <Link href="/auth/login" className="text-[#2d6be4] font-semibold hover:underline">Sign in</Link>
+            <button onClick={() => router.push('/auth/login?modal=true')} className="text-[#2d6be4] font-semibold hover:underline">Sign in</button>
           </p>
+          </>
+          )}
         </div>
       </div>
     </div>

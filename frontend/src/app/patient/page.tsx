@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import Link from 'next/link';
 import Sidebar from '@/components/Sidebar';
-import NotificationBell from '@/components/NotificationBell';
+import PatientTopBar from '@/components/PatientTopBar';
 import { Search, CalendarDays, UserRound, CalendarPlus } from 'lucide-react';
 import { getPatientAppointmentsApi, getClientAccountApi } from '@/lib/api/patient.api';
 
@@ -45,18 +45,14 @@ export default function PatientDashboard() {
   const completed = allApts.filter((a: any) => a.status?.status === 'Completed');
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className="min-h-screen bg-gray-50 flex pt-12">
+      <PatientTopBar />
       <Sidebar items={navItems} />
       <main className="flex-1 flex flex-col ml-60">
-        <header className="h-16 bg-white border-b border-gray-100 flex items-center justify-between px-6 sticky top-0 z-30">
-          <h1 className="text-base font-semibold text-gray-900">Dashboard</h1>
-          <NotificationBell />
-        </header>
-
         <div className="flex-1 p-6 space-y-5">
-          <div className="bg-[#2d6be4] rounded-2xl p-6 text-white">
-            <h2 className="text-lg font-semibold">Welcome back</h2>
-            <p className="text-blue-100 text-sm mt-1">{user.email}</p>
+          <div className="bg-gradient-to-r from-[#4a1d96] to-[#7c3aed] rounded-2xl p-6 text-white">
+            <h2 className="text-lg font-semibold">Welcome back{profile ? `, ${profile.firstName}` : ''}</h2>
+            <p className="text-purple-100 text-sm mt-1">{user.email}</p>
           </div>
 
       

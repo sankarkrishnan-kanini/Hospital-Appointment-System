@@ -20,6 +20,13 @@ export class AdminController {
     return this.adminService.getAllUsers();
   }
 
+  @Get('users/:id/detail')
+  getUserDetail(
+    @Param('id', new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE })) id: number
+  ) {
+    return this.adminService.getUserDetail(id);
+  }
+
   @Patch('users/:id/deactivate')
   deactivateUser(
     @Param('id', new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE })) id: number
@@ -92,6 +99,15 @@ export class AdminController {
   ) {
     return this.adminService.getPatientById(id);
   }
+
+
+  // ─── SPECIALIZATION REQUESTS ─────────────────────────────────────────────────
+
+  @Get('specializations')
+  getAllSpecializations() {
+    return this.adminService.getAllSpecializations();
+  }
+
 
   @Get('specialization-requests')
   getSpecializationRequests() {

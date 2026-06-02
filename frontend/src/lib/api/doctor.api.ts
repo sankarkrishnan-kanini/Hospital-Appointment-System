@@ -1,9 +1,12 @@
-import { AffiliateHospitalDto, CreatePrivatePracticeDto, GenerateTimeSlotsDto, MarkUnavailabilityDto, SetAvailabilityDto } from '@/types/dto.types';
+import { AffiliateHospitalDto, CreatePrivatePracticeDto, GenerateTimeSlotsDto, MarkUnavailabilityDto, SetAvailabilityDto, UpdateDoctorProfileDto } from '@/types/dto.types';
 import api from '../axios';
 
 
 export const getDoctorProfileApi = () => api.get('/doctor-role/profile');
-export const updateDoctorProfileApi = (dto: any) => api.patch('/doctor-role/profile', dto);
+
+export const getSpecializationsApi = () => api.get('/doctor-role/specializations');
+export const updateDoctorProfileApi = (dto: UpdateDoctorProfileDto) => api.patch('/doctor-role/profile', dto);
+
 export const requestVerificationApi = () => api.patch('/doctor-role/request-verification');
 
 

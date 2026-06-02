@@ -2,6 +2,7 @@ import api from '../axios';
 
 
 export const getAllUsersApi = () => api.get('/admin/users');
+export const getUserDetailApi = (userId: number) => api.get(`/admin/users/${userId}/detail`);
 export const activateUserApi = (id: number) => api.patch(`/admin/users/${id}/activate`);
 export const deactivateUserApi = (id: number) => api.patch(`/admin/users/${id}/deactivate`);
 
@@ -45,7 +46,9 @@ export const updateHospitalApi = (id: number, dto: any) =>
 export const deleteHospitalApi = (id: number) => api.delete(`/admin/hospitals/${id}`);
 
 
+
 export const getAllSpecializationsApi = () => api.get('/patient/doctors?limit=0').then(() => ({ data: [] }));
 
 
 export const getAnalyticsApi = () => api.get('/admin/analytics');
+
