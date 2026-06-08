@@ -5,15 +5,16 @@ import { useAuthStore } from '@/store/auth.store';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import Sidebar from '@/components/Sidebar';
-import { Search, X, ChevronRight, Clock, DollarSign } from 'lucide-react';
+import { Search, X, ChevronRight, Clock, DollarSign, MessageCircle } from 'lucide-react';
 import { searchDoctorsApi, getAvailableTimeSlotsApi, bookAppointmentApi, getSpecializationsApi } from '@/lib/api/patient.api';
-import PatientTopBar from '@/components/PatientTopBar';
+import { startChatApi } from '@/lib/api/chat.api';
 import toast from 'react-hot-toast';
 
 const navItems = [
   { label: 'Dashboard', href: '/patient', icon: '' },
   { label: 'Find Doctors', href: '/patient/doctors', icon: '' },
   { label: 'My Appointments', href: '/patient/appointments', icon: '' },
+  { label: 'Messages', href: '/patient/chat', icon: '' },
   { label: 'My Profile', href: '/patient/profile', icon: '' },
 ];
 
@@ -45,6 +46,22 @@ export default function FindDoctorsPage() {
   const [selectedSpecId, setSelectedSpecId] = useState<number | null>(null);
   const [reason, setReason] = useState('');
   const [showBooking, setShowBooking] = useState(false);
+  const [isFollowup, setIsFollowup] = useState(false);
+
+  // ── Feature #5: Reason Templates ─────────────────────────────────────────────
+  const REASON_TEMPLATES = ['Routine Checkup', 'Follow-up Visit', 'New Symptoms', 'Test Results Review', 'Second Opinion', 'Prescription Renewal'];
+
+  // ── Feature #2: Slot grouping helper ─────────────────────────────────────────
+  const groupSlotsByPeriod = (slots: any[]) => {
+    const morning: any[] = [], afternoon: any[] = [], evening: any[] = [];
+    slots.forEach(s => {
+      const h = new Date(s.startTime).getUTCHours();
+      if (h < 12) morning.push(s);
+      else if (h < 17) afternoon.push(s);
+      else evening.push(s);
+    });
+    return { morning, afternoon, evening };
+  };
 
   useEffect(() => {
     if (!_hasHydrated) return;
@@ -102,7 +119,15 @@ export default function FindDoctorsPage() {
     setSelectedPractice(practice);
     setSelectedSlot(null);
     setReason('');
- 
+    // ── Feature #3: detect follow-up ──
+    // We don't have appointments here, but we pass it via query — check via queryClient cache
+    const cachedApts = queryClient.getQueryData<any>(['patient-appointments']);
+    const allApts = Array.isArray(cachedApts?.data) ? cachedApts.data : [];
+    const hasCompleted = allApts.some((a: any) =>
+      a.doctorHospital?.doctor?.id === doctor.id && a.status?.status === 'Completed'
+    );
+    setIsFollowup(hasCompleted);
+
     const filterMatch = specializationId ? Number(specializationId) : null;
     if (filterMatch) {
       setSelectedSpecId(filterMatch);
@@ -127,8 +152,7 @@ export default function FindDoctorsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex pt-12">
-      <PatientTopBar />
+    <div className="min-h-screen bg-gray-50 flex pt-14">
       <Sidebar items={navItems} />
       <main className="flex-1 flex flex-col ml-60">
         <div className="flex-1 p-6 space-y-5">
@@ -197,6 +221,20 @@ export default function FindDoctorsPage() {
                         ))}
                       </div>
                     </div>
+                    <button
+                      onClick={async () => {
+                        try {
+                          await startChatApi(doc.id);
+                          router.push('/patient/chat');
+                        } catch {
+                          toast.error('Could not start chat. Please set up your profile first.');
+                        }
+                      }}
+                      className="flex items-center gap-1 text-xs font-medium text-emerald-600 bg-emerald-50 hover:bg-emerald-100 px-3 py-1.5 rounded-lg transition"
+                      title="Message this doctor"
+                    >
+                      <MessageCircle size={12} /> Chat
+                    </button>
                   </div>
 
                  
@@ -258,11 +296,32 @@ export default function FindDoctorsPage() {
                       ? selectedPractice.city ? `Private · ${selectedPractice.city}` : 'Private Practice'
                       : selectedPractice.hospital?.name}
                   </p>
+                  {/* ── Feature #3: Fee Estimator ── */}
+                  <div className="flex gap-3 mt-3">
+                    <div className={`flex-1 rounded-xl p-2.5 border-2 text-center transition ${
+                      !isFollowup ? 'border-[#2d6be4] bg-blue-50' : 'border-gray-100 bg-white'
+                    }`}>
+                      <p className="text-[10px] text-gray-400 font-medium">First Visit</p>
+                      <p className={`text-base font-bold mt-0.5 ${ !isFollowup ? 'text-[#2d6be4]' : 'text-gray-400'}`}>
+                        ₹{selectedPractice.firstConsultationFee ?? '—'}
+                      </p>
+                    </div>
+                    <div className={`flex-1 rounded-xl p-2.5 border-2 text-center transition ${
+                      isFollowup ? 'border-[#2d6be4] bg-blue-50' : 'border-gray-100 bg-white'
+                    }`}>
+                      <p className="text-[10px] text-gray-400 font-medium">Follow-up</p>
+                      <p className={`text-base font-bold mt-0.5 ${ isFollowup ? 'text-[#2d6be4]' : 'text-gray-400'}`}>
+                        ₹{selectedPractice.followupConsultationFee ?? '—'}
+                      </p>
+                    </div>
+                  </div>
+                  {isFollowup && (
+                    <p className="text-[11px] text-emerald-600 bg-emerald-50 rounded-lg px-3 py-1.5 mt-2 font-medium">
+                      ✅ Follow-up rate applied — you've visited this doctor before
+                    </p>
+                  )}
                   <div className="flex gap-4 mt-2">
-                    <span className="flex items-center gap-1 text-xs text-gray-500">
-                      <DollarSign size={11} /> First visit: ₹{selectedPractice.firstConsultationFee}
-                    </span>
-                    <span className="flex items-center gap-1 text-xs text-gray-500">
+                    <span className="flex items-center gap-1 text-xs text-gray-400">
                       <Clock size={11} /> {selectedPractice.timeSlotPerClientInMin ?? '—'} min/slot
                     </span>
                   </div>
@@ -276,7 +335,6 @@ export default function FindDoctorsPage() {
                   )}
                 </div>
 
-             
                 <div>
                   <label className="block text-xs font-medium text-gray-600 mb-1">Consulting For *</label>
                   <select value={selectedSpecId ?? ''} onChange={e => setSelectedSpecId(Number(e.target.value))}
@@ -285,7 +343,6 @@ export default function FindDoctorsPage() {
                     {selectedDoctor?.specializations?.map((name: string) => {
                       const s = SPECIALIZATIONS.find(x => x.name === name);
                       if (s) return <option key={s.id} value={s.id}>{s.name}</option>;
-                      // fallback: show the name even if not in local list
                       const idx = selectedDoctor.specializations.indexOf(name) + 1;
                       return <option key={idx} value={idx}>{name}</option>;
                     })}
@@ -299,34 +356,61 @@ export default function FindDoctorsPage() {
                       No available slots. Ask the doctor to generate slots.
                     </p>
                   ) : (
-                    <div className="space-y-3 max-h-56 overflow-y-auto">
-                      {groupedSlots.map((group) => (
-                        <div key={group.date}>
-                          <p className="text-xs font-semibold text-gray-500 mb-1.5">
-                            {new Date(group.date).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' })}
-                          </p>
-                          <div className="grid grid-cols-3 gap-2">
-                            {group.slots.map((slot: any) => (
-                              <button key={slot.id} onClick={() => setSelectedSlot(slot.id)}
-                                className={`p-2.5 rounded-xl border text-xs font-medium transition text-center
-                                  ${selectedSlot === slot.id
-                                    ? 'border-[#2d6be4] bg-blue-50 text-[#2d6be4]'
-                                    : 'border-gray-200 text-gray-600 hover:border-gray-300'}`}>
-                                {new Date(slot.startTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', timeZone: 'UTC' })}
-                              </button>
+                    // ── Feature #2: Time Slot Grouping ──
+                    <div className="space-y-3 max-h-64 overflow-y-auto pr-1">
+                      {groupedSlots.map((group) => {
+                        const { morning, afternoon, evening } = groupSlotsByPeriod(group.slots);
+                        const periods = [
+                          { label: '🌅 Morning', slots: morning },
+                          { label: '☀️ Afternoon', slots: afternoon },
+                          { label: '🌆 Evening', slots: evening },
+                        ].filter(p => p.slots.length > 0);
+                        return (
+                          <div key={group.date}>
+                            <p className="text-xs font-semibold text-gray-500 mb-2">
+                              {new Date(group.date).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'short', timeZone: 'UTC' })}
+                            </p>
+                            {periods.map(period => (
+                              <div key={period.label} className="mb-2">
+                                <p className="text-[11px] text-gray-400 font-medium mb-1.5">{period.label}</p>
+                                <div className="grid grid-cols-4 gap-1.5">
+                                  {period.slots.map((slot: any) => (
+                                    <button key={slot.id} onClick={() => setSelectedSlot(slot.id)}
+                                      className={`py-2 rounded-xl border text-[11px] font-semibold transition text-center ${
+                                        selectedSlot === slot.id
+                                          ? 'border-[#2d6be4] bg-[#2d6be4] text-white shadow-sm'
+                                          : 'border-gray-200 text-gray-600 hover:border-[#2d6be4] hover:text-[#2d6be4] bg-white'
+                                      }`}>
+                                      {new Date(slot.startTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', timeZone: 'UTC' })}
+                                    </button>
+                                  ))}
+                                </div>
+                              </div>
                             ))}
                           </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   )}
                 </div>
 
-               
+                {/* ── Feature #5: Reason Templates ── */}
                 <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Reason (optional)</label>
+                  <label className="block text-xs font-medium text-gray-600 mb-2">Reason for Visit</label>
+                  <div className="flex flex-wrap gap-1.5 mb-2">
+                    {REASON_TEMPLATES.map(t => (
+                      <button key={t} onClick={() => setReason(t)}
+                        className={`text-[11px] px-3 py-1.5 rounded-full border font-medium transition ${
+                          reason === t
+                            ? 'bg-[#2d6be4] text-white border-[#2d6be4]'
+                            : 'bg-white text-gray-600 border-gray-200 hover:border-[#2d6be4] hover:text-[#2d6be4]'
+                        }`}>
+                        {t}
+                      </button>
+                    ))}
+                  </div>
                   <input value={reason} onChange={e => setReason(e.target.value)}
-                    placeholder="e.g. Chest pain, routine checkup..."
+                    placeholder="Or type your own reason..."
                     className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#2d6be4]" />
                 </div>
               </div>

@@ -51,15 +51,9 @@ export default function AdminDashboard() {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className="min-h-screen bg-gray-50 flex pt-14">
       <Sidebar items={navItems} />
-      <main className="flex-1 flex flex-col ml-60 mt-12">
-        <header className="h-14 bg-white border-b border-gray-100 flex items-center px-6 sticky top-12 z-30">
-          <div>
-            <h1 className="text-base font-semibold text-gray-900">Dashboard</h1>
-            <p className="text-xs text-gray-500">Welcome back, Admin — here is your system overview</p>
-          </div>
-        </header>
+      <main className="flex-1 flex flex-col ml-60">
 
         <div className="flex-1 p-6 space-y-5">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">

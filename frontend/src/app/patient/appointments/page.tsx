@@ -4,8 +4,6 @@ import { useAuthStore } from '@/store/auth.store';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import Sidebar from '@/components/Sidebar';
-
-import PatientTopBar from '@/components/PatientTopBar';
 import { CalendarDays, X, RefreshCw, CheckCircle2, Hash, User, Building2, DollarSign } from 'lucide-react';
 
 import { getPatientAppointmentsApi, cancelAppointmentApi, rescheduleAppointmentApi, getAvailableTimeSlotsApi } from '@/lib/api/patient.api';
@@ -15,6 +13,7 @@ const navItems = [
   { label: 'Dashboard', href: '/patient', icon: '' },
   { label: 'Find Doctors', href: '/patient/doctors', icon: '' },
   { label: 'My Appointments', href: '/patient/appointments', icon: '' },
+  { label: 'Messages', href: '/patient/chat', icon: '' },
   { label: 'My Profile', href: '/patient/profile', icon: '' },
 ];
 
@@ -96,8 +95,7 @@ export default function PatientAppointmentsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex pt-12">
-      <PatientTopBar />
+    <div className="min-h-screen bg-gray-50 flex pt-14">
       <Sidebar items={navItems} />
       <main className="flex-1 flex flex-col ml-60">
         <div className="flex-1 p-6 space-y-5">

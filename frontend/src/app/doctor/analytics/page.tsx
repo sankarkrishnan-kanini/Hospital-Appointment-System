@@ -19,6 +19,7 @@ const navItems = [
   { label: 'Availability', href: '/doctor/availability', icon: '' },
   { label: 'Time Slots', href: '/doctor/timeslots', icon: '' },
   { label: 'Appointments', href: '/doctor/appointments', icon: '' },
+  { label: 'Messages', href: '/doctor/chat', icon: '' },
 ];
 
 const BLUE = '#2d6be4';

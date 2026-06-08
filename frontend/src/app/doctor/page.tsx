@@ -8,6 +8,7 @@ import Sidebar from '@/components/Sidebar';
 import NotificationBell from '@/components/NotificationBell';
 import { CalendarDays, Building2, GraduationCap, FileText, UserRound, Clock, ChevronRight } from 'lucide-react';
 import { getDoctorProfileApi, getDoctorAppointmentsApi, getDoctorOfficesApi } from '@/lib/api/doctor.api';
+import ChatBot from '@/components/ChatBot';
 
 const navItems = [
   { label: 'Dashboard', href: '/doctor', icon: '' },
@@ -17,6 +18,7 @@ const navItems = [
   { label: 'Availability', href: '/doctor/availability', icon: '' },
   { label: 'Time Slots', href: '/doctor/timeslots', icon: '' },
   { label: 'Appointments', href: '/doctor/appointments', icon: '' },
+  { label: 'Messages', href: '/doctor/chat', icon: '' },
 ];
 
 export default function DoctorDashboard() {
@@ -43,13 +45,9 @@ export default function DoctorDashboard() {
 
   if (!isLoading && (!isProfileSetup || (!isVerified && verificationRequested))) {
     return (
-      <div className="min-h-screen bg-gray-50 flex">
+      <div className="min-h-screen bg-gray-50 flex pt-14">
         <Sidebar items={navItems} />
         <main className="flex-1 flex flex-col ml-60">
-          <header className="h-16 bg-white border-b border-gray-100 flex items-center justify-between px-6 sticky top-0 z-30">
-            <h1 className="text-base font-semibold text-gray-900">Dashboard</h1>
-            <NotificationBell />
-          </header>
           <div className="flex-1 flex items-center justify-center p-6">
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-12 text-center max-w-md w-full">
               {!isProfileSetup ? (
@@ -94,16 +92,10 @@ export default function DoctorDashboard() {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <>
+    <div className="min-h-screen bg-gray-50 flex pt-14">
       <Sidebar items={navItems} />
       <main className="flex-1 flex flex-col ml-60">
-        <header className="h-16 bg-white border-b border-gray-100 flex items-center justify-between px-6 sticky top-0 z-30">
-          <div>
-            <h1 className="text-base font-semibold text-gray-900">Dashboard</h1>
-            <p className="text-xs text-gray-500">Welcome, Dr. {doctor?.firstName} {doctor?.lastName} — manage your practice</p>
-          </div>
-          <NotificationBell />
-        </header>
 
         <div className="flex-1 p-6 space-y-5">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -170,5 +162,7 @@ export default function DoctorDashboard() {
         </div>
       </main>
     </div>
+    <ChatBot role="doctor" userName={doctor?.firstName ? `Dr. ${doctor.firstName}` : user.email} />
+    </>
   );
 }

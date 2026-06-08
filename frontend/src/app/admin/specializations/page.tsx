@@ -318,7 +318,7 @@ export default function AdminSpecializationsPage() {
   const hasFilters = search || specFilter || dateFrom || dateTo;
 
   return (
-    <div className="min-h-screen bg-gray-50 flex pt-12">
+    <div className="min-h-screen bg-gray-50 flex pt-14">
       <AdminTopBar />
       <Sidebar items={navItems} />
       <main className="flex-1 flex flex-col ml-64">

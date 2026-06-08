@@ -3,6 +3,7 @@ import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateClientAccountDto } from './DTOS/createClientAccountDto';
+import { UpdateClientAccountDto } from './DTOS/updateClientAccountDto';
 import { SearchDoctorsDto } from './DTOS/searchDoctorsDto';
 import { BookAppointmentDto } from './DTOS/bookAppointmentDto';
 import { CancelAppointmentDto } from './DTOS/cancelAppointmentDto';
@@ -56,6 +57,21 @@ export class PatientService {
     const client = await this.prisma.clientAccount.findUnique({ where: { userId } });
     if (!client) throw new NotFoundException(`Client account not found`);
     return client;
+  }
+
+  async updateClientAccount(userId: number, dto: UpdateClientAccountDto) {
+    const client = await this.prisma.clientAccount.findUnique({ where: { userId } });
+    if (!client) throw new NotFoundException(`Client account not found`);
+
+    return this.prisma.clientAccount.update({
+      where: { userId },
+      data: {
+        ...(dto.firstName && { firstName: dto.firstName }),
+        ...(dto.lastName && { lastName: dto.lastName }),
+        ...(dto.contactNumber && { contactNumber: dto.contactNumber }),
+        ...(dto.email && { email: dto.email }),
+      },
+    });
   }
 
   async searchDoctors(dto: SearchDoctorsDto) {
