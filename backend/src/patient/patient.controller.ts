@@ -1,6 +1,7 @@
 import { Controller, Get, Post, Patch, Body, Param, Query, ParseIntPipe, HttpStatus, UseGuards } from '@nestjs/common';
 import { PatientService } from './patient.service';
 import { CreateClientAccountDto } from './DTOS/createClientAccountDto';
+import { UpdateClientAccountDto } from './DTOS/updateClientAccountDto';
 import { SearchDoctorsDto } from './DTOS/searchDoctorsDto';
 import { BookAppointmentDto } from './DTOS/bookAppointmentDto';
 import { CancelAppointmentDto } from './DTOS/cancelAppointmentDto';
@@ -43,7 +44,13 @@ export class PatientController {
     return this.patientService.getClientAccount(userId);
   }
 
- 
+  @Patch('account')
+  updateClientAccount(
+    @User('sub', new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE })) userId: number,
+    @Body() dto: UpdateClientAccountDto
+  ) {
+    return this.patientService.updateClientAccount(userId, dto);
+  }
 
   @Get('doctors')
   searchDoctors(@Query() dto: SearchDoctorsDto) {

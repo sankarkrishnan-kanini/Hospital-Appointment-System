@@ -16,6 +16,8 @@ import { InNetworkInsuranceModule } from './in-network-insurance/in-network-insu
 import { MailModule } from './mail/mail.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { TimeslotCleanupModule } from './timeslot-cleanup/timeslot-cleanup.module';
+import { ChatbotModule } from './chatbot/chatbot.module';
+import { ChatModule } from './chat/chat.module';
 
 @Module({
   imports: [
@@ -36,6 +38,8 @@ import { TimeslotCleanupModule } from './timeslot-cleanup/timeslot-cleanup.modul
     InNetworkInsuranceModule,
     MailModule,
     TimeslotCleanupModule,
+    ChatbotModule,
+    ChatModule,
   ],
   controllers: [AppController],
   providers: [AppService, PrismaService],

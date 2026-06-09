@@ -9,6 +9,7 @@ import {
 
 export const createClientAccountApi = (dto: CreateClientAccountDto) => api.post('/patient/account', dto);
 export const getClientAccountApi = () => api.get('/patient/account');
+export const updateClientAccountApi = (dto: Partial<CreateClientAccountDto>) => api.patch('/patient/account', dto);
 
 export const searchDoctorsApi = (params: SearchDoctorsDto) => api.get('/patient/doctors', { params });
 export const getDoctorProfileApi = (id: number) => api.get(`/patient/doctors/${id}`);

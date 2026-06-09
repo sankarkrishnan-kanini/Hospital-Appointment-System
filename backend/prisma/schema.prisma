@@ -23,6 +23,7 @@ model User {
   doctor        Doctor?
   client        ClientAccount?
   notifications Notification[]
+  chatMessages  ChatRoomMessage[] @relation("ChatMessageSender")
 }
 
 model Doctor {
@@ -43,6 +44,7 @@ model Doctor {
   qualifications  Qualification[]
   unavailability  DoctorUnavailability[]
   doctorHospitals DoctorHospital[]
+  chatRooms       ChatRoom[]
 }
 
 model DoctorDocument {
@@ -61,7 +63,8 @@ model Specialization {
   id                 Int                  @id @default(autoincrement())
   specializationName String
 
-  doctors DoctorSpecialization[]
+  doctors          DoctorSpecialization[]
+  chatbotSymptoms  ChatbotSymptom[]
 }
 
 model DoctorSpecialization {
@@ -104,6 +107,7 @@ model ClientAccount {
 
   user         User          @relation(fields: [userId], references: [id])
   appointments Appointment[]
+  chatRooms    ChatRoom[]
 }
 
 // ─── OFFICE (Admin managed region) ───────────────────────────────────────────
@@ -241,4 +245,56 @@ model Notification {
   createdAt DateTime @default(now())
 
   user User @relation(fields: [userId], references: [id])
+}
+
+// ─── CHATBOT CONFIGURATION ───────────────────────────────────────────────────
+
+model ChatbotSymptom {
+  id               Int    @id @default(autoincrement())
+  keyword          String @unique
+  specializationId Int
+
+  specialization Specialization @relation(fields: [specializationId], references: [id])
+}
+
+model ChatbotFaq {
+  id       Int    @id @default(autoincrement())
+  keyword  String @unique
+  answer   String @db.Text
+  role     String @default("all") // "patient", "doctor", "all"
+}
+
+model ChatbotConfig {
+  id    Int    @id @default(autoincrement())
+  key   String @unique
+  value String @db.Text
+  role  String @default("all") // "patient", "doctor", "all"
+}
+
+// ─── LIVE CHAT (Doctor ↔ Patient) ────────────────────────────────────────────
+
+model ChatRoom {
+  id        Int      @id @default(autoincrement())
+  doctorId  Int
+  patientId Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  doctor   Doctor         @relation(fields: [doctorId], references: [id])
+  patient  ClientAccount  @relation(fields: [patientId], references: [id])
+  messages ChatRoomMessage[]
+
+  @@unique([doctorId, patientId])
+}
+
+model ChatRoomMessage {
+  id         Int      @id @default(autoincrement())
+  chatRoomId Int
+  senderId   Int      // userId of sender
+  content    String   @db.Text
+  isRead     Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  chatRoom ChatRoom @relation(fields: [chatRoomId], references: [id], onDelete: Cascade)
+  sender   User     @relation("ChatMessageSender", fields: [senderId], references: [id])
 }

@@ -3,6 +3,7 @@ import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateClientAccountDto } from './DTOS/createClientAccountDto';
+import { UpdateClientAccountDto } from './DTOS/updateClientAccountDto';
 import { SearchDoctorsDto } from './DTOS/searchDoctorsDto';
 import { BookAppointmentDto } from './DTOS/bookAppointmentDto';
 import { CancelAppointmentDto } from './DTOS/cancelAppointmentDto';
@@ -56,6 +57,21 @@ export class PatientService {
     const client = await this.prisma.clientAccount.findUnique({ where: { userId } });
     if (!client) throw new NotFoundException(`Client account not found`);
     return client;
+  }
+
+  async updateClientAccount(userId: number, dto: UpdateClientAccountDto) {
+    const client = await this.prisma.clientAccount.findUnique({ where: { userId } });
+    if (!client) throw new NotFoundException(`Client account not found`);
+
+    return this.prisma.clientAccount.update({
+      where: { userId },
+      data: {
+        ...(dto.firstName && { firstName: dto.firstName }),
+        ...(dto.lastName && { lastName: dto.lastName }),
+        ...(dto.contactNumber && { contactNumber: dto.contactNumber }),
+        ...(dto.email && { email: dto.email }),
+      },
+    });
   }
 
   async searchDoctors(dto: SearchDoctorsDto) {
@@ -292,7 +308,6 @@ export class PatientService {
           appointmentTakenDate: new Date(),
           consultationFee: consultationFee ?? 0,
         },
-        include: { status: true, timeSlot: true, doctorHospital: { include: { doctor: true, hospital: true } } }
       });
 
       await tx.timeSlot.update({ where: { id: dto.timeSlotId }, data: { isBooked: true } });
@@ -340,12 +355,12 @@ export class PatientService {
       probableStartTime: appointment.probableStartTime,
       durationInMinutes: appointment.durationInMinutes,
       appointmentTakenDate: appointment.appointmentTakenDate,
-      status: appointment.status.status,
+      status: activeStatus.status,
       specialization: specialization.specializationName,
       timeSlot: {
-        id: appointment.timeSlot.id,
-        startTime: appointment.timeSlot.startTime,
-        endTime: appointment.timeSlot.endTime
+        id: timeSlot.id,
+        startTime: timeSlot.startTime,
+        endTime: timeSlot.endTime
       },
       doctor: {
         id: doctor.id,

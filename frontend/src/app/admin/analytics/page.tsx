@@ -26,6 +26,16 @@ const BLUE = '#2d6be4';
 const BAR_FILL = '#dbeafe';
 const BAR_STROKE = '#2d6be4';
 
+const CustomTooltip = ({ active, payload }: any) => {
+  if (!active || !payload?.length) return null;
+  return (
+    <div className="bg-gray-900 text-white text-xs px-3 py-2 rounded-lg shadow-lg">
+      <p className="font-medium">{payload[0].name}</p>
+      <p>{payload[0].value}</p>
+    </div>
+  );
+};
+
 export default function AdminAnalyticsPage() {
   const { user, _hasHydrated } = useAuthStore();
   const router = useRouter();
@@ -94,7 +104,7 @@ export default function AdminAnalyticsPage() {
                       <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                       <XAxis dataKey="month" tick={{ fontSize: 11 }} />
                       <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
-                      <Tooltip />
+                      <Tooltip content={<CustomTooltip />} />
                       <Line type="monotone" dataKey="count" stroke={BLUE} strokeWidth={2} dot={{ r: 3, fill: '#fff', stroke: BLUE, strokeWidth: 2 }} name="Appointments" />
                     </LineChart>
                   </ResponsiveContainer>
@@ -120,7 +130,7 @@ export default function AdminAnalyticsPage() {
                             <Cell key={entry.status} fill={entry.status === 'ACTIVE' ? '#dbeafe' : entry.status === 'Completed' ? '#e2e8f0' : '#f1f5f9'} stroke={entry.status === 'ACTIVE' ? BLUE : '#94a3b8'} strokeWidth={1} />
                           ))}
                         </Pie>
-                        <Tooltip formatter={(value: any, name: any) => [value, name]} />
+                        <Tooltip content={<CustomTooltip />} formatter={(value: any, name: any) => [value, name]} />
                         <Legend
                           iconType="circle"
                           iconSize={8}
@@ -147,7 +157,7 @@ export default function AdminAnalyticsPage() {
                         <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                         <XAxis dataKey="name" tick={{ fontSize: 10 }} />
                         <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
-                        <Tooltip />
+                        <Tooltip content={<CustomTooltip />} />
                         <Bar dataKey="count" fill={BAR_FILL} stroke={BAR_STROKE} strokeWidth={1.5} radius={[6, 6, 0, 0]} name="Appointments" />
                       </BarChart>
                     </ResponsiveContainer>
@@ -165,7 +175,7 @@ export default function AdminAnalyticsPage() {
                         <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                         <XAxis dataKey="name" tick={{ fontSize: 10 }} />
                         <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
-                        <Tooltip />
+                        <Tooltip content={<CustomTooltip />} />
                         <Bar dataKey="count" fill={BAR_FILL} stroke={BAR_STROKE} strokeWidth={1.5} radius={[6, 6, 0, 0]} name="Bookings" />
                       </BarChart>
                     </ResponsiveContainer>

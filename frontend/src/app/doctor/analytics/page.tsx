@@ -19,6 +19,7 @@ const navItems = [
   { label: 'Availability', href: '/doctor/availability', icon: '' },
   { label: 'Time Slots', href: '/doctor/timeslots', icon: '' },
   { label: 'Appointments', href: '/doctor/appointments', icon: '' },
+  { label: 'Messages', href: '/doctor/chat', icon: '' },
 ];
 
 const BLUE = '#2d6be4';
@@ -28,6 +29,16 @@ const STATUS_COLORS: Record<string, string> = {
   ACTIVE: '#dbeafe',
   Completed: '#e2e8f0',
   CANCELLED: '#f1f5f9',
+};
+
+const CustomTooltip = ({ active, payload }: any) => {
+  if (!active || !payload?.length) return null;
+  return (
+    <div className="bg-gray-900 text-white text-xs px-3 py-2 rounded-lg shadow-lg">
+      <p className="font-medium">{payload[0].name}</p>
+      <p>{payload[0].value}</p>
+    </div>
+  );
 };
 
 export default function DoctorAnalyticsPage() {
@@ -98,7 +109,7 @@ export default function DoctorAnalyticsPage() {
                       <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                       <XAxis dataKey="month" tick={{ fontSize: 11 }} />
                       <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
-                      <Tooltip />
+                      <Tooltip content={<CustomTooltip />} />
                       <Line type="monotone" dataKey="count" stroke={BLUE} strokeWidth={2} dot={{ r: 3, fill: '#fff', stroke: BLUE, strokeWidth: 2 }} name="Appointments" />
                     </LineChart>
                   </ResponsiveContainer>
@@ -124,7 +135,7 @@ export default function DoctorAnalyticsPage() {
                             <Cell key={entry.status} fill={STATUS_COLORS[entry.status] ?? '#f1f5f9'} stroke={entry.status === 'ACTIVE' ? BLUE : '#94a3b8'} strokeWidth={1} />
                           ))}
                         </Pie>
-                        <Tooltip formatter={(value: any, name: any) => [value, name]} />
+                        <Tooltip content={<CustomTooltip />} formatter={(value: any, name: any) => [value, name]} />
                         <Legend
                           iconType="circle"
                           iconSize={8}
@@ -150,7 +161,7 @@ export default function DoctorAnalyticsPage() {
                       <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                       <XAxis dataKey="month" tick={{ fontSize: 11 }} />
                       <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
-                      <Tooltip formatter={(v: any) => `₹${v}`} />
+                      <Tooltip content={<CustomTooltip />} formatter={(v: any) => `₹${v}`} />
                       <Bar dataKey="amount" fill={BAR_FILL} stroke={BAR_STROKE} strokeWidth={1.5} radius={[6, 6, 0, 0]} name="Earnings (₹)" />
                     </BarChart>
                   </ResponsiveContainer>
@@ -165,7 +176,7 @@ export default function DoctorAnalyticsPage() {
                         <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" horizontal={false} />
                         <XAxis type="number" tick={{ fontSize: 11 }} allowDecimals={false} />
                         <YAxis dataKey="name" type="category" tick={{ fontSize: 10 }} width={110} />
-                        <Tooltip />
+                        <Tooltip content={<CustomTooltip />} />
                         <Bar dataKey="count" fill={BAR_FILL} stroke={BAR_STROKE} strokeWidth={1.5} radius={[0, 6, 6, 0]} name="Visits" />
                       </BarChart>
                     </ResponsiveContainer>

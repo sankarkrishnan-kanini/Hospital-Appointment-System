@@ -17,6 +17,7 @@ const navItems = [
   { label: 'Availability', href: '/doctor/availability', icon: '' },
   { label: 'Time Slots', href: '/doctor/timeslots', icon: '' },
   { label: 'Appointments', href: '/doctor/appointments', icon: '' },
+  { label: 'Messages', href: '/doctor/chat', icon: '' },
 ];
 
 export default function DoctorProfilePage() {
@@ -159,7 +160,7 @@ export default function DoctorProfilePage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex pt-12">
+      <div className="min-h-screen bg-gray-50 flex pt-14">
         <DoctorTopBar />
         <Sidebar items={navItems} />
         <main className="flex-1 ml-60 flex items-center justify-center">
@@ -170,7 +171,7 @@ export default function DoctorProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex pt-12">
+    <div className="min-h-screen bg-gray-50 flex pt-14">
       <DoctorTopBar />
       <Sidebar items={navItems} />
       <main className="flex-1 flex flex-col ml-60">

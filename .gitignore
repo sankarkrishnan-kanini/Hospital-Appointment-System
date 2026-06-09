@@ -47,3 +47,5 @@ dist
 .env
 
 /generated/prisma
+/src/prisma/prisma.service.tsbackend/dist/ 
+
