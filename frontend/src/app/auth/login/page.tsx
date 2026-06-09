@@ -7,7 +7,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
 import { jwtDecode } from 'jwt-decode';
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import { loginApi } from '@/lib/api/auth.api';
 import { useAuthStore } from '@/store/auth.store';
 import { DecodedToken } from '@/types';
@@ -18,7 +18,7 @@ const schema = z.object({
 });
 type FormData = z.infer<typeof schema>;
 
-export default function LoginPage() {
+function LoginContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { setAuth, logout } = useAuthStore();
@@ -349,5 +349,13 @@ export default function LoginPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense>
+      <LoginContent />
+    </Suspense>
   );
 }
