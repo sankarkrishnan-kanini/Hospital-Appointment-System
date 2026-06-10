@@ -18,6 +18,7 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { TimeslotCleanupModule } from './timeslot-cleanup/timeslot-cleanup.module';
 import { ChatbotModule } from './chatbot/chatbot.module';
 import { ChatModule } from './chat/chat.module';
+import { TranscribeModule } from './transcribe/transcribe.module';
 
 @Module({
   imports: [
@@ -40,6 +41,7 @@ import { ChatModule } from './chat/chat.module';
     TimeslotCleanupModule,
     ChatbotModule,
     ChatModule,
+    TranscribeModule,
   ],
   controllers: [AppController],
   providers: [AppService, PrismaService],
