@@ -31,7 +31,7 @@ export default function DoctorChatPage() {
 
   return (
     <div className="flex h-screen bg-gray-50">
-      <Sidebar navItems={navItems} role="doctor" />
+      <Sidebar items={navItems} />
       <main className="flex-1 flex flex-col overflow-hidden">
         <div className="flex-1 overflow-hidden">
           <LiveChat role="doctor" />

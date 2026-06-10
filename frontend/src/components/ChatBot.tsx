@@ -1,13 +1,23 @@
 'use client';
-import { useState, useRef, useEffect, KeyboardEvent } from 'react';
-import { Trash2, Send, ChevronDown } from 'lucide-react';
+import { useState, useRef, useEffect, useCallback, KeyboardEvent } from 'react';
+import { Trash2, Send, ChevronDown, Mic, Square, Play, Pause, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useChatBot } from '@/hooks/useChatBot';
+import api from '@/lib/axios';
 
 interface Props {
   role: 'patient' | 'doctor';
   userName: string;
 }
+
+const MIC_CONSTRAINTS: MediaStreamConstraints = {
+  video: false,
+  audio: {
+    echoCancellation: true,
+    noiseSuppression: true,
+    sampleRate: { ideal: 16000 },
+  },
+};
 
 export default function ChatBot({ role, userName }: Props) {
   const router = useRouter();
@@ -19,6 +29,173 @@ export default function ChatBot({ role, userName }: Props) {
   const prevMsgCount = useRef(1);
   const { messages, loading, sendMessage, clearChat, triggerBriefing } = useChatBot(role, userName);
 
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const chunksRef = useRef<Blob[]>([]);
+  const audioBlobRef = useRef<Blob | null>(null);
+  const [isRecording, setIsRecording] = useState(false);
+  const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
+  const [audioUrl, setAudioUrl] = useState<string | null>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [submittingAudio, setSubmittingAudio] = useState(false);
+  const audioElRef = useRef<HTMLAudioElement | null>(null);
+  useEffect(() => {
+    return () => {
+      streamRef.current?.getTracks().forEach((t) => t.stop());
+      audioContextRef.current?.close();
+      streamRef.current = null;
+      audioContextRef.current = null;
+    };
+  }, []);
+
+  const prevAudioUrl = useRef<string | null>(null);
+  useEffect(() => {
+    if (prevAudioUrl.current && prevAudioUrl.current !== audioUrl) {
+      URL.revokeObjectURL(prevAudioUrl.current);
+    }
+    prevAudioUrl.current = audioUrl;
+  }, [audioUrl]);
+
+  const initStream = useCallback(async () => {
+    
+    if (streamRef.current && streamRef.current.getTracks().some((t) => t.readyState === 'live')) {
+      // Resume AudioContext if it was suspended by the browser
+      if (audioContextRef.current?.state === 'suspended') {
+        await audioContextRef.current.resume();
+      }
+      return streamRef.current;
+    }
+    const rawStream = await navigator.mediaDevices.getUserMedia(MIC_CONSTRAINTS);
+    const ctx = new AudioContext();
+    const source = ctx.createMediaStreamSource(rawStream);
+
+    const highpass = ctx.createBiquadFilter();
+    highpass.type = 'highpass';
+    highpass.frequency.value = 85;
+    highpass.Q.value = 0.707;
+
+    const lowpass = ctx.createBiquadFilter();
+    lowpass.type = 'lowpass';
+    lowpass.frequency.value = 3500;
+    lowpass.Q.value = 0.707;
+
+    const dest = ctx.createMediaStreamDestination();
+    source.connect(highpass);
+    highpass.connect(lowpass);
+    lowpass.connect(dest);
+
+    streamRef.current = dest.stream;
+    audioContextRef.current = ctx;
+    return dest.stream;
+  }, []);
+
+  const handleStartRecording = useCallback(async () => {
+    try {
+      const stream = await initStream();
+      const mimeTypes = [
+        'audio/webm;codecs=opus',
+        'audio/webm',
+        'audio/ogg;codecs=opus',
+        'audio/mp4',
+        '',
+      ];
+      const mimeType = mimeTypes.find((t) =>
+        t === '' || MediaRecorder.isTypeSupported(t)
+      ) ?? '';
+
+      const recorderOptions: MediaRecorderOptions = mimeType
+        ? { mimeType }
+        : {};
+      const recorder = new MediaRecorder(stream, recorderOptions);
+      const actualMime = recorder.mimeType || 'audio/webm';
+      chunksRef.current = [];
+
+      recorder.ondataavailable = (e) => {
+        if (e.data.size > 0) chunksRef.current.push(e.data);
+      };
+
+      recorder.onstop = () => {
+        const blob = new Blob(chunksRef.current, { type: actualMime });
+        const url = URL.createObjectURL(blob);
+        audioBlobRef.current = blob;
+        setAudioBlob(blob);
+        setAudioUrl(url);
+        setIsRecording(false);
+      };
+
+      // Discard any previous preview before starting
+      discardRecording();
+      mediaRecorderRef.current = recorder;
+      recorder.start();
+      setIsRecording(true);
+    } catch (err) {
+      console.error('Microphone access failed:', err);
+    }
+  }, [initStream]);
+
+  const handleStopRecording = useCallback(() => {
+    if (mediaRecorderRef.current?.state === 'recording') {
+      mediaRecorderRef.current.stop();
+
+      console.log(audioBlob);
+    }
+  }, []);
+
+  const discardRecording = useCallback(() => {
+    if (audioUrl) URL.revokeObjectURL(audioUrl);
+    audioBlobRef.current = null;
+    setAudioBlob(null);
+    setAudioUrl(null);
+    setIsPlaying(false);
+    if (audioElRef.current) {
+      audioElRef.current.pause();
+      audioElRef.current = null;
+    }
+  }, [audioUrl]);
+
+  const togglePlayback = useCallback(() => {
+    if (!audioUrl) return;
+    if (isPlaying && audioElRef.current) {
+      audioElRef.current.pause();
+      setIsPlaying(false);
+      return;
+    }
+    const el = new Audio(audioUrl);
+    el.onended = () => setIsPlaying(false);
+    el.play();
+    audioElRef.current = el;
+    setIsPlaying(true);
+  }, [audioUrl, isPlaying]);
+
+  const handleSubmitRecording = useCallback(async () => {
+    const blob = audioBlobRef.current;
+    if (!blob) return;
+    setSubmittingAudio(true);
+    try {
+      const reader = new FileReader();
+      reader.readAsDataURL(blob);
+      reader.onloadend = async () => {
+        try {
+          const base64data = reader.result as string;
+          console.log(base64data);
+          const response = await api.post('/transcribe', { audio: base64data });
+          const data = response.data;
+          if (data.transcription) {
+            await sendMessage(data.transcription);
+          }
+        } catch (err) {
+          console.error('Transcription failed:', err);
+        } finally {
+          discardRecording();
+          setSubmittingAudio(false);
+        }
+      };
+    } catch (err) {
+      console.error('Submit recording failed:', err);
+      setSubmittingAudio(false);
+    }
+  }, [sendMessage, discardRecording]);
   // Track unread when closed
   useEffect(() => {
     if (!open && messages.length > prevMsgCount.current) {
@@ -335,23 +512,95 @@ export default function ChatBot({ role, userName }: Props) {
 
           {/* ── Input ── */}
           <div className="flex-shrink-0 px-4 pb-4 pt-2 bg-white border-t border-gray-100">
+            {/* Audio preview bar */}
+            {audioUrl && !isRecording && (
+              <div className="flex items-center gap-2 bg-blue-50 border border-blue-200 rounded-2xl px-3 py-2 mb-2 animate-in fade-in">
+                <button
+                  onClick={togglePlayback}
+                  className="w-8 h-8 rounded-full bg-gradient-to-br from-[#2d6be4] to-[#1a4fc4] text-white flex items-center justify-center flex-shrink-0 hover:scale-105 transition-transform"
+                  title={isPlaying ? 'Pause' : 'Play'}
+                >
+                  {isPlaying ? <Pause size={13} /> : <Play size={13} className="ml-0.5" />}
+                </button>
+                {/* Waveform placeholder */}
+                <div className="flex-1 flex items-center gap-[3px] h-6 px-1">
+                  {Array.from({ length: 20 }).map((_, i) => (
+                    <div
+                      key={i}
+                      className={`w-[3px] rounded-full ${isPlaying ? 'bg-[#2d6be4] animate-pulse' : 'bg-blue-300'}`}
+                      style={{ height: `${8 + Math.sin(i * 0.8) * 10 + Math.random() * 6}px`, animationDelay: `${i * 50}ms` }}
+                    />
+                  ))}
+                </div>
+                <button
+                  onClick={handleSubmitRecording}
+                  disabled={submittingAudio || loading}
+                  className="w-8 h-8 rounded-full bg-emerald-500 text-white flex items-center justify-center flex-shrink-0 hover:bg-emerald-600 hover:scale-105 transition-all disabled:opacity-40"
+                  title="Send voice message"
+                >
+                  {submittingAudio ? (
+                    <span className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    <Send size={12} />
+                  )}
+                </button>
+                <button
+                  onClick={discardRecording}
+                  className="w-7 h-7 rounded-full bg-gray-200 text-gray-500 flex items-center justify-center flex-shrink-0 hover:bg-red-100 hover:text-red-500 transition-all"
+                  title="Discard"
+                >
+                  <X size={12} />
+                </button>
+              </div>
+            )}
+
+            {/* Recording indicator */}
+            {isRecording && (
+              <div className="flex items-center gap-3 bg-red-50 border border-red-200 rounded-2xl px-4 py-3 mb-2">
+                <span className="w-3 h-3 bg-red-500 rounded-full animate-pulse flex-shrink-0" />
+                <span className="text-[12px] text-red-600 font-medium flex-1">Recording…</span>
+                <button
+                  onClick={handleStopRecording}
+                  className="w-8 h-8 rounded-full bg-red-500 text-white flex items-center justify-center hover:bg-red-600 hover:scale-105 transition-all"
+                  title="Stop recording"
+                >
+                  <Square size={11} />
+                </button>
+              </div>
+            )}
+
+            {/* Text input + mic button */}
             <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-2xl px-4 py-2.5 focus-within:border-[#2d6be4] focus-within:bg-white focus-within:shadow-[0_0_0_3px_rgba(45,107,228,0.1)] transition-all duration-200">
               <input
                 ref={inputRef}
                 value={input}
                 onChange={e => setInput(e.target.value)}
                 onKeyDown={handleKey}
-                placeholder="Type a message..."
-                disabled={loading}
+                placeholder={isRecording ? 'Recording...' : 'Type a message...'}
+                disabled={loading || isRecording || submittingAudio}
                 className="flex-1 bg-transparent text-[13px] text-gray-800 placeholder-gray-400 outline-none disabled:opacity-50 min-w-0"
               />
-              <button
-                onClick={handleSend}
-                disabled={!input.trim() || loading}
-                className="w-8 h-8 bg-gradient-to-br from-[#2d6be4] to-[#1a4fc4] text-white rounded-xl flex items-center justify-center transition-all duration-200 hover:shadow-[0_4px_12px_rgba(45,107,228,0.4)] hover:scale-105 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:hover:shadow-none flex-shrink-0"
-              >
-                <Send size={13} />
-              </button>
+              {/* Mic button — shown when no text typed and not already recording/previewing */}
+              {!input.trim() && !audioUrl && !isRecording && (
+                <button
+                  onClick={handleStartRecording}
+                  disabled={loading || submittingAudio}
+                  className="w-8 h-8 bg-gray-200 text-gray-500 rounded-xl flex items-center justify-center transition-all duration-200 hover:bg-[#2d6be4] hover:text-white hover:scale-105 disabled:opacity-30 disabled:cursor-not-allowed flex-shrink-0"
+                  title="Record voice message"
+                >
+                  <Mic size={14} />
+                </button>
+              )}
+              {/* Send button — shown when text is typed */}
+              {input.trim() && (
+                <button
+                  onClick={handleSend}
+                  disabled={!input.trim() || loading}
+                  className="w-8 h-8 bg-gradient-to-br from-[#2d6be4] to-[#1a4fc4] text-white rounded-xl flex items-center justify-center transition-all duration-200 hover:shadow-[0_4px_12px_rgba(45,107,228,0.4)] hover:scale-105 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:hover:shadow-none flex-shrink-0"
+                >
+                  <Send size={13} />
+                </button>
+              )}
             </div>
             <p className="text-center text-[10px] text-gray-300 mt-2">
               Powered by MediAssist AI · Your data is secure

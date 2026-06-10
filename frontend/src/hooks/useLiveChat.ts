@@ -199,7 +199,7 @@ export function useLiveChat() {
     loading,
     typing,
     unreadCount,
-    userId: user?.sub,
+    userId: user?.id,
     joinRoom,
     leaveRoom,
     sendMessage,

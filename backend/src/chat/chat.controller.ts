@@ -1,7 +1,10 @@
-import { Controller, Get, Post, Param, Query, UseGuards, Request, ParseIntPipe } from '@nestjs/common';
+import { Controller, Get, Post, Param, Query, UseGuards, Request, ParseIntPipe,Body } from '@nestjs/common';
 import { ChatService } from './chat.service';
 import { AuthGuard } from '../auth/auth.guard';
 
+interface RequestBody{
+  audio:string;
+}
 @Controller('chat')
 @UseGuards(AuthGuard)
 export class ChatController {
@@ -54,4 +57,6 @@ export class ChatController {
     const count = await this.chatService.getUnreadCount(req.user.sub, req.user.role);
     return { unreadCount: count };
   }
+
+  
 }
